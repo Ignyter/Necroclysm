@@ -28,23 +28,6 @@ void Craft::clickUpGUI()
 	{
 		CORO(executeBookmark());
 	}
-	else if (checkCursor(&unfoldBtn) && craftCursor >= 0)//툴팁 펼치기
-	{
-		if (tooltipUnfold == false)
-		{
-			tooltipUnfold = true;
-			deactColorChange = true;
-			topWindow.h += 300;
-			unfoldBtn.y += 300;
-		}
-		else
-		{
-			tooltipUnfold = false;
-			deactColorChange = false;
-			topWindow.h -= 300;
-			unfoldBtn.y -= 300;
-		}
-	}
 	else if (checkCursor(&bookmarkCategory))//즐겨찾기 카테고리 클릭업
 	{
 		craftCursor = -1;

@@ -729,7 +729,7 @@ export enum class msgOption
 
 export enum class tabFlag
 {
-    autoAtk,
+    attackNearby,
     closeWin,
     back,
     confirm,
@@ -767,6 +767,16 @@ export enum class turn
     monsterAI,
     monsterAnime,
 };
+
+export namespace keyboardIndex
+{
+    constexpr int tab = 1;
+    constexpr int tabPressed = 2;
+    constexpr int m = 3;
+    constexpr int mPressed = 4;
+    constexpr int enter = 5;
+    constexpr int enterPressed = 6;
+}
 
 export namespace keyIcon
 {

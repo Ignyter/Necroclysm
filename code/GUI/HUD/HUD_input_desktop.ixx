@@ -22,6 +22,7 @@ import ItemData;
 import ItemPocket;
 import SystemMenu;
 
+static bool btnPressed = false;
 
 void HUD::clickDownGUI()
 {
@@ -102,6 +103,7 @@ void HUD::clickUpGUI()
 			}
 		}
 	}
+	else if (checkCursor(&minimapRegion));
 	else//타일터치
 	{
 		if (dragQuickSlotTarget == -1)
@@ -221,8 +223,30 @@ void HUD::clickHoldGUI()
 	}
 }
 
+
+void HUD::keyDownGUI()
+{
+	switch (event.key.key)
+	{
+	case SDLK_TAB:
+		executeTab();
+		break;
+
+	case SDLK_RETURN:
+		if (!btnPressed)
+		{
+			if (y == 0) { executePopUp(); }
+			else { executePopDown(); }
+		}
+		break;
+	}
+
+	btnPressed = true;
+}
+
 void HUD::keyUpGUI()
 {
+	btnPressed = false;
 	switch (event.key.key)
 	{
 	case SDLK_1:
@@ -252,5 +276,6 @@ void HUD::keyUpGUI()
 	case SDLK_ESCAPE:
 		new SystemMenu();
 		break;
+
 	}
 }

@@ -34,7 +34,7 @@ export namespace actSet
 export namespace option
 {
     std::wstring language = L"English";// 또는 "English"
-    input inputMethod = input::gamepad; //조작방식 설정
+    input inputMethod = input::mouse; //조작방식 설정
 };
 
 export namespace debug
@@ -113,7 +113,7 @@ export bool exInputEditing = false; // 현재 입력이 수정 중인지, 예로
 export int exInputIndex = -1; // -1은 미선택, 0부터 할당, 0은 아이템 선택 숫자 입력
 ////////////////////////////////////////////////////////////////
 //HUD 관련 전역변수
-export tabFlag tabType = tabFlag::autoAtk;
+export tabFlag tabType = tabFlag::attackNearby;
 export SDL_Rect letterbox = { 0, 0, 0, 0 };
 export SDL_Rect barButton[35] = { 0, 0, 0, 0 };
 export SDL_Rect letterboxInButton[35] = { 0, 0, 0, 0 };
@@ -194,6 +194,7 @@ export std::vector<Drawable*> extraRenderEntityList;
 export std::array<std::pair<quickSlotFlag, int>, 8> quickSlot = { std::pair(quickSlotFlag::NONE , -1), };
 
 export SDL_Rect quickSlotRegion;
+export SDL_Rect minimapRegion;
 
 export int prevMouseX4Motion, prevMouseY4Motion = 0; //마우스모션에 대해 원래 마우스 클릭좌표, 기존 클릭좌표랑은 조금 다르니 유의할 것, 카메라 이동에 사용됨
 

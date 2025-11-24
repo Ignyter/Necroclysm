@@ -269,6 +269,8 @@ export void drawStadium(int x, int y, int w, int h, SDL_Color color, int alpha, 
 	}
 }
 
+export void drawStadium(SDL_Rect rect, SDL_Color color, int alpha, int edge){ drawStadium(rect.x, rect.y, rect.w, rect.h, color, alpha, edge); }
+
 export void drawRectBatch(int rectW, int rectH, SDL_Color* cols, const Point2* pts, size_t count, float inputZoomScale)
 {
 	if (!cols || !pts || !cols || count == 0) return;

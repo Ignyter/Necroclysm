@@ -571,10 +571,16 @@ void Craft::drawGUI()
 
 				//아이템 아이콘 그리기
 				SDL_Rect iconBox = { topWindow.x + 54 - 36, topWindow.y + 54 - 36, 72, 72 };
-				drawWindow(&iconBox);
-				setZoom(3.0);
-				drawSpriteCenter(spr::itemset, getItemSprIndex(recipePtr->itemInfo[targetCursor]), topWindow.x + 54, topWindow.y + 54);
-				setZoom(1.0);
+				//drawWindow(&iconBox);
+
+				{
+					int iconPivotX = topWindow.x + 18 + spr::itemBackgroundRect->getW() / 2;
+					int iconPivotY = topWindow.y + 18 + spr::itemBackgroundRect->getH() / 2;
+					drawSpriteCenter(spr::itemBackgroundRect, 0, iconPivotX, iconPivotY);
+					setZoom(3.0);
+					drawSpriteCenter(spr::itemset, getItemSprIndex(recipePtr->itemInfo[targetCursor]), iconPivotX, iconPivotY);
+					setZoom(1.0);
+				}
 				setFontSize(24);
 				drawText(recipePtr->itemInfo[targetCursor].name, topWindow.x + 102, topWindow.y + 18);
 
@@ -669,29 +675,7 @@ void Craft::drawGUI()
 				tooltipText += itemTooltip[recipePtr->itemInfo[targetCursor].tooltipIndex];
 
 				setFontSize(15);
-				if (!tooltipUnfold) drawTextWidth(col2Str(lowCol::white) + tooltipText, topWindow.x + 15, topWindow.y + 15 + 87 + 23 * 0, false, 540, 18, 9);
-				else drawTextWidth(col2Str(lowCol::white) + tooltipText, topWindow.x + 15, topWindow.y + 15 + 87 + 23 * 0, false, 540, 18);
-
-				//접기-펼치기 버튼
-				{
-					SDL_Color btnColor = { 0x00, 0x00, 0x00 };
-					SDL_Color outlineColor = { 0x4A, 0x4A, 0x4A };
-					if (checkCursor(&unfoldBtn))
-					{
-						if (click == true) { btnColor = lowCol::deepBlue; }
-						else { btnColor = lowCol::blue; }
-						outlineColor = { 0xa6, 0xa6, 0xa6 };
-					}
-					//기본 사각형 
-					drawFillRect(unfoldBtn, btnColor, 180);
-					//회색 테두리
-					drawRect(unfoldBtn, outlineColor);
-					//아이콘
-					if (tooltipUnfold == false) drawSpriteCenter(spr::icon16, 38, unfoldBtn.x + 21, unfoldBtn.y + unfoldBtn.h / 2);
-					else drawSpriteCenter(spr::icon16, 39, unfoldBtn.x + 21, unfoldBtn.y + unfoldBtn.h / 2);
-
-				}
-
+				drawTextWidth(col2Str(lowCol::white) + tooltipText, topWindow.x + 15, topWindow.y + 15 + 87 + 23 * 0, false, 540, 18, 9);
 
 				//조합하기 버튼
 				{
@@ -714,7 +698,9 @@ void Craft::drawGUI()
 
 					std::wstring remainStr = replaceStr(replaceStr(sysStr[238], L"(%hour)", L"1"), L"(%min)",L"34");
 					drawTextCenter(remainStr, tooltipCraftBtn.x + tooltipCraftBtn.w / 2 + 15, tooltipCraftBtn.y + tooltipCraftBtn.h / 2 - 3 - 6 + 18);
+					setZoom(1.5);
 					drawSpriteCenter(spr::icon16, 28, tooltipCraftBtn.x + 21, tooltipCraftBtn.y + tooltipCraftBtn.h / 2);
+					setZoom(1.0);
 
 					if (canCraft == false) drawFillRect(tooltipCraftBtn, col::black, 100);
 				}
@@ -745,7 +731,9 @@ void Craft::drawGUI()
 
 					setFontSize(18);
 					drawTextCenter(sysStr[239], tooltipBookmarkBtn.x + tooltipBookmarkBtn.w / 2 + 15, tooltipBookmarkBtn.y + tooltipBookmarkBtn.h / 2 - 3, textColor);//즐겨찾기
+					setZoom(1.5);
 					drawSpriteCenter(spr::icon16, bookmarkSprIndex, tooltipBookmarkBtn.x + 21, tooltipBookmarkBtn.y + tooltipBookmarkBtn.h / 2);
+					setZoom(1.0);
 
 					if (recipePtr->itemInfo[targetCursor].checkFlag(itemFlag::BOOKMARK1));
 					else if (recipePtr->itemInfo[targetCursor].checkFlag(itemFlag::BOOKMARK2));

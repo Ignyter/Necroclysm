@@ -52,6 +52,7 @@ private:
 	Point2 advancedModeGrid;
 
 	SDL_Rect quickSlotPopBtn;
+	SDL_Rect openMapBtn;
 	
 	bool isQuickSlotPop = false; //화면우측의 퀵슬롯이 오른쪽으로 팝업되었는지를 나타내는 bool 변수
 	float popUpDist = 360;
@@ -102,13 +103,15 @@ public:
 
 		letterbox = { 0, 0, 782, 176 };
 		letterbox.x = cameraW - 1 - 781;
-		letterbox.y = cameraH - 1- 175 + inputY;
-		
+		letterbox.y = cameraH - 1 - 175 + inputY;
+
 		if (option::inputMethod == input::gamepad)
 		{
 			letterbox.y += 99;
-        }
-		
+		}
+
+        letterbox.h = cameraH - letterbox.y + 20;
+
 		//letterbox.h = cameraH - letterbox.y + 6;
 
 		for (int i = 0; i < 35; i++)
@@ -127,6 +130,10 @@ public:
 
 		quickSlotRegion = { 185 + 90, 0,566,64, };
 		for (int i = 0; i < 8; i++) quickSlotBtn[i] = { 185 + 90 + 72 * i, 0, 62,64 };
+
+        minimapRegion = { 14, 14, spr::minimapEdge->getW(), spr::minimapEdge->getH() };
+
+		openMapBtn = { 18,18 ,38, 38 };
 
 
 		x = 0;
@@ -147,6 +154,7 @@ public:
 	void clickUpGUI();
 	void clickRightGUI();
 	void clickHoldGUI();
+	void keyDownGUI();
 	void keyUpGUI();
 
 	void mouseWheel() 

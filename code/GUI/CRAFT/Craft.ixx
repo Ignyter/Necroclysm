@@ -54,8 +54,6 @@ private:
 
 	SDL_Rect tooltipCraftBtn;
 	SDL_Rect tooltipBookmarkBtn;
-	SDL_Rect unfoldBtn;
-	bool tooltipUnfold = false;
 
 	ItemPocket* recipePtr;//플레이어가 보유한 레시피들
 
@@ -173,7 +171,6 @@ public:
 
 		tooltipCraftBtn = { topWindow.x + 465, topWindow.y + 15, 135, 39 };
 		tooltipBookmarkBtn = { topWindow.x + 465, topWindow.y + 15 + 48, 135, 39 };
-		unfoldBtn = { topWindow.x + topWindow.w - 48, topWindow.y + topWindow.h - 48, 42, 42 };
 
 		if (center == false)
 		{

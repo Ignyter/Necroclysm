@@ -1261,7 +1261,12 @@ void drawMarkers()
     {
         if (isPlayerMoving == false && turnCycle == turn::playerInput)
         {
-            if (checkCursor(&letterbox) == false && checkCursor(&tab) == false && checkCursor(&letterboxPopUpButton) == false && checkCursor(&quickSlotRegion) == false)
+            if (checkCursor(&letterbox) == false 
+                && checkCursor(&tab) == false 
+                && checkCursor(&letterboxPopUpButton) == false 
+                && checkCursor(&quickSlotRegion) == false
+                && checkCursor(&minimapRegion) == false
+                )
             {
                 if (GUI::getLastGUI() == HUD::ins())
                 {

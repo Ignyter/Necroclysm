@@ -113,7 +113,6 @@ void HUD::drawGUI()
 
 			drawSprite(spr::minimapEdge, 0, 14, 14);
 
-			setZoom(1.5);
 			Point2 minimapBtn = { 36,36 };
 			Sprite* targetBtnSpr;
 			if (option::inputMethod == input::gamepad)
@@ -123,8 +122,11 @@ void HUD::drawGUI()
 			}
 			else if (option::inputMethod == input::mouse)
 			{
-				targetBtnSpr = spr::buttons;
-				drawSpriteCenter(targetBtnSpr, keyIcon::keyboard_M, minimapBtn.x, minimapBtn.y);
+				if (checkCursor(&openMapBtn)) drawStadium(openMapBtn, click ? lowCol::deepBlue : lowCol::blue, 255, 2);
+				else drawStadium(openMapBtn, { 0,0,0 }, 255, 2);
+                
+                drawSpriteCenter(spr::keyboardButtons, keyboardIndex::m + state[SDL_SCANCODE_M]
+					, minimapBtn.x, minimapBtn.y);
 			}
 			setZoom(1.0);
 
@@ -353,7 +355,7 @@ void HUD::drawGUI()
 			setZoom(1.5);
 			if (getHour() >= 12) { timeIndex = segmentIndex::pm; }
 			else { timeIndex = segmentIndex::am; }
-			drawSprite(spr::segment, timeIndex, pivotX + 21 * 0, pivotY);
+			drawSprite(spr::segment, timeIndex, pivotX - 4, pivotY);
 
 			//xx시
 			drawSprite(spr::segment, getHour() / 10, pivotX + 21 * 1, pivotY);
@@ -439,7 +441,6 @@ void HUD::drawGUI()
 						if (click == true) { popUpBtnColor = lowCol::deepBlue; }
 						else { popUpBtnColor = lowCol::blue; }
 					}
-					else if (state[SDL_SCANCODE_RETURN]) { popUpBtnColor = lowCol::blue; }
 					else { popUpBtnColor = lowCol::black; }
 				}
 
@@ -455,6 +456,8 @@ void HUD::drawGUI()
 				{
 					if (y == 0) drawSpriteCenter(spr::windowArrow, 1, letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
 					else drawSpriteCenter(spr::windowArrow, 3, letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
+
+                    drawSpriteCenter(spr::keyboardButtons, keyboardIndex::enter + state[SDL_SCANCODE_RETURN], letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
 				}
 			}
 		}
@@ -521,7 +524,7 @@ void HUD::drawTab()
 
 	switch (tabType)
 	{
-	case tabFlag::autoAtk:
+	case tabFlag::attackNearby:
 	{
 		if (option::inputMethod == input::gamepad)
 		{
@@ -549,12 +552,14 @@ void HUD::drawTab()
 		}
 		if (option::language == L"Korean") setFontSize(12);
 		else  setFontSize(10);
-		setZoom(1.5);
-		drawSpriteCenter(spr::icon48, 1, tab.x + 42 + 25, tab.y + 55 + 12);
-		drawSpriteCenter(spr::icon48, 2, tab.x + 72 + 40, tab.y + 64 + 29);
+		setZoom(2.5);
+		drawSpriteCenter(spr::icon48, 183, tab.x + tab.w/2, tab.y + 55 + 20);
 		setZoom(1.0);
 		setFontSize(18);
 		drawTextCenter(sysStr[1], tab.x + tab.w / 2, tab.y + tab.h - 30);
+		
+        drawSpriteCenter(spr::keyboardButtons, keyboardIndex::tab + SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_TAB], tab.x + 164, tab.y + 8);
+
 		break;
 	}
 	case tabFlag::aim:
@@ -634,6 +639,7 @@ void HUD::drawTab()
 		setZoom(1.0);
 		setFontSize(22);
 		drawTextCenter(sysStr[14], tab.x + 90, tab.y + 150);
+		drawSpriteCenter(spr::keyboardButtons, keyboardIndex::tab + SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_TAB], tab.x + 164, tab.y + 8);
 		break;
 	case tabFlag::back:
 		//뒤로가기
@@ -643,6 +649,7 @@ void HUD::drawTab()
 		setZoom(1.0);
 		setFontSize(22);
 		drawTextCenter(sysStr[31], tab.x + 90, tab.y + 150);
+		drawSpriteCenter(spr::keyboardButtons, keyboardIndex::tab + SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_TAB], tab.x + 164, tab.y + 8);
 		break;
 	case tabFlag::confirm:
 		//뒤로가기
@@ -652,6 +659,7 @@ void HUD::drawTab()
 		setZoom(1.0);
 		setFontSize(22);
 		drawTextCenter(sysStr[91], tab.x + 90, tab.y + 150);
+		drawSpriteCenter(spr::keyboardButtons, keyboardIndex::tab + SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_TAB], tab.x + 164, tab.y + 8);
 		break;
 	default:
 		errorBox(L"undefined tabFalg");
@@ -811,8 +819,8 @@ void HUD::drawBarAct()
 			else if (ctrlVeh->gearState == gearFlag::reverse) gearSprIndex = 1;
 			else if (ctrlVeh->gearState == gearFlag::neutral) gearSprIndex = 2;
 			else gearSprIndex = 3;
-			drawSpriteCenter(spr::vehicleHUDParts, 5 + gearSprIndex, barButton[4].x + barButton[4].w / 2, barButton[4].y + barButton[4].h / 2 - 12);
-
+			drawSpriteCenter(spr::vehicleHUDParts, 5 + gearSprIndex, barButton[4].x + barButton[4].w / 2, barButton[4].y + barButton[4].h / 2 - 15);
+			
 			drawSpriteCenter(spr::vehicleHUDParts, 10 + (checkCursor(&barButton[5]) && click), barButton[5].x + barButton[5].w / 2, barButton[5].y + barButton[5].h / 2);
 			drawSpriteCenter(spr::vehicleHUDParts, 12 + (checkCursor(&barButton[6]) && click), barButton[6].x + barButton[6].w / 2, barButton[6].y + barButton[6].h / 2);
 		}
@@ -957,7 +965,7 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::select) setBtnLayout(sysStr[29], 30);
 		else if (barAct[i] == act::droping) setBtnLayout(sysStr[52], 18);
 		else if (barAct[i] == act::throwing) setBtnLayout(sysStr[53], 19);
-		else if (barAct[i] == act::craft) setBtnLayout(sysStr[75], 21);
+		else if (barAct[i] == act::craft) setBtnLayout(sysStr[75], 185);
 		else if (barAct[i] == act::construct) setBtnLayout(sysStr[73], 20);
 		else if (barAct[i] == act::open) setBtnLayout(sysStr[88], 38);
 		else if (barAct[i] == act::test) setBtnLayout(sysStr[92], 60);

@@ -6,7 +6,7 @@ import Sleep;
 
 void HUD::step()
 {
-    tabType = tabFlag::autoAtk;
+    tabType = tabFlag::attackNearby;
 
     if (GUI::getLastGUI() == this)
     {
