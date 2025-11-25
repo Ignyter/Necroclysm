@@ -27,8 +27,8 @@ public:
         h = inputH;
         SDL_SetTextureScaleMode(texturePtr, SDL_SCALEMODE_NEAREST);
 
-        //if(adr != "image/UI/icon48.png") SDL_SetTextureScaleMode(texturePtr, SDL_SCALEMODE_NEAREST);
-        //else SDL_SetTextureScaleMode(texturePtr, SDL_SCALEMODE_LINEAR);
+        if(adr != "image/UI/icon48.png") SDL_SetTextureScaleMode(texturePtr, SDL_SCALEMODE_NEAREST);
+        else SDL_SetTextureScaleMode(texturePtr, SDL_SCALEMODE_LINEAR);
     }
     Sprite(SDL_Renderer* renderer, SDL_Texture* inputTexture, int inputW, int inputH)
     {

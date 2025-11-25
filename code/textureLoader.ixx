@@ -198,4 +198,6 @@ export void textureLoader()
     spr::gamepadInstruction = new Sprite(renderer, "image/UI/gamepadInstruction.png", 176, 112);
 	spr::gamepadButtons = new Sprite(renderer, "image/UI/gamepadButtons.png", 48, 48);
     spr::keyboardButtons = new Sprite(renderer, "image/UI/keyboardButtons.png", 48, 48);
+
+	spr::icon80 = new Sprite(renderer, "image/UI/icon80.png", 80, 80);
 }
