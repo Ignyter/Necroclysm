@@ -552,8 +552,8 @@ void HUD::drawTab()
 		}
 		if (option::language == L"Korean") setFontSize(12);
 		else  setFontSize(10);
-		setZoom(2.5);
-		drawSpriteCenter(spr::icon48, 183, tab.x + tab.w/2, tab.y + 55 + 20);
+		setZoom(1.0);
+		drawSpriteCenter(spr::icon80, 18, tab.x + tab.w/2, tab.y + 55 + 25);
 		setZoom(1.0);
 		setFontSize(18);
 		drawTextCenter(sysStr[1], tab.x + tab.w / 2, tab.y + tab.h - 30);
@@ -917,35 +917,46 @@ void HUD::drawBarAct()
 		std::wstring actName = L" ";
 		int actIndex = 0;
 		bool deactRect = false; // true일 경우 회색으로 변함
+		bool useIcon80 = false;
 		auto setBtnLayout = [&actName, &actIndex](std::wstring inputString, int inputActIndex)
 			{
 				actName = inputString;
 				actIndex = inputActIndex;
 			};
 
-		if (barAct[i] == act::status) setBtnLayout(sysStr[3], 33);
-		else if (barAct[i] == act::mutation) setBtnLayout(sysStr[54], 34);
-		else if (barAct[i] == act::ability) setBtnLayout(sysStr[4], 4);
-		else if (barAct[i] == act::equipment) setBtnLayout(sysStr[332], 79);
-		else if (barAct[i] == act::bionic) setBtnLayout(sysStr[6], 47);
-		else if (barAct[i] == act::profic) setBtnLayout(sysStr[7], 7);
-		else if (barAct[i] == act::skill) setBtnLayout(sysStr[197], 4);
+		auto setBtnLayout80 = [&actName, &actIndex, &useIcon80](std::wstring inputString, int inputActIndex)
+			{
+				actName = inputString;
+				actIndex = inputActIndex;
+                useIcon80 = true;
+			};
+
+		if (barAct[i] == act::status) setBtnLayout80(sysStr[3], 15);
+		else if (barAct[i] == act::craft) setBtnLayout80(sysStr[75], 3);
+		else if (barAct[i] == act::equipment) setBtnLayout80(sysStr[332], 1);
+		else if (barAct[i] == act::profic) setBtnLayout80(sysStr[7], 10);
+		else if (barAct[i] == act::skill) setBtnLayout80(sysStr[197], 17);
+		else if (barAct[i] == act::wait)
+		{
+			if (ctrlVeh == nullptr) setBtnLayout80(sysStr[142], 2);
+			else setBtnLayout(sysStr[142], 0);
+		}
 		else if (barAct[i] == act::quest) setBtnLayout(sysStr[198], 52);
 		else if (barAct[i] == act::runMode)
 		{
 
-			if (PlayerPtr->entityInfo.walkMode == walkFlag::walk) setBtnLayout(sysStr[8], 9);
-			else if (PlayerPtr->entityInfo.walkMode == walkFlag::run) setBtnLayout(sysStr[8], 10);
-			else if (PlayerPtr->entityInfo.walkMode == walkFlag::crouch) setBtnLayout(sysStr[8], 12);
-			else if (PlayerPtr->entityInfo.walkMode == walkFlag::crawl) setBtnLayout(sysStr[8], 11);
+			if (PlayerPtr->entityInfo.walkMode == walkFlag::walk) setBtnLayout80(sysStr[8], 4);
+			else if (PlayerPtr->entityInfo.walkMode == walkFlag::run) setBtnLayout80(sysStr[8], 5);
+			else if (PlayerPtr->entityInfo.walkMode == walkFlag::crouch) setBtnLayout80(sysStr[8], 7);
+			else if (PlayerPtr->entityInfo.walkMode == walkFlag::crawl) setBtnLayout80(sysStr[8], 6);
 			else if (PlayerPtr->entityInfo.walkMode == walkFlag::wade)
 			{
-				setBtnLayout(sysStr[8], 161);
+				setBtnLayout80(sysStr[8], 9);
 				deactRect = true;
 			}
 			else if (PlayerPtr->entityInfo.walkMode == walkFlag::swim)
 			{
-				setBtnLayout(sysStr[8], 160);
+				setBtnLayout80(sysStr[8], 8);
 				deactRect = true;
 			}
 		}
@@ -965,7 +976,6 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::select) setBtnLayout(sysStr[29], 30);
 		else if (barAct[i] == act::droping) setBtnLayout(sysStr[52], 18);
 		else if (barAct[i] == act::throwing) setBtnLayout(sysStr[53], 19);
-		else if (barAct[i] == act::craft) setBtnLayout(sysStr[75], 185);
 		else if (barAct[i] == act::construct) setBtnLayout(sysStr[73], 20);
 		else if (barAct[i] == act::open) setBtnLayout(sysStr[88], 38);
 		else if (barAct[i] == act::test) setBtnLayout(sysStr[92], 60);
@@ -978,11 +988,6 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::reloadBulletToGun) setBtnLayout(sysStr[113], 45);
 		else if (barAct[i] == act::unloadBulletFromGun) setBtnLayout(sysStr[114], 46);
 		else if (barAct[i] == act::turnLeft) setBtnLayout(sysStr[141], 0);
-		else if (barAct[i] == act::wait)
-		{
-			if (ctrlVeh == nullptr) setBtnLayout(sysStr[142], 2);
-			else setBtnLayout(sysStr[142], 0);
-		}
 		else if (barAct[i] == act::turnRight) setBtnLayout(sysStr[143], 0);
 		else if (barAct[i] == act::startEngine) setBtnLayout(sysStr[144], 0);
 		else if (barAct[i] == act::stopEngine) setBtnLayout(sysStr[145], 0);
@@ -1047,8 +1052,17 @@ void HUD::drawBarAct()
 		else setBtnLayout(L" ", 0);
 
 		//48*48 심볼 아이콘 그리기
-		setZoom(1.5);
-		drawSpriteCenter(spr::icon48, actIndex, barButton[i].x + (barButton[i].w / 2), barButton[i].y + (barButton[i].h / 2) - 10);
+		if (useIcon80)
+		{
+			setZoom(1.0);
+			drawSpriteCenter(spr::icon80, actIndex, barButton[i].x + (barButton[i].w / 2), barButton[i].y + (barButton[i].h / 2) - 10);
+		}
+		else
+		{
+			setZoom(1.5);
+			drawSpriteCenter(spr::icon48, actIndex, barButton[i].x + (barButton[i].w / 2), barButton[i].y + (barButton[i].h / 2) - 10);
+		}
+		
 		setZoom(1.0);
 
 		//하단 텍스트
