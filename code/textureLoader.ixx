@@ -200,4 +200,6 @@ export void textureLoader()
     spr::keyboardButtons = new Sprite(renderer, "image/UI/keyboardButtons.png", 48, 48);
 
 	spr::icon80 = new Sprite(renderer, "image/UI/icon80.png", 80, 80);
+
+    spr::gearStick = new Sprite(renderer, "image/UI/GUI/Vehicle/gearStick.png", 80, 144);
 }

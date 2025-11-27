@@ -815,11 +815,11 @@ void HUD::drawBarAct()
 
 			//기어(PRND) 그리기
 			int gearSprIndex = 0;
-			if (ctrlVeh->gearState == gearFlag::park) gearSprIndex = 0;
-			else if (ctrlVeh->gearState == gearFlag::reverse) gearSprIndex = 1;
-			else if (ctrlVeh->gearState == gearFlag::neutral) gearSprIndex = 2;
-			else gearSprIndex = 3;
-			drawSpriteCenter(spr::vehicleHUDParts, 5 + gearSprIndex, barButton[4].x + barButton[4].w / 2, barButton[4].y + barButton[4].h / 2 - 15);
+			if (ctrlVeh->gearState == gearFlag::park) gearSprIndex = 1;
+			else if (ctrlVeh->gearState == gearFlag::reverse) gearSprIndex = 2;
+			else if (ctrlVeh->gearState == gearFlag::neutral) gearSprIndex = 3;
+			else gearSprIndex = 4;
+			drawSpriteCenter(spr::gearStick, gearSprIndex, barButton[4].x + barButton[4].w / 2, barButton[4].y + barButton[4].h / 2 - 35);
 			
 			drawSpriteCenter(spr::vehicleHUDParts, 10 + (checkCursor(&barButton[5]) && click), barButton[5].x + barButton[5].w / 2, barButton[5].y + barButton[5].h / 2);
 			drawSpriteCenter(spr::vehicleHUDParts, 12 + (checkCursor(&barButton[6]) && click), barButton[6].x + barButton[6].w / 2, barButton[6].y + barButton[6].h / 2);

@@ -168,4 +168,6 @@ export namespace spr
 	Sprite* gamepadButtons = nullptr;
 	Sprite* keyboardButtons = nullptr;
 	Sprite* icon80 = nullptr;
+
+	Sprite* gearStick = nullptr;
 }
