@@ -21,7 +21,12 @@ export constexpr int LOOT_ITEM_MAX = 9;
 export constexpr int INVENTORY_ITEM_MAX = 9;
 export constexpr int DMG_FLAG_SIZE = 3;
 export constexpr int TALENT_SIZE = 20;
+
+// 13칸이 한 청크니까 걸칠 수 있는 정도로, 차량의 왼쪽끝(코어)이 청크의 오른쪽끝 그러면... 7청크*7청크 분석해야한다.
+// ●|○○○○○○○○○○○○○|○○○○○○○○○○○○○|○○○○×××××××××|
 export constexpr int MAX_VEHICLE_SIZE = 31;
+
+
 export constexpr int CHUNK_LOADING_RANGE = 5;
 export constexpr int MINIMAP_DIAMETER = 41; //미니맵의 지름 (홀수)
 export constexpr int NAVIMAP_WIDTH = 99;//167;

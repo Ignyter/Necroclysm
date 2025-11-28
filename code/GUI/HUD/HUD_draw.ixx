@@ -776,12 +776,15 @@ void HUD::drawQuickSlot()
 	{
 		if (quickSlot[dragQuickSlotTarget].first == quickSlotFlag::SKILL)
 		{
-			setZoom(2.0);
-			SDL_SetTextureAlphaMod(spr::icon24->getTexture(), 180);
-			SDL_SetTextureBlendMode(spr::icon24->getTexture(), SDL_BLENDMODE_BLEND);
-			drawSpriteCenter(spr::icon24, skillDex[quickSlot[dragQuickSlotTarget].second].iconIndex, getMouseX(), getMouseY());
-			SDL_SetTextureAlphaMod(spr::icon24->getTexture(), 255);
-			setZoom(1.0);
+			if (!checkCursor(&quickSlotBtn[dragQuickSlotTarget]))
+			{
+				setZoom(2.0);
+				SDL_SetTextureAlphaMod(spr::icon24->getTexture(), 180);
+				SDL_SetTextureBlendMode(spr::icon24->getTexture(), SDL_BLENDMODE_BLEND);
+				drawSpriteCenter(spr::icon24, skillDex[quickSlot[dragQuickSlotTarget].second].iconIndex, getMouseX(), getMouseY());
+				SDL_SetTextureAlphaMod(spr::icon24->getTexture(), 255);
+				setZoom(1.0);
+			}
 		}
 	}
 }
@@ -793,16 +796,17 @@ void HUD::drawBarAct()
 		if (typeHUD == vehFlag::car)
 		{
 			//핸들
-			int wheelIndex = 0;
 			SDL_SetTextureAlphaMod(spr::vehicleHUDSteeringWheel->getTexture(), 140);
 			SDL_SetTextureBlendMode(spr::vehicleHUDSteeringWheel->getTexture(), SDL_BLENDMODE_BLEND);
-			if (click)
-			{
-				if (checkCursor(&barButton[0])) wheelIndex = 1;
-				else if (checkCursor(&barButton[1])) wheelIndex = 3;
-				else if (checkCursor(&barButton[2])) wheelIndex = 2;
-			}
-			drawSpriteCenter(spr::vehicleHUDSteeringWheel, wheelIndex, barButton[1].x + (barButton[1].w / 2), barButton[1].y + (barButton[1].h / 2));
+
+			int wheelIndex = 0;
+			if (ctrlVeh->wheelDir == ACW(ctrlVeh->bodyDir)) wheelIndex = 1;
+			else if (ctrlVeh->wheelDir == CW(ctrlVeh->bodyDir)) wheelIndex = 2;
+			else if (ctrlVeh->wheelDir == CW2(ctrlVeh->bodyDir)) wheelIndex = 4;
+            else if (ctrlVeh->wheelDir == ACW2(ctrlVeh->bodyDir)) wheelIndex = 3;
+			else wheelIndex = 0;
+
+			drawSpriteCenter(spr::vehicleHUDSteeringWheel, wheelIndex, barButton[1].x + (barButton[1].w / 2), barButton[1].y + (barButton[1].h / 2) + 10*(click&& checkCursor(&barButton[1])));
 
 			drawSpriteCenter(spr::vehicleHUDParts, 15, barButton[0].x + barButton[0].w / 2, barButton[0].y + barButton[0].h / 2); //좌회전 마크
 			drawSpriteCenter(spr::vehicleHUDParts, 16, barButton[1].x + barButton[1].w / 2, barButton[1].y + barButton[1].h / 2); //1턴 대기

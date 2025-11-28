@@ -95,7 +95,7 @@ void HUD::clickUpGUI()
 				prt(L"%d번 스킬 슬롯을 눌렀다!\n", i + 1);
 				if (quickSlot[i].first != quickSlotFlag::NONE)
 				{
-					if (dragQuickSlotTarget == -1)
+					if (dragQuickSlotTarget == i)
 					{
 						CORO(useSkill(quickSlot[i].second));
 					}

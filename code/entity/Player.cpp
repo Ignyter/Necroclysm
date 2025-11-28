@@ -303,6 +303,7 @@ void Player::updateVision()
 
 void Player::updateNearbyChunk(int range)
 {
+    //std::wprintf(L"updateNearbyChunk 호출됨. 플레이어 좌표 : %d,%d,%d\n", getGridX(), getGridY(), getGridZ());
 	int chunkX, chunkY;
 	World::ins()->changeToChunkCoord(getGridX(), getGridY(), chunkX, chunkY);
 	for (int y = chunkY - range; y <= chunkY + range; y++)
@@ -340,10 +341,13 @@ void Player::updateNearbyChunk(int range)
 
 	World::ins()->deactivate();
 
-	for (int y = chunkY - 2; y <= chunkY + 2; y++)
+	//std::wprintf(L"▼청크 활성화▼\n");
+	for (int x = chunkX - 2; x <= chunkX + 2; x++)
 	{
-		for (int x = chunkX - 2; x <= chunkX + 2; x++)
+		for (int y = chunkY - 2; y <= chunkY + 2; y++)
 		{
+            //std::wprintf(L"(%d,%d) ", x, y);
+			//if (y == chunkY + 2) std::wprintf(L"\n");
 			World::ins()->activate(x, y, PlayerPtr->getGridZ());
 		}
 	}

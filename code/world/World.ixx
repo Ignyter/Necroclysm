@@ -90,6 +90,18 @@ public:
 			: ((y - (CHUNK_SIZE_Y - 1)) / CHUNK_SIZE_Y);
 
 	}
+	Point2 changeToChunkCoord(int x, int y)
+	{
+		int chunkX = (x >= 0)
+			? (x / CHUNK_SIZE_X)
+			: ((x - (CHUNK_SIZE_X - 1)) / CHUNK_SIZE_X);
+
+		int chunkY = (y >= 0)
+			? (y / CHUNK_SIZE_Y)
+			: ((y - (CHUNK_SIZE_Y - 1)) / CHUNK_SIZE_Y);
+
+		return Point2{ chunkX,chunkY };
+	}
 	void activate(int x, int y, int z)
 	{
 		activeChunk.push_back(chunkPtr[{x, y, z}]);

@@ -142,13 +142,13 @@ void Vehicle::extendPart(int inputX, int inputY, int inputItemCode)
 
 void Vehicle::setGrid(int inputGridX, int inputGridY, int inputGridZ)
 {
-    Point2 prevChunkCoord = World::ins()->changeToSectorCoord(getGridX(), getGridY());
+    Point2 prevChunkCoord = World::ins()->changeToChunkCoord(getGridX(), getGridY());
     Chunk& prevChunk = World::ins()->getChunk(prevChunkCoord.x, prevChunkCoord.y, getGridZ());
     prevChunk.eraseVehicle(this);
 
     Coord::setGrid(inputGridX, inputGridY, inputGridZ);
 
-    Point2 currentChunkCoord = World::ins()->changeToSectorCoord(getGridX(), getGridY());
+    Point2 currentChunkCoord = World::ins()->changeToChunkCoord(getGridX(), getGridY());
     Chunk& currentChunk = World::ins()->getChunk(currentChunkCoord.x, currentChunkCoord.y, getGridZ());
     currentChunk.addVehicle(this);
 }
