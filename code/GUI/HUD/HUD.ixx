@@ -32,6 +32,7 @@ import debugConsole;
 import CoordSelect;
 import SkillData;
 import ContextMenu;
+import ItemData;
 import ItemPocket;
 import ItemStack;
 import Dialogue;
