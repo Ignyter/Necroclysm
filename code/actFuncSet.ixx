@@ -154,7 +154,7 @@ export namespace actFunc
 		ItemPocket* equipPtr = PlayerPtr->getEquipPtr();
 		std::vector<ItemPocket*> targetSearchPtr;
 
-		//탐사할 타일 추가 (장비, 주변타일 9칸)
+		//1. 탐사할 타일 추가 (장비, 주변타일 9칸)
 		{
 			targetSearchPtr.push_back(equipPtr);
 			//바닥타일(주변9타일)
@@ -171,16 +171,21 @@ export namespace actFunc
 			}
 		}
 
-		//장비 중인 아이템에서 pocketList 추가
+		//2. 주변 타일과 장비 포인터들을 보관 중인 targetSearchPtr에서 리로드 가능한 아이템의 이름들을 수집
 		for (int j = 0; j < targetSearchPtr.size(); j++)
 		{
-			for (int i = 0; i < targetSearchPtr[j]->itemInfo.size(); i++)
+			std::vector<ItemData>& targetItemInfo = targetSearchPtr[j]->itemInfo;
+			for (int i = 0; i < targetItemInfo.size(); i++)
 			{
-				if (targetSearchPtr[j]->itemInfo[i].pocketMaxNumber > 0 && countPocketItemNumber(targetSearchPtr[j]->itemInfo[i].pocketPtr.get()) < targetSearchPtr[j]->itemInfo[i].pocketMaxNumber)
+				if (targetItemInfo[i].pocketMaxNumber > 0 
+					&& targetItemInfo[i].pocketPtr->countPocketItemNumber() < targetItemInfo[i].pocketMaxNumber)
 				{
-					if (std::find(targetSearchPtr[j]->itemInfo[i].pocketOnlyItem.begin(), targetSearchPtr[j]->itemInfo[i].pocketOnlyItem.end(), reloadItemPocket->itemInfo[targetLootCursor].itemCode) != targetSearchPtr[j]->itemInfo[i].pocketOnlyItem.end())
+					if (std::find(
+						targetItemInfo[i].pocketOnlyItem.begin(), 
+						targetItemInfo[i].pocketOnlyItem.end(), 
+						reloadItemPocket->itemInfo[targetLootCursor].itemCode) != targetItemInfo[i].pocketOnlyItem.end())
 					{
-						pocketList.push_back(targetSearchPtr[j]->itemInfo[i].name);
+						pocketList.push_back(targetItemInfo[i].name);
 					}
 				}
 			}
@@ -206,15 +211,17 @@ export namespace actFunc
 			{
 				for (int i = 0; i < targetSearchPtr[j]->itemInfo.size(); i++)
 				{
-					if (targetSearchPtr[j]->itemInfo[i].pocketMaxNumber > 0 && countPocketItemNumber(targetSearchPtr[j]->itemInfo[i].pocketPtr.get()) < targetSearchPtr[j]->itemInfo[i].pocketMaxNumber)
+					std::vector<ItemData>& targetItemInfo = targetSearchPtr[j]->itemInfo;
+					if (targetItemInfo[i].pocketMaxNumber > 0 
+						&& targetItemInfo[i].pocketPtr->countPocketItemNumber() < targetItemInfo[i].pocketMaxNumber)
 					{
-						if (std::find(targetSearchPtr[j]->itemInfo[i].pocketOnlyItem.begin(), targetSearchPtr[j]->itemInfo[i].pocketOnlyItem.end(), reloadItemPocket->itemInfo[targetLootCursor].itemCode) != targetSearchPtr[j]->itemInfo[i].pocketOnlyItem.end())
+						if (std::find(targetItemInfo[i].pocketOnlyItem.begin(), targetItemInfo[i].pocketOnlyItem.end(), reloadItemPocket->itemInfo[targetLootCursor].itemCode) != targetItemInfo[i].pocketOnlyItem.end())
 						{
 							if (counter == wtoi(coAnswer.c_str()))
 							{
 								reloadItemPocket->transferItem
 								(
-									targetSearchPtr[j]->itemInfo[i].pocketPtr.get(),
+									targetItemInfo[i].pocketPtr.get(),
 									targetLootCursor,
 									1
 								);

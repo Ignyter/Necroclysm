@@ -4,6 +4,7 @@
 
 export module HUD;
 
+import ItemData;
 import std;
 import util;
 import GUI;

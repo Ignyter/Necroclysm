@@ -84,7 +84,10 @@ public:
 	int getPocketWeight();
 	int getPocketNumber();
 
+	int countPocketItemNumber();
 
+	//상단 총알의 데이터를 삭제
+	void popTopBullet();
 };
 
 inline std::unique_ptr<ItemPocket> ItemPocket::availableRecipe = std::make_unique<ItemPocket>(storageType::recipe);
@@ -92,12 +95,6 @@ inline std::unique_ptr<ItemPocket> ItemPocket::availableRecipe = std::make_uniqu
 //현재 이 총에 장전된 모든 총알을 벡터 형태로 반환
 export ItemPocket* getBulletPocket(ItemData& inputGun);
 
-//상단 총알의 데이터를 삭제
-export void popTopBullet(ItemPocket* inputPocket);
-
 //이 총에 장전된 모든 총알의 갯수 반환, 탄창일 때도 할것
 export int getBulletNumber(ItemData& inputGun);
-
-//입력한 포켓의 내부 아이템 수를 반환
-export int countPocketItemNumber(ItemPocket* inputPtr);
 

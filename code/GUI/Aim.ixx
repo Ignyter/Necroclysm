@@ -590,12 +590,13 @@ public:
 				//직탄식 총
 				if (itemDex[tmpAimWeapon.pocketOnlyItem[0]].checkFlag(itemFlag::AMMO))
 				{
-					popTopBullet(tmpAimWeapon.pocketPtr.get());
+					tmpAimWeapon.pocketPtr->popTopBullet();
 				}
 				//탄창식 총
 				else if (itemDex[tmpAimWeapon.pocketOnlyItem[0]].checkFlag(itemFlag::MAGAZINE))
 				{
-					popTopBullet(tmpAimWeapon.pocketPtr.get()->itemInfo[0].pocketPtr.get());
+					ItemData& magazineData = tmpAimWeapon.pocketPtr.get()->itemInfo[0];
+					magazineData.pocketPtr->popTopBullet();
 				}
 
 				auto pEquip = PlayerPtr->getEquipPtr();

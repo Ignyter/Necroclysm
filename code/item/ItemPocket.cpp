@@ -409,6 +409,24 @@ int ItemPocket::getPocketNumber()
 	return totalNumber;
 }
 
+//입력한 포켓의 내부 아이템 수를 반환
+int ItemPocket::countPocketItemNumber()
+{
+	int number = 0;
+	for (int i = 0; i < itemInfo.size(); i++)
+	{
+		number += itemInfo[i].number;
+	}
+	return number;
+};
+
+//상단 총알의 데이터를 삭제
+void ItemPocket::popTopBullet()
+{
+	errorBox(itemInfo.size() == 0, L"function popTopBullet has executed with no bullet in ItemPocket.ixx");
+	if (itemInfo[0].number == 1) { itemInfo.erase(itemInfo.begin()); }
+	else { itemInfo[0].number--; }
+};
 
 
 //@brief 현재 이 총에 장전된 모든 총알을 벡터 형태로 반환
@@ -437,15 +455,6 @@ ItemPocket* getBulletPocket(ItemData& inputGun)
 }
 
 
-//상단 총알의 데이터를 삭제
-void popTopBullet(ItemPocket* inputPocket)
-{
-	errorBox(inputPocket->itemInfo.size() == 0, L"function popTopBullet has executed with no bullet in ItemPocket.ixx");
-	if (inputPocket->itemInfo[0].number == 1) { inputPocket->itemInfo.erase(inputPocket->itemInfo.begin()); }
-	else { inputPocket->itemInfo[0].number--; }
-};
-
-
 //이 총에 장전된 모든 총알의 갯수 반환, 탄창일 때도 할것
 int getBulletNumber(ItemData& inputGun)
 {
@@ -460,17 +469,6 @@ int getBulletNumber(ItemData& inputGun)
 		return bulletNumber;
 	}
 	else { return 0; }
-};
-
-//입력한 포켓의 내부 아이템 수를 반환
-int countPocketItemNumber(ItemPocket* inputPtr)
-{
-	int number = 0;
-	for (int i = 0; i < inputPtr->itemInfo.size(); i++)
-	{
-		number += inputPtr->itemInfo[i].number;
-	}
-	return number;
 };
 
 
