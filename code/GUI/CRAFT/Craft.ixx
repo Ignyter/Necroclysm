@@ -74,6 +74,12 @@ private:
 	inline static int ongoingTargetCodeStructure = -1; //제작 중인 건축물
 	inline static int ongoingElapsedTimeStructure = -1; //제작 경과 시간 건축물
 
+	// 창 상태 저장 변수들
+	inline static int savedCraftCursor = -1;
+	inline static int savedCraftScroll = 0;
+	inline static int savedSelectCategory = -1;
+	inline static int savedSelectSubcategory = -1;
+	inline static std::wstring savedSearchInfo = L"";
 
 public:
 	Craft() : GUI(false)
@@ -100,6 +106,13 @@ public:
 		}
 		numNoneBlackFilter = recipePtr->itemInfo.size();
 
+		// 저장된 창 상태 복원
+		craftCursor = savedCraftCursor;
+		craftScroll = savedCraftScroll;
+		selectCategory = savedSelectCategory;
+		selectSubcategory = savedSelectSubcategory;
+		searchInfo = savedSearchInfo;
+
 		if (existCraftData() || existCraftDataStructure())
 		{
 			CORO(executeCraft());
@@ -108,6 +121,13 @@ public:
 	~Craft()
 	{
 		prt(L"Craft : 소멸자가 호출되었습니다..\n");
+
+		// 현재 창 상태 저장
+		savedCraftCursor = craftCursor;
+		savedCraftScroll = craftScroll;
+		savedSelectCategory = selectCategory;
+		savedSelectSubcategory = selectSubcategory;
+		savedSearchInfo = searchInfo;
 
 		PlayerPtr->setFakeX(0);
 		PlayerPtr->setFakeY(0);
