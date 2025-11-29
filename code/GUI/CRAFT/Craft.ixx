@@ -74,12 +74,6 @@ private:
 	inline static int ongoingTargetCodeStructure = -1; //제작 중인 건축물
 	inline static int ongoingElapsedTimeStructure = -1; //제작 경과 시간 건축물
 
-	// 창 상태 저장 변수들
-	inline static int savedCraftCursor = -1;
-	inline static int savedCraftScroll = 0;
-	inline static int savedSelectCategory = -1;
-	inline static int savedSelectSubcategory = -1;
-	inline static std::wstring savedSearchInfo = L"";
 
 public:
 	Craft() : GUI(false)
@@ -106,116 +100,6 @@ public:
 		}
 		numNoneBlackFilter = recipePtr->itemInfo.size();
 
-		// 저장된 창 상태 복원
-		craftCursor = savedCraftCursor;
-		craftScroll = savedCraftScroll;
-		selectCategory = savedSelectCategory;
-		selectSubcategory = savedSelectSubcategory;
-		searchInfo = savedSearchInfo;
-
-		// 필터 재적용
-		if (exInputText.empty() == false)
-		{
-			// 검색어가 있으면 검색 필터 재적용
-			int matchCount = recipePtr->searchTxt(exInputText);
-			filterUpdate(matchCount);
-		}
-		else if (selectCategory >= 0)
-		{
-			// 카테고리가 선택되어 있으면 카테고리 필터 재적용
-			itemCategory targetCategory;
-			switch (selectCategory)
-			{
-			case 0: targetCategory = itemCategory::equipment; break;
-			case 1: targetCategory = itemCategory::foods; break;
-			case 2: targetCategory = itemCategory::tools; break;
-			case 3: targetCategory = itemCategory::tech; break;
-			case 4: targetCategory = itemCategory::consumables; break;
-			case 5: targetCategory = itemCategory::vehicles; break;
-			case 6: targetCategory = itemCategory::structures; break;
-			case 7: targetCategory = itemCategory::materials; break;
-			}
-
-			if (selectSubcategory == 0)
-			{
-				// 카테고리 전체
-				int matchCount = recipePtr->searchCategory(targetCategory);
-				filterUpdate(matchCount);
-			}
-			else
-			{
-				// 서브카테고리 선택
-				itemSubcategory targetSubcategory;
-				switch (selectCategory)
-				{
-				case 0: // 장비
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::equipment_melee;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::equipment_ranged;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::equipment_firearms;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::equipment_throwing;
-					else if (selectSubcategory == 5) targetSubcategory = itemSubcategory::equipment_clothing;
-					break;
-				case 1: // 음식
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::foods_cooked;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::foods_processed;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::foods_preserved;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::foods_drinks;
-					else if (selectSubcategory == 5) targetSubcategory = itemSubcategory::foods_ingredients;
-					break;
-				case 2: // 도구
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::tools_hand;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::tools_power;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::tools_containers;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::tools_etc;
-					break;
-				case 3: // 기술
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::tech_bionics;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::tech_powerArmor;
-					break;
-				case 4: // 소모품
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::consumable_medicine;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::consumable_ammo;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::consumable_fuel;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::consumable_etc;
-					break;
-				case 5: // 차량
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::vehicle_frames;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::vehicle_power;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::vehicle_exteriors;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::vehicle_parts;
-					break;
-				case 6: // 건축물
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::structure_walls;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::structure_floors;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::structure_ceilings;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::structure_props;
-					break;
-				case 7: // 재료
-					if (selectSubcategory == 1) targetSubcategory = itemSubcategory::material_metals;
-					else if (selectSubcategory == 2) targetSubcategory = itemSubcategory::material_organic;
-					else if (selectSubcategory == 3) targetSubcategory = itemSubcategory::material_components;
-					else if (selectSubcategory == 4) targetSubcategory = itemSubcategory::material_chemicals;
-					else if (selectSubcategory == 5) targetSubcategory = itemSubcategory::material_etc;
-					break;
-				}
-				int matchCount = recipePtr->searchSubcategory(targetSubcategory);
-				filterUpdate(matchCount);
-			}
-		}
-		else if (selectCategory == -2)
-		{
-			// 북마크가 선택되어 있으면 북마크 필터 재적용
-			itemFlag targetFlag;
-			if (selectSubcategory == 0) targetFlag = itemFlag::BOOKMARK1;
-			else if (selectSubcategory == 1) targetFlag = itemFlag::BOOKMARK2;
-			else if (selectSubcategory == 2) targetFlag = itemFlag::BOOKMARK3;
-			else if (selectSubcategory == 3) targetFlag = itemFlag::BOOKMARK4;
-			else if (selectSubcategory == 4) targetFlag = itemFlag::BOOKMARK5;
-			else if (selectSubcategory == 5) targetFlag = itemFlag::BOOKMARK6;
-			int matchCount = recipePtr->searchFlag(targetFlag);
-			filterUpdate(matchCount);
-		}
-
 		if (existCraftData() || existCraftDataStructure())
 		{
 			CORO(executeCraft());
@@ -224,13 +108,6 @@ public:
 	~Craft()
 	{
 		prt(L"Craft : 소멸자가 호출되었습니다..\n");
-
-		// 현재 창 상태 저장
-		savedCraftCursor = craftCursor;
-		savedCraftScroll = craftScroll;
-		savedSelectCategory = selectCategory;
-		savedSelectSubcategory = selectSubcategory;
-		savedSearchInfo = searchInfo;
 
 		PlayerPtr->setFakeX(0);
 		PlayerPtr->setFakeY(0);
