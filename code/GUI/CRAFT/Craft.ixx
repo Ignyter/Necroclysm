@@ -112,9 +112,10 @@ public:
 		selectCategory = savedSelectCategory;
 		selectSubcategory = savedSelectSubcategory;
 		searchInfo = savedSearchInfo;
+		exInputText = savedSearchInfo; // 검색어 복원
 
 		// 필터 재적용
-		if (exInputText.empty() == false)
+		if (savedSearchInfo.empty() == false)
 		{
 			// 검색어가 있으면 검색 필터 재적용
 			int matchCount = recipePtr->searchTxt(exInputText);
@@ -230,7 +231,7 @@ public:
 		savedCraftScroll = craftScroll;
 		savedSelectCategory = selectCategory;
 		savedSelectSubcategory = selectSubcategory;
-		savedSearchInfo = searchInfo;
+		savedSearchInfo = exInputText; // 검색어 저장 (전역 변수에서)
 
 		PlayerPtr->setFakeX(0);
 		PlayerPtr->setFakeY(0);
