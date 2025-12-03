@@ -331,6 +331,8 @@ void Prop::runPropFunc()
 {
     if (runUsed) return;
 
+    if (leadItem.electricUsePower > 0) finalLoadSet.insert(this);
+
     if (leadItem.checkFlag(itemFlag::CIRCUIT))
     {
         updateCircuitNetwork();

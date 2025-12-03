@@ -1312,6 +1312,16 @@ export namespace itemRefCode
 
     constexpr int leverRL = 149;
     constexpr int leverUD = 150;
+
+    constexpr int transistorR = 155;
+    constexpr int transistorU = 156;
+    constexpr int transistorL = 157;
+    constexpr int transistorD = 158;
+
+    constexpr int relayR = 165;
+    constexpr int relayU = 166;
+    constexpr int relayL = 167;
+    constexpr int relayD = 168;
 };
 
 export namespace entityRefCode

@@ -203,9 +203,54 @@ void Prop::drawSelf()
             if (nodeInputElectron > 0 || nodeOutputElectron > 0) sprIndex += 4;
             else sprIndex += 3;
         }
-
     }
+    else if (leadItem.itemCode == itemRefCode::transistorR || leadItem.itemCode == itemRefCode::transistorU || leadItem.itemCode == itemRefCode::transistorL || leadItem.itemCode == itemRefCode::transistorD)
+    {
+        if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+        {
+            sprIndex += 1;
+        }
+        else if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+        {
+            if (leadItem.itemCode == itemRefCode::transistorU || leadItem.itemCode == itemRefCode::transistorD)
+            {
+                Prop* leftProp = TileProp(getGridX() - 1, getGridY(), getGridZ());
+                Prop* rightProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
 
+                if (leftProp != nullptr && (leftProp->nodeInputElectron > 0 || leftProp->nodeOutputElectron > 0)) sprIndex += 2;
+                else if (rightProp != nullptr && (rightProp->nodeInputElectron > 0 || rightProp->nodeOutputElectron > 0)) sprIndex += 2;
+            }
+            else if (leadItem.itemCode == itemRefCode::transistorR || leadItem.itemCode == itemRefCode::transistorL)
+            {
+                Prop* upProp = TileProp(getGridX(), getGridY() - 1, getGridZ());
+                Prop* downProp = TileProp(getGridX(), getGridY() + 1, getGridZ());
+                if (upProp != nullptr && (upProp->nodeInputElectron > 0 || upProp->nodeOutputElectron > 0)) sprIndex += 2;
+                else if (downProp != nullptr && (downProp->nodeInputElectron > 0 || downProp->nodeOutputElectron > 0)) sprIndex += 2;
+            }
+        }
+    }
+    else if (leadItem.itemCode== itemRefCode::relayR || leadItem.itemCode == itemRefCode::relayU || leadItem.itemCode == itemRefCode::relayL || leadItem.itemCode == itemRefCode::relayD)
+    {
+        if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+        {
+            if(leadItem.itemCode == itemRefCode::relayU || leadItem.itemCode == itemRefCode::relayD)
+            {
+                Prop* leftProp = TileProp(getGridX() - 1, getGridY(), getGridZ());
+                Prop* rightProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
+                if (leftProp != nullptr && (leftProp->nodeInputElectron > 0 || leftProp->nodeOutputElectron > 0)) sprIndex += 2;
+                else if (rightProp != nullptr && (rightProp->nodeInputElectron > 0 || rightProp->nodeOutputElectron > 0)) sprIndex += 2;
+                else sprIndex += 1;
+            }
+            else if (leadItem.itemCode == itemRefCode::relayR || leadItem.itemCode == itemRefCode::relayL)
+            {
+                Prop* upProp = TileProp(getGridX(), getGridY() - 1, getGridZ());
+                Prop* downProp = TileProp(getGridX(), getGridY() + 1, getGridZ());
+                if (upProp != nullptr && (upProp->nodeInputElectron > 0 || upProp->nodeOutputElectron > 0)) sprIndex += 2;
+                else if (downProp != nullptr && (downProp->nodeInputElectron > 0 || downProp->nodeOutputElectron > 0)) sprIndex += 2;
+                else sprIndex += 1;
+            }
+        }
+    }
 
 
     drawSpriteCenter

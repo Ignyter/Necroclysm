@@ -11,6 +11,9 @@ constexpr double SYSTEM_VOLTAGE = 24.0;
 constexpr double TIME_PER_TURN = 60.0;
 constexpr double EPSILON = 0.000001;
 
+
+
+
 void Prop::updateCircuitNetwork()
 {
     int cursorX = getGridX();
@@ -22,6 +25,8 @@ void Prop::updateCircuitNetwork()
     std::vector<Point3> visitedVec;//디버그용 나중에 지울 것
     std::vector<Prop*> voltagePropVec;
     std::vector<Prop*> loadVec; //부하가 가해지는 전자기기들
+
+    std::unordered_set<Point3, Point3::Hash> skipBFSSet;
 
     int circuitMaxEnergy = 0;
     int circuitTotalLoad = 0;
@@ -75,25 +80,44 @@ void Prop::updateCircuitNetwork()
                 { itemFlag::VOLTAGE_GND_ALL, itemFlag::VOLTAGE_GND_ALL }
             };
 
-            for (int i = 0; i < 6; ++i)
+
+            if (skipBFSSet.find(current) == skipBFSSet.end())
             {
-                if (isConnected(current, directions[i]))
+                for (int i = 0; i < 6; ++i)
                 {
-                    int dx, dy, dz;
-                    dirToXYZ(directions[i], dx, dy, dz);
-                    Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
-                    Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
-
-                    frontierQueue.push(nextCoord);
-
-                    if (nextProp &&
-                        (nextProp->leadItem.checkFlag(groundFlags[i][0]) ||
-                            nextProp->leadItem.checkFlag(groundFlags[i][1])))
+                    if (isConnected(current, directions[i]))
                     {
-                        hasGround = true;
+                        int dx, dy, dz;
+                        dirToXYZ(directions[i], dx, dy, dz);
+                        Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
+                        Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
+
+                        if (nextProp != nullptr)
+                        {
+                            if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorU && directions[i] == dir16::down) skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorR && directions[i] == dir16::left) skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorD && directions[i] == dir16::up) skipBFSSet.insert(nextCoord);
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::relayL && directions[i] == dir16::right) skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayU && directions[i] == dir16::down) skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayR && directions[i] == dir16::left) skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayD && directions[i] == dir16::up) skipBFSSet.insert(nextCoord);
+                        }
+
+                        frontierQueue.push(nextCoord);
+
+                        if (nextProp &&
+                            (nextProp->leadItem.checkFlag(groundFlags[i][0]) ||
+                                nextProp->leadItem.checkFlag(groundFlags[i][1])))
+                        {
+                            hasGround = true;
+                        }
                     }
                 }
             }
+            else skipBFSSet.erase(current);
+                
         }
     }
 
@@ -180,27 +204,6 @@ void Prop::updateCircuitNetwork()
             totalPushedElectron += voltProp->prevPushedElectron;
             voltProp->nodeElectron = voltProp->nodeMaxElectron;
         }
-    }
-
-
-    //==============================================================================
-    // 4. 부하 부품들 전력 소모
-    //==============================================================================
-    for (int i = 0; i < loadVec.size(); i++)
-    {
-        Prop* loadProp = loadVec[i];
-        if (loadProp->groundChargeEnergy >= static_cast<double>(loadProp->leadItem.electricUsePower))
-        {
-            if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
-                loadProp->propTurnOn();
-        }
-        else
-        {
-            if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
-                loadProp->propTurnOff();
-        }
-
-        loadProp->groundChargeEnergy = 0;
     }
 
 
@@ -295,6 +298,37 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     {
         if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
     }
+
+
+
+    if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::transistorU || targetProp->leadItem.itemCode == itemRefCode::transistorD))
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON)) return false;
+    }
+    else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::transistorR || targetProp->leadItem.itemCode == itemRefCode::transistorL))
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON)) return false;
+    }
+
+    if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::relayU || targetProp->leadItem.itemCode == itemRefCode::relayD))
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::relayR || targetProp->leadItem.itemCode == itemRefCode::relayL))
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+
+    //메인라인에서 베이스로 나가는 방향 절연
+    if (currentProp->leadItem.itemCode == itemRefCode::transistorL && dir == dir16::left) return false;
+    else if(currentProp->leadItem.itemCode == itemRefCode::transistorU && dir == dir16::up) return false;
+    else if(currentProp->leadItem.itemCode == itemRefCode::transistorR && dir == dir16::right) return false;
+    else if (currentProp->leadItem.itemCode == itemRefCode::transistorD && dir == dir16::down) return false;
+
+    if (currentProp->leadItem.itemCode == itemRefCode::relayL && dir == dir16::left) return false;
+    else if (currentProp->leadItem.itemCode == itemRefCode::relayU && dir == dir16::up) return false;
+    else if (currentProp->leadItem.itemCode == itemRefCode::relayR && dir == dir16::right) return false;
+    else if (currentProp->leadItem.itemCode == itemRefCode::relayD && dir == dir16::down) return false;
 
     if (dir == dir16::ascend || dir == dir16::descend)
     {
@@ -578,3 +612,4 @@ void Prop::transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectr
         }
     }
 }
+

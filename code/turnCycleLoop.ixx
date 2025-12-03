@@ -641,12 +641,35 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
+	finalLoadSet.clear();
+
 	for (auto pPtr : (World::ins())->getActivePropSet()) pPtr->runUsed = false;
 
 	for (auto pPtr : (World::ins())->getActivePropSet())
 	{
 		pPtr->runPropFunc();
 	}
+
+	//==============================================================================
+	// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
+	//==============================================================================
+	for (auto pPtr : finalLoadSet)
+	{
+		Prop* loadProp = pPtr;
+		if (loadProp->groundChargeEnergy >= static_cast<double>(loadProp->leadItem.electricUsePower))
+		{
+			if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+				loadProp->propTurnOn();
+		}
+		else
+		{
+			if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+				loadProp->propTurnOff();
+		}
+
+		loadProp->groundChargeEnergy = 0;
+	}
+
 
     //updateLog(L"Prop turn started.");
 	return 0;
