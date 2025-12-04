@@ -329,9 +329,8 @@ bool Prop::runAnimation(bool shutdown)
 
 void Prop::runPropFunc()
 {
-    if (runUsed) return;
-
     if (leadItem.electricUsePower > 0) finalLoadSet.insert(this);
+    if (runUsed) return;
 
     if (leadItem.checkFlag(itemFlag::CIRCUIT))
     {

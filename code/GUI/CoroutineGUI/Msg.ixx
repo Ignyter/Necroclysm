@@ -129,7 +129,10 @@ public:
 			{ {msgBase.x + 61 ,msgBase.y + msgBase.h - 80, 134 , 68}, {msgBase.x + 255 ,msgBase.y + msgBase.h - 80, 134 , 68} },
 			{ {msgBase.x + 13,msgBase.y + msgBase.h - 54, 134 , 68}, {msgBase.x + 158,msgBase.y + msgBase.h - 54, 134 , 68}, {msgBase.x + 303,msgBase.y + msgBase.h - 54, 134 , 68} }
 		};
-		msgInputBox = { msgBase.x + 50,msgBase.y + 36 + 60, 200, 40 };
+		msgInputBox = { msgBase.x + msgBase.w/2,msgBase.y + msgBase.h/2, 300, 60 };
+        msgInputBox.x -= msgInputBox.w / 2;
+        msgInputBox.y -= msgInputBox.h / 2;
+		msgInputBox.y += 20;
 
 
 		if (center == false)
@@ -211,7 +214,11 @@ public:
 			}
 		loopEnd:
 
-			if (exInput == true) drawTextWidth(msgText, msgBase.x + msgBase.w / 2, msgBase.y + 36 + 60 - 40 + 14, true, 280, -1);
+			if (exInput == true)
+			{
+				setFontSize(24);
+				drawTextWidth(msgText, msgBase.x + msgBase.w / 2, msgBase.y + 128, true, 280, -1);
+			}
 			else if (msgItemCode != -1)
 			{
 				setFontSize(16);
@@ -276,9 +283,9 @@ public:
 				fMsgInputBox.x = msgInputBox.x + 30 * lootItemExist;
 				drawRect(fMsgInputBox, col::white);
 
-				const unsigned __int16 maxTextWidth = 170;
-				SDL_Point inputTextPoint = { fMsgInputBox.x + 10, msgInputBox.y + 9 };
-				setFontSize(16);
+				const unsigned __int16 maxTextWidth = 280;
+				SDL_Point inputTextPoint = { fMsgInputBox.x + 10, msgInputBox.y + 12 };
+				setFontSize(26);
 
 				std::wstring exInputTextCut = exInputText;
 				while (queryTextWidth(exInputTextCut, false) > maxTextWidth)

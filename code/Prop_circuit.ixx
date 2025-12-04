@@ -303,11 +303,11 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
 
     if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::transistorU || targetProp->leadItem.itemCode == itemRefCode::transistorD))
     {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON)) return false;
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
     }
     else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::transistorR || targetProp->leadItem.itemCode == itemRefCode::transistorL))
     {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON)) return false;
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
     }
 
     if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::relayU || targetProp->leadItem.itemCode == itemRefCode::relayD))
