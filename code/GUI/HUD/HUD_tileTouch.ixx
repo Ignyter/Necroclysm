@@ -18,7 +18,6 @@ void HUD::tileTouch(int touchX, int touchY) //일반 타일 터치
 		//화면에 있는 아이템 터치
 		if (touchX == PlayerX() && touchY == PlayerY()) //자신 위치 터치
 		{
-
 			if (TileItemStack(touchX, touchY, PlayerZ()) != nullptr)
 			{
 				prt(L"루팅창 오픈 함수 실행\n");
@@ -236,6 +235,19 @@ void HUD::tileTouch(int touchX, int touchY) //일반 타일 터치
 				{
 					PlayerPtr->setDirection(coord2Dir(touchX - PlayerX(), touchY - PlayerY()));
 					addAniUSetPlayer(PlayerPtr, aniFlag::felling);
+				}
+				else if (tgtProp->leadItem.itemCode == itemRefCode::leverRL || tgtProp->leadItem.itemCode == itemRefCode::leverUD)
+				{
+					PlayerPtr->setDirection(coord2Dir(touchX - PlayerX(), touchY - PlayerY()));
+					addAniUSetPlayer(PlayerPtr, aniFlag::propTurnOnOff);
+                }
+				else if (tgtProp->leadItem.itemCode == itemRefCode::tactSwitchRL || tgtProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
+				{
+					if (tgtProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						PlayerPtr->setDirection(coord2Dir(touchX - PlayerX(), touchY - PlayerY()));
+						addAniUSetPlayer(PlayerPtr, aniFlag::propTurnOnOff);
+					}
 				}
 			}
 			else if (TileEntity(touchX, touchY, PlayerZ()) != nullptr && TileEntity(touchX, touchY, PlayerZ())->entityInfo.relation == relationFlag::friendly)

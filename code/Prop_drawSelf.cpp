@@ -176,32 +176,28 @@ void Prop::drawSelf()
     }
 
 
-    if (leadItem.itemCode == itemRefCode::leverRL)
+    if (leadItem.itemCode == itemRefCode::leverRL || leadItem.itemCode == itemRefCode::leverUD)
     {
-        bool rConnected = isConnected(this, dir16::right);
-        bool uConnected = isConnected(this, dir16::up);
-        bool lConnected = isConnected(this, dir16::left);
-        bool dConnected = isConnected(this, dir16::down);
-
-
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
         {
-            if (nodeInputElectron > 0 || nodeOutputElectron > 0) sprIndex += 4;
-            else sprIndex += 3;
+            if (nodeInputElectron > 0 || nodeOutputElectron > 0) sprIndex += 2;
+            else sprIndex += 1;
         }
-
     }
-    else if (leadItem.itemCode == itemRefCode::leverUD)
+    else if (leadItem.itemCode == itemRefCode::tactSwitchRL || leadItem.itemCode == itemRefCode::tactSwitchUD)
     {
-        bool rConnected = isConnected(this, dir16::right);
-        bool uConnected = isConnected(this, dir16::up);
-        bool lConnected = isConnected(this, dir16::left);
-        bool dConnected = isConnected(this, dir16::down);
-
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
         {
-            if (nodeInputElectron > 0 || nodeOutputElectron > 0) sprIndex += 4;
-            else sprIndex += 3;
+            if (nodeInputElectron > 0 || nodeOutputElectron > 0) sprIndex += 2;
+            else sprIndex += 1;
+        }
+    }
+    else if (leadItem.itemCode == itemRefCode::pressureSwitchRL || leadItem.itemCode == itemRefCode::pressureSwitchUD)
+    {
+        if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+        {
+            if (nodeInputElectron > 0 || nodeOutputElectron > 0) sprIndex += 2;
+            else sprIndex += 1;
         }
     }
     else if (leadItem.itemCode == itemRefCode::transistorR || leadItem.itemCode == itemRefCode::transistorU || leadItem.itemCode == itemRefCode::transistorL || leadItem.itemCode == itemRefCode::transistorD)
@@ -325,12 +321,17 @@ void Prop::drawSelf()
         Prop* lProp = TileProp(getGridX() - 1, getGridY(), getGridZ());
         Prop* dProp = TileProp(getGridX(), getGridY() + 1, getGridZ());
 
+        if (getGridX() == 11 && getGridY() == -15)
+        {
+            int a = 3;
+        }
+
         bool rConnected = rProp != nullptr && (rProp->leadItem.checkFlag(itemFlag::CABLE) || rProp->leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT));
         bool uConnected = uProp != nullptr && (uProp->leadItem.checkFlag(itemFlag::CABLE) || uProp->leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN));
         bool lConnected = lProp != nullptr && (lProp->leadItem.checkFlag(itemFlag::CABLE) || lProp->leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT));
         bool dConnected = dProp != nullptr && (dProp->leadItem.checkFlag(itemFlag::CABLE) || dProp->leadItem.checkFlag(itemFlag::CABLE_CNCT_UP));
 
-        if (nodeInputElectron > 0)
+        if (nodeInputElectron > 0 || nodeOutputElectron > 0)
         {
             if (rConnected && lConnected && !uConnected && !dConnected) //¦¡
             {

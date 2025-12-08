@@ -68,6 +68,54 @@ void Prop::updateCircuitNetwork()
 
             if (currentProp->leadItem.electricUsePower > 0) loadVec.push_back(currentProp);
 
+            //택트스위치일 경우 다음 턴 시작 시에 종료
+            if (currentProp->leadItem.itemCode == itemRefCode::tactSwitchRL || currentProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
+            {
+                if (currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+                {
+                    if (currentProp->leadItem.checkFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF) == false)
+                    {
+                        currentProp->leadItem.addFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF);
+                    }
+                    else
+                    {
+                        currentProp->leadItem.eraseFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF);
+                        currentProp->leadItem.eraseFlag(itemFlag::PROP_POWER_ON);
+                        currentProp->leadItem.addFlag(itemFlag::PROP_POWER_OFF);
+                    }
+                }
+            }
+            else if(currentProp->leadItem.itemCode == itemRefCode::pressureSwitchRL || currentProp->leadItem.itemCode == itemRefCode::pressureSwitchUD)
+            {
+                int totalWeight = 0;
+                
+                //아이템 무게
+                ItemStack* tgtItemStack = TileItemStack(current.x, current.y, current.z);
+                if (tgtItemStack != nullptr)
+                {
+                    auto& tileItemInfo = tgtItemStack->getPocket()->itemInfo;
+                    for (int i = 0; i < tileItemInfo.size(); i++)
+                    {
+                        totalWeight += tileItemInfo[i].weight * tileItemInfo[i].number;
+                    }
+                }
+
+                //엔티티 무게
+                Entity* ePtr = TileEntity(current.x, current.y, current.z);
+                if(ePtr != nullptr) totalWeight += ePtr->entityInfo.weight;
+                
+                
+                if (totalWeight >= 10.0 && currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+                {
+                    currentProp->leadItem.eraseFlag(itemFlag::PROP_POWER_OFF);
+                    currentProp->leadItem.addFlag(itemFlag::PROP_POWER_ON);
+                }
+                else if (totalWeight < 10.0 && currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+                {
+                    currentProp->leadItem.eraseFlag(itemFlag::PROP_POWER_ON);
+                    currentProp->leadItem.addFlag(itemFlag::PROP_POWER_OFF);
+                }
+            }
 
 
             const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::ascend, dir16::descend };
@@ -298,8 +346,22 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     {
         if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
     }
-
-
+    else if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::tactSwitchRL)
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::pressureSwitchRL)
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::pressureSwitchUD)
+    {
+        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
 
     if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::transistorU || targetProp->leadItem.itemCode == itemRefCode::transistorD))
     {

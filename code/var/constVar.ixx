@@ -555,6 +555,7 @@ export enum class itemFlag
 
     PROP_POWER_OFF,//가솔린 발전기나 무선 장치 등등
     PROP_POWER_ON,
+    PROP_NEXT_TURN_POWER_OFF, //택트스위치 다음 턴 종료 플래그
 
     CIRCUIT, //전자회로 관련 부품
 
@@ -712,6 +713,8 @@ export enum class aniFlag
 
     faint,
     dropInventory,
+
+    propTurnOnOff, //프롭 켜기/끄기
 };
 
 export enum class input
@@ -1312,6 +1315,12 @@ export namespace itemRefCode
 
     constexpr int leverRL = 149;
     constexpr int leverUD = 150;
+
+    constexpr int tactSwitchRL = 151;
+    constexpr int tactSwitchUD = 152;
+
+    constexpr int pressureSwitchRL = 163;
+    constexpr int pressureSwitchUD = 164;
 
     constexpr int transistorR = 155;
     constexpr int transistorU = 156;

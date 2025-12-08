@@ -43,6 +43,7 @@ Uint8 batchAlphas[MAX_BATCH];
 void analyseRender();
 void drawTiles();
 void drawCorpses();
+void drawFloorProp();
 void drawItems();
 void drawEntities();
 void drawDamages();
@@ -117,6 +118,7 @@ export __int64 renderTile()
     dur::analysis = PROFILE([] { analyseRender(); });
     dur::tile = PROFILE([] { drawTiles(); });
     dur::corpse = PROFILE([] { drawCorpses(); });
+    dur::floorProp = PROFILE([] { drawFloorProp(); });
     dur::item = PROFILE([] { drawItems(); });
     dur::entity = PROFILE([] { drawEntities(); });
     dur::damage = PROFILE([] { drawDamages(); });
@@ -194,12 +196,12 @@ void analyseRender()
 
             }
 
-            // 아이템
-            if (thisTile->fov == fovFlag::white && TileItemStack(tgtX, tgtY, pZ) != nullptr) itemList.push_back({ tgtX, tgtY });
-
             // 바닥프롭
             Prop* fpPtr = thisTile->PropPtr.get();
             if (fpPtr != nullptr && fpPtr->leadItem.checkFlag(itemFlag::PROP_DEPTH_LOWER)) floorPropList.push_back({ tgtX, tgtY });
+
+            // 아이템
+            if (thisTile->fov == fovFlag::white && TileItemStack(tgtX, tgtY, pZ) != nullptr) itemList.push_back({ tgtX, tgtY });
 
             // 화염
             Flame* flamePtr = thisTile->flamePtr.get();
@@ -804,6 +806,19 @@ void drawCorpses()
     }
 }
 
+void drawFloorProp()
+{
+    // 바닥 설치물 그리기
+    for (const auto& elem : floorPropList)
+    {
+        int tgtX = elem.x;
+        int tgtY = elem.y;
+        Prop* iPtr = TileProp(tgtX, tgtY, PlayerZ());
+        iPtr->drawSelf();
+    }
+}
+
+
 void drawItems()
 {
     for (const auto& elem : itemList)
@@ -827,15 +842,6 @@ void drawItems()
 
 void drawEntities()
 {
-    // 바닥 설치물 그리기
-    for (const auto& elem : floorPropList)
-    {
-        int tgtX = elem.x;
-        int tgtY = elem.y;
-        Prop* iPtr = TileProp(tgtX, tgtY, PlayerZ());
-        iPtr->drawSelf();
-    }
-
     // 화염 그리기
     for (const auto& elem : flameList)
     {

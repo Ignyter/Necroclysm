@@ -645,6 +645,8 @@ __int64 propTurn()
 
 	for (auto pPtr : (World::ins())->getActivePropSet()) pPtr->runUsed = false;
 
+
+
 	for (auto pPtr : (World::ins())->getActivePropSet())
 	{
 		pPtr->runPropFunc();
@@ -670,6 +672,17 @@ __int64 propTurn()
 		loadProp->groundChargeEnergy = 0;
 	}
 
+	////다음 턴에 종료할 택트스위치
+	//for (auto pPtr : (World::ins())->getActivePropSet())
+	//{
+	//	if (pPtr->leadItem.itemCode == itemRefCode::tactSwitchRL || pPtr->leadItem.itemCode == itemRefCode::tactSwitchUD)
+	//	{
+	//		if (pPtr->leadItem.checkFlag(itemFlag::PROP_POWER_ON) && pPtr->leadItem.checkFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF) == false)
+	//		{
+ //               pPtr->leadItem.addFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF);
+	//		}
+	//	}
+	//}
 
     //updateLog(L"Prop turn started.");
 	return 0;

@@ -169,6 +169,7 @@ export namespace dur
     __int64 analysis = 0;
     __int64 tile = 0;
     __int64 corpse = 0;
+    __int64 floorProp = 0;
     __int64 item = 0;
     __int64 entity = 0;
     __int64 damage = 0;

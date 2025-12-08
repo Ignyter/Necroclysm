@@ -978,6 +978,7 @@ bool Entity::runAnimation(bool shutdown)
 					delete sPtr;
 					resetTimer();
 					setAniType(aniFlag::null);
+					if (entityInfo.isPlayer == true) { turnWait(1.0); }
 					return true;
 				}
 			}
@@ -1005,6 +1006,7 @@ bool Entity::runAnimation(bool shutdown)
 
 					resetTimer();
 					setAniType(aniFlag::null);
+					if (entityInfo.isPlayer == true) { turnWait(1.0); }
 					return true;
 				}
 			}
@@ -1024,6 +1026,7 @@ bool Entity::runAnimation(bool shutdown)
 				delete sPtr;
 				resetTimer();
 				setAniType(aniFlag::null);
+				if (entityInfo.isPlayer == true) { turnWait(1.0); }
 				return true;
 			}
 			else //이미 그 자리에 아이템이 있는 경우
@@ -1040,6 +1043,8 @@ bool Entity::runAnimation(bool shutdown)
 				delete sPtr;
 				resetTimer();
 				setAniType(aniFlag::null);
+
+				if (entityInfo.isPlayer == true) { turnWait(1.0); }
 				return true;
 			}
 		}
@@ -1249,6 +1254,114 @@ bool Entity::runAnimation(bool shutdown)
 			return true;
 		}
 	}
+	else if (getAniType() == aniFlag::propTurnOnOff)
+	{
+		addTimer();
+
+		char dx;
+		char dy;
+
+		static int prevSprIndex;
+		bool twoHanded = false;
+		if (getEquipPtr()->itemInfo[0].checkFlag(itemFlag::TWOHANDED)) twoHanded = true;
+
+		switch (entityInfo.direction)
+		{
+		case 0: dx = 1; dy = 0; break;
+		case 1: dx = 1; dy = -1; break;
+		case 2: dx = 0; dy = -1; break;
+		case 3: dx = -1; dy = -1; break;
+		case 4: dx = -1; dy = 0; break;
+		case 5: dx = -1; dy = 1; break;
+		case 6: dx = 0; dy = 1; break;
+		case 7: dx = 1; dy = 1; break;
+		}
+
+		Prop* address = TileProp(PlayerX() + dx, PlayerY() + dy, PlayerZ());
+
+		if (shutdown == true)//사망으로 인한 강제종료
+		{
+			aniUSet.erase(aniUSet.find(this));
+			setFakeX(0);
+			setFakeY(0);
+			return true;
+		}
+
+		switch (getTimer())
+		{
+		case 1:
+            prevSprIndex = PlayerPtr->getSpriteIndex();
+			if(twoHanded) PlayerPtr->setSpriteIndex(charSprIndex::MINING1);
+			else PlayerPtr->setSpriteIndex(charSprIndex::RATK1);
+			break;
+		case 3:
+			setFakeX(getFakeX() + 2.5 * dx);
+			setFakeY(getFakeY() + 2.5 * dy);
+			break;
+		case 4:
+			setFakeX(getFakeX() + 2.0 * dx);
+			setFakeY(getFakeY() + 2.0 * dy);
+			break;
+		case 5:
+			setFakeX(getFakeX() + 1.5 * dx);
+			setFakeY(getFakeY() + 1.5 * dy);
+			break;
+		case 6:
+			setFakeX(getFakeX() + 1.0 * dx);
+			setFakeY(getFakeY() + 1.0 * dy);
+			break;
+		case 7:
+			setFakeX(getFakeX() + 0.5 * dx);
+			setFakeY(getFakeY() + 0.5 * dy);
+
+			if(twoHanded) PlayerPtr->setSpriteIndex(charSprIndex::MINING2);
+            else PlayerPtr->setSpriteIndex(charSprIndex::RATK2);
+
+			if(address->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) 			
+			{
+				address->leadItem.eraseFlag(itemFlag::PROP_POWER_OFF);
+				address->leadItem.addFlag(itemFlag::PROP_POWER_ON);
+			}
+			else if(address->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+			{
+				address->leadItem.eraseFlag(itemFlag::PROP_POWER_ON);
+				address->leadItem.addFlag(itemFlag::PROP_POWER_OFF);
+            }
+			break;
+		case 9:
+			setFakeX(getIntegerFakeX() - 0.5 * dx);
+			setFakeY(getIntegerFakeY() - 0.5 * dy);
+			break;
+		case 10:
+			setFakeX(getFakeX() - 1.0 * (float)dx);
+			setFakeY(getIntegerFakeY() - 1.0 * (float)dy);
+			break;
+		case 11:
+			setFakeX(getFakeX() - 1.5 * dx);
+			setFakeY(getFakeY() - 1.5 * dy);
+			break;
+		case 12:
+			setFakeX(getFakeX() - 2.0 * (float)dx);
+			setFakeY(getFakeY() - 2.0 * (float)dy);
+			break;
+		case 13:
+			setFakeX(getFakeX() - 2.5 * dx);
+			setFakeY(getFakeY() - 2.5 * dy);
+			break;
+		case 15:
+			break;
+		case 17:
+		case 19:
+			setFakeX(0);
+			setFakeY(0);
+			resetTimer();
+			setAniType(aniFlag::null);
+            PlayerPtr->setSpriteIndex(prevSprIndex);
+			if (entityInfo.isPlayer == true) { turnWait(1.0); }
+			else {}
+			return true;
+		}
+		}
 
 	return false;
 }
