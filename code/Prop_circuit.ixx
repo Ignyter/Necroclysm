@@ -32,6 +32,12 @@ void Prop::updateCircuitNetwork()
     int circuitTotalLoad = 0;
     bool hasGround = false;
 
+    //std::wprintf(L"[BFS] 시작점 : %d,%d,%d \n", cursorX, cursorY, cursorZ);
+
+    if (cursorX == 13 && cursorY == -15)
+    {
+        int a = 2;
+    }
 
     //==============================================================================
     // 1. 회로 최초 탐색(BFS)
@@ -39,6 +45,7 @@ void Prop::updateCircuitNetwork()
     frontierQueue.push({ cursorX, cursorY, cursorZ });
     while (!frontierQueue.empty())
     {
+
         Point3 current = frontierQueue.front();
         frontierQueue.pop();
 
@@ -46,6 +53,8 @@ void Prop::updateCircuitNetwork()
         visitedSet.insert(current);
         visitedVec.push_back(current);
 
+
+        //std::wprintf(L"[BFS] 탐색 중 : %d,%d,%d \n", current.x, current.y, current.z);
 
         Prop* currentProp = TileProp(current.x, current.y, current.z);
 
@@ -63,6 +72,8 @@ void Prop::updateCircuitNetwork()
                 {
                     circuitMaxEnergy += currentProp->leadItem.electricMaxPower;
                     voltagePropVec.push_back(currentProp);
+                    
+                    
                 }
             }
 
@@ -105,12 +116,12 @@ void Prop::updateCircuitNetwork()
                 if(ePtr != nullptr) totalWeight += ePtr->entityInfo.weight;
                 
                 
-                if (totalWeight >= 10.0 && currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+                if (totalWeight >= 5000.0 && currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
                 {
                     currentProp->leadItem.eraseFlag(itemFlag::PROP_POWER_OFF);
                     currentProp->leadItem.addFlag(itemFlag::PROP_POWER_ON);
                 }
-                else if (totalWeight < 10.0 && currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+                else if (totalWeight < 5000.0 && currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
                 {
                     currentProp->leadItem.eraseFlag(itemFlag::PROP_POWER_ON);
                     currentProp->leadItem.addFlag(itemFlag::PROP_POWER_OFF);
@@ -337,6 +348,17 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     Prop* targetProp = TileProp(currentCoord.x + delCoord.x, currentCoord.y + delCoord.y, currentCoord.z + delCoord.z);
 
     if (targetProp == nullptr) return false;
+
+    if(currentProp->leadItem.itemCode == itemRefCode::tactSwitchRL 
+        || currentProp->leadItem.itemCode == itemRefCode::tactSwitchUD
+        || currentProp->leadItem.itemCode == itemRefCode::leverRL
+        || currentProp->leadItem.itemCode == itemRefCode::leverUD
+        || currentProp->leadItem.itemCode == itemRefCode::pressureSwitchRL
+        || currentProp->leadItem.itemCode == itemRefCode::pressureSwitchUD
+        )
+    {
+        if (currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
 
     if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::leverRL)
     {
