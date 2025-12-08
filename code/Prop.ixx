@@ -49,9 +49,9 @@ public:
 
     void updateCircuitNetwork();
 
-    bool isConnected(Point3 currentCoord, dir16 dir);
+    bool isConnected(Point3 currentCoord, dir16 dir, bool forBFS = false);
 
-    bool isConnected(Prop* currentProp, dir16 dir);
+    bool isConnected(Prop* currentProp, dir16 dir, bool forBFS = false);
 
     bool isGround(Point3 currentCoord, dir16 dir);
 

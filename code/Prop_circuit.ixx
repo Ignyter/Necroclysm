@@ -137,7 +137,8 @@ void Prop::updateCircuitNetwork()
             {
                 for (int i = 0; i < 6; ++i)
                 {
-                    if (isConnected(current, directions[i]))
+                    // ⚠️ BFS에서는 스위치 상태를 무시하고 회로 구조 전체를 탐색
+                    if (isConnected(current, directions[i], true))
                     {
                         int dx, dy, dz;
                         dirToXYZ(directions[i], dx, dy, dz);
@@ -311,7 +312,7 @@ void Prop::updateCircuitNetwork()
     //std::wprintf(L"����������������������������������������������������������������������������\n\n");
 }
 
-bool Prop::isConnected(Point3 currentCoord, dir16 dir)
+bool Prop::isConnected(Point3 currentCoord, dir16 dir, bool forBFS)
 {
     Prop* currentProp = TileProp(currentCoord.x, currentCoord.y, currentCoord.z);
 
@@ -357,47 +358,56 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
 
     if (targetProp == nullptr) return false;
 
-    if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::leverRL)
+    // ⚠️ BFS 모드에서는 스위치 상태 무시 (회로 구조 파악용)
+    // 전자 흐름 모드에서만 스위치 상태 체크
+    if (!forBFS)
     {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::leverUD)
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::tactSwitchRL)
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::pressureSwitchRL)
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::pressureSwitchUD)
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-
-    if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::transistorU || targetProp->leadItem.itemCode == itemRefCode::transistorD))
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::transistorR || targetProp->leadItem.itemCode == itemRefCode::transistorL))
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::leverRL)
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::leverUD)
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::tactSwitchRL)
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::right || dir == dir16::left) && targetProp->leadItem.itemCode == itemRefCode::pressureSwitchRL)
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::up || dir == dir16::down) && targetProp->leadItem.itemCode == itemRefCode::pressureSwitchUD)
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
     }
 
-    if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::relayU || targetProp->leadItem.itemCode == itemRefCode::relayD))
+    // ⚠️ 트랜지스터/릴레이도 BFS 모드에서는 상태 무시
+    if (!forBFS)
     {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::relayR || targetProp->leadItem.itemCode == itemRefCode::relayL))
-    {
-        if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::transistorU || targetProp->leadItem.itemCode == itemRefCode::transistorD))
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::transistorR || targetProp->leadItem.itemCode == itemRefCode::transistorL))
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+
+        if ((dir == dir16::right || dir == dir16::left) && (targetProp->leadItem.itemCode == itemRefCode::relayU || targetProp->leadItem.itemCode == itemRefCode::relayD))
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
+        else if ((dir == dir16::up || dir == dir16::down) && (targetProp->leadItem.itemCode == itemRefCode::relayR || targetProp->leadItem.itemCode == itemRefCode::relayL))
+        {
+            if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+        }
     }
 
     //���ζ��ο��� ���̽��� ������ ���� ����
@@ -471,9 +481,9 @@ bool Prop::isGround(Point3 currentCoord, dir16 dir)
     else return false;
 }
 
-bool Prop::isConnected(Prop* currentProp, dir16 dir)
+bool Prop::isConnected(Prop* currentProp, dir16 dir, bool forBFS)
 {
-    return isConnected({ currentProp->getGridX(),currentProp->getGridY(),currentProp->getGridZ() }, dir);
+    return isConnected({ currentProp->getGridX(),currentProp->getGridY(),currentProp->getGridZ() }, dir, forBFS);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
