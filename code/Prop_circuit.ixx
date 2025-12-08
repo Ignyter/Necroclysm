@@ -36,14 +36,16 @@ void Prop::updateCircuitNetwork()
     //==============================================================================
     // 1. ȸ�� ���� Ž��(BFS)
     //==============================================================================
+    // ⚠️ 표준 BFS: 시작점을 visitedSet에 먼저 추가
+    visitedSet.insert({ cursorX, cursorY, cursorZ });
     frontierQueue.push({ cursorX, cursorY, cursorZ });
+
     while (!frontierQueue.empty())
     {
         Point3 current = frontierQueue.front();
         frontierQueue.pop();
 
-        if (visitedSet.find(current) != visitedSet.end()) continue;
-        visitedSet.insert(current);
+        // 표준 BFS에서는 이미 push할 때 visitedSet에 추가했으므로 여기서 체크 불필요
         visitedVec.push_back(current);
 
 
@@ -155,7 +157,12 @@ void Prop::updateCircuitNetwork()
                             else if (nextProp->leadItem.itemCode == itemRefCode::relayD && directions[i] == dir16::up) skipBFSSet.insert(nextCoord);
                         }
 
-                        frontierQueue.push(nextCoord);
+                        // ⚠️ 표준 BFS: push하기 전에 visitedSet에 추가 (중복 방지)
+                        if (visitedSet.find(nextCoord) == visitedSet.end())
+                        {
+                            visitedSet.insert(nextCoord);
+                            frontierQueue.push(nextCoord);
+                        }
 
                         if (nextProp &&
                             (nextProp->leadItem.checkFlag(groundFlags[i][0]) ||
