@@ -22,9 +22,9 @@ void Prop::updateCircuitNetwork()
 
     std::queue<Point3> frontierQueue;
     std::unordered_set<Point3, Point3::Hash> visitedSet;
-    std::vector<Point3> visitedVec;//µð¹ö±×¿ë ³ªÁß¿¡ Áö¿ï °Í
+    std::vector<Point3> visitedVec;//ï¿½ï¿½ï¿½ï¿½×¿ï¿½ ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
     std::vector<Prop*> voltagePropVec;
-    std::vector<Prop*> loadVec; //ºÎÇÏ°¡ °¡ÇØÁö´Â ÀüÀÚ±â±âµé
+    std::vector<Prop*> loadVec; //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½
 
     std::unordered_set<Point3, Point3::Hash> skipBFSSet;
 
@@ -34,7 +34,7 @@ void Prop::updateCircuitNetwork()
 
 
     //==============================================================================
-    // 1. È¸·Î ÃÖÃÊ Å½»ö(BFS)
+    // 1. È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å½ï¿½ï¿½(BFS)
     //==============================================================================
     frontierQueue.push({ cursorX, cursorY, cursorZ });
     while (!frontierQueue.empty())
@@ -68,7 +68,7 @@ void Prop::updateCircuitNetwork()
 
             if (currentProp->leadItem.electricUsePower > 0) loadVec.push_back(currentProp);
 
-            //ÅÃÆ®½ºÀ§Ä¡ÀÏ °æ¿ì ´ÙÀ½ ÅÏ ½ÃÀÛ ½Ã¿¡ Á¾·á
+            //ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã¿ï¿½ ï¿½ï¿½ï¿½ï¿½
             if (currentProp->leadItem.itemCode == itemRefCode::tactSwitchRL || currentProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
             {
                 if (currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
@@ -89,7 +89,7 @@ void Prop::updateCircuitNetwork()
             {
                 int totalWeight = 0;
                 
-                //¾ÆÀÌÅÛ ¹«°Ô
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 ItemStack* tgtItemStack = TileItemStack(current.x, current.y, current.z);
                 if (tgtItemStack != nullptr)
                 {
@@ -100,7 +100,7 @@ void Prop::updateCircuitNetwork()
                     }
                 }
 
-                //¿£Æ¼Æ¼ ¹«°Ô
+                //ï¿½ï¿½Æ¼Æ¼ ï¿½ï¿½ï¿½ï¿½
                 Entity* ePtr = TileEntity(current.x, current.y, current.z);
                 if(ePtr != nullptr) totalWeight += ePtr->entityInfo.weight;
                 
@@ -174,7 +174,7 @@ void Prop::updateCircuitNetwork()
         circuitTotalLoad += loadVec[i]->leadItem.electricUsePower;
     }
 
-    // ³ëµå°¡ 2°³ ¹Ì¸¸ÀÌ¸é Ãâ·ÂÇÏÁö ¾ÊÀ½
+    // ï¿½ï¿½å°¡ 2ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (visitedSet.size() < 2)
     {
         runUsed = true;
@@ -182,16 +182,16 @@ void Prop::updateCircuitNetwork()
     }
 
 
-    //std::wprintf(L"\n¦£¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¤\n");
-    //std::wprintf(L"¦¢ È¸·Î ºÐ¼® ¿Ï·á                  ¦¢\n");
-    //std::wprintf(L"¦§¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦©\n");
-    //std::wprintf(L"¦¢ ³ëµå ¼ö: %3d                    ¦¢\n", visitedSet.size());
-    //std::wprintf(L"¦¢ ÃÖ´ë Àü·Â: %3d kJ               ¦¢\n", circuitMaxEnergy);
-    //std::wprintf(L"¦¢ Á¢Áö Á¸Àç: %s                   ¦¢\n", hasGround ? L"Yes" : L"No ");
-    //std::wprintf(L"¦¦¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¥\n\n");
+    //std::wprintf(L"\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n");
+    //std::wprintf(L"ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½Ð¼ï¿½ ï¿½Ï·ï¿½                  ï¿½ï¿½\n");
+    //std::wprintf(L"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n");
+    //std::wprintf(L"ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½: %3d                    ï¿½ï¿½\n", visitedSet.size());
+    //std::wprintf(L"ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½: %3d kJ               ï¿½ï¿½\n", circuitMaxEnergy);
+    //std::wprintf(L"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: %s                   ï¿½ï¿½\n", hasGround ? L"Yes" : L"No ");
+    //std::wprintf(L"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n\n");
 
     //==============================================================================
-    // 2. ÃÖ´ë Àü·Â ¼³Á¤
+    // 2. ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     //==============================================================================
     for (auto coord : visitedSet)
     {
@@ -201,13 +201,13 @@ void Prop::updateCircuitNetwork()
             
             propPtr->nodeMaxElectron = circuitMaxEnergy;
         
-            //ÀüÀÚÈ¸·Î´Â Ç×»ó ÀüÀÚ °¡µæ Âù »óÅÂ
+            //ï¿½ï¿½ï¿½ï¿½È¸ï¿½Î´ï¿½ ï¿½×»ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             propPtr->nodeElectron = circuitMaxEnergy;
         }
     }
 
     //==============================================================================
-    // 3. Àü¾Ð¿ø Àü¼Û ½ÃÀÛ
+    // 3. ï¿½ï¿½ï¿½Ð¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     //==============================================================================
     double totalPushedElectron = 0;
 
@@ -235,9 +235,9 @@ void Prop::updateCircuitNetwork()
         double voltRatio = (double)voltProp->leadItem.electricMaxPower / (double)totalAvailablePower;
         double voltOutputPower = myMin(std::ceil(circuitTotalLoad * voltRatio), voltProp->leadItem.electricMaxPower);
         voltProp->prevPushedElectron = 0;
-        voltOutputPower *= LOSS_COMPENSATION_FACTOR;  // ÀúÇ×¼Õ½Ç º¸Á¸ º¯¼ö (±âº»°ª 110%)
+        voltOutputPower *= LOSS_COMPENSATION_FACTOR;  // ï¿½ï¿½ï¿½×¼Õ½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½âº»ï¿½ï¿½ 110%)
 
-        if (DEBUG_CIRCUIT_LOG) std::wprintf(L"========================¡åÀü¾Ð¿ø %p : ¹Ð¾î³»±â ½ÃÀÛ¡å========================\n", voltProp);
+        if (DEBUG_CIRCUIT_LOG) std::wprintf(L"========================ï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ %p : ï¿½Ð¾î³»ï¿½ï¿½ ï¿½ï¿½ï¿½Û¡ï¿½========================\n", voltProp);
         if (voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON) || voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF) == false)
         {
             if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_RIGHT) && isConnected({ x,y,z }, dir16::right))
@@ -256,11 +256,11 @@ void Prop::updateCircuitNetwork()
 
 
     //==============================================================================
-    // 5. ÃÖÁ¾ »óÅÂ Ãâ·Â
+    // 5. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     //==============================================================================
-    //std::wprintf(L"\n¦£¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¤\n");
-    //std::wprintf(L"¦¢ ÃÖÁ¾ È¸·Î »óÅÂ                     ¦¢\n");
-    //std::wprintf(L"¦§¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦©\n");
+    //std::wprintf(L"\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n");
+    //std::wprintf(L"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½                     ï¿½ï¿½\n");
+    //std::wprintf(L"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n");
 
     //for (auto coord : visitedVec)
     //{
@@ -276,12 +276,12 @@ void Prop::updateCircuitNetwork()
     //            propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT))
     //            nodeType = L"GND ";
 
-    //        wchar_t status = L'¡Û';
-    //        if (propPtr->nodeElectron == 0) status = L'¡Û';
-    //        else if (propPtr->nodeElectron == propPtr->nodeMaxElectron) status = L'¡Ü';
-    //        else status = L'¢Ä';
+    //        wchar_t status = L'ï¿½ï¿½';
+    //        if (propPtr->nodeElectron == 0) status = L'ï¿½ï¿½';
+    //        else if (propPtr->nodeElectron == propPtr->nodeMaxElectron) status = L'ï¿½ï¿½';
+    //        else status = L'ï¿½ï¿½';
 
-    //        std::wprintf(L"¦¢ %s (%3d,%3d): %3d/%3d %c     ¦¢\n",
+    //        std::wprintf(L"ï¿½ï¿½ %s (%3d,%3d): %3d/%3d %c     ï¿½ï¿½\n",
     //            nodeType.c_str(),
     //            coord.x, coord.y,
     //            propPtr->nodeElectron, propPtr->nodeMaxElectron,
@@ -289,7 +289,7 @@ void Prop::updateCircuitNetwork()
     //    }
     //}
 
-    //std::wprintf(L"¦¦¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¥\n\n");
+    //std::wprintf(L"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n\n");
 }
 
 bool Prop::isConnected(Point3 currentCoord, dir16 dir)
@@ -381,7 +381,7 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
         if (targetProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
     }
 
-    //¸ÞÀÎ¶óÀÎ¿¡¼­ º£ÀÌ½º·Î ³ª°¡´Â ¹æÇâ Àý¿¬
+    //ï¿½ï¿½ï¿½Î¶ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (currentProp->leadItem.itemCode == itemRefCode::transistorL && dir == dir16::left) return false;
     else if(currentProp->leadItem.itemCode == itemRefCode::transistorU && dir == dir16::up) return false;
     else if(currentProp->leadItem.itemCode == itemRefCode::transistorR && dir == dir16::right) return false;
@@ -446,7 +446,7 @@ bool Prop::isGround(Point3 currentCoord, dir16 dir)
     if (targetProp == nullptr) return false;
     if (targetProp->leadItem.checkFlag(groundFlag) || targetProp->leadItem.checkFlag(itemFlag::VOLTAGE_GND_ALL))
     {
-        //Áßº¹ÀÎ°¡? ÃÖÀûÈ­¸¦ À§ÇØ¼± ¾ø¾îµµ µÉ ¼öµµ
+        //ï¿½ßºï¿½ï¿½Î°ï¿½? ï¿½ï¿½ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¼ï¿½ ï¿½ï¿½ï¿½îµµ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (isConnected(currentCoord, dir)) return true;
     }
     else return false;
@@ -477,9 +477,9 @@ double Prop::pushElectron(Prop* donorProp, dir16 txDir, double txElectronAmount,
     pathVisited.insert(donorProp);
     if (pathVisited.find(acceptorProp) != pathVisited.end()) return 0;
 
-    // µé¿©¾²±â »ý¼º
-    std::wstring indent(depth * 2, L' ');  // depth¸¶´Ù 2Ä­¾¿
-    std::wprintf(L"%s[PUSH] (%d,%d) ¡æ (%d,%d) ½Ãµµ: %.2f\n",
+    // ï¿½é¿©ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    std::wstring indent(depth * 2, L' ');  // depthï¿½ï¿½ï¿½ï¿½ 2Ä­ï¿½ï¿½
+    std::wprintf(L"%s[PUSH] (%d,%d) ï¿½ï¿½ (%d,%d) ï¿½Ãµï¿½: %.2f\n",
         indent.c_str(),
         donorProp->getGridX(), donorProp->getGridY(),
         acceptorProp->getGridX(), acceptorProp->getGridY(),
@@ -563,7 +563,7 @@ double Prop::divideElectron(Prop* propPtr, double inputElectron, std::vector<dir
         double gndPushedElectron = 0;
         double loopPushedElectron = 0;
 
-        //Á¢Áö ¿ì¼± ¹èºÐ
+        //ï¿½ï¿½ï¿½ï¿½ ï¿½ì¼± ï¿½ï¿½ï¿½
 
         for (auto dir : possibleDirs)
         {
@@ -619,9 +619,14 @@ void Prop::transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectr
 {
     if (txElectronAmount < EPSILON)
     {
+        // âš ï¸ EPSILON ë¯¸ë§Œì´ì–´ë„ nodeInputElectron/nodeOutputElectronì€ ì—…ë°ì´íŠ¸í•´ì•¼ í•¨
+        // ì´ìœ : ë³‘ë ¬ íšŒë¡œì—ì„œ ì „ì„ ì´ ì´ë¯¸ ê½‰ ì°¨ìžˆì–´ë„ "ì „ë¥˜ê°€ íë¥´ê³  ìžˆë‹¤"ëŠ” í‘œì‹œë¥¼ í•´ì•¼í•¨
+        donorProp->nodeOutputElectron += EPSILON;
+        acceptorProp->nodeInputElectron += EPSILON;
+
         if (DEBUG_CIRCUIT_LOG)
         {
-            std::wprintf(L"%s[Àü¼Û ½ºÅµ] (%d,%d) ¡æ (%d,%d) ¾ç:%.8f (EPSILON ¹Ì¸¸)\n",
+            std::wprintf(L"%s[ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Åµ] (%d,%d) ï¿½ï¿½ (%d,%d) ï¿½ï¿½:%.8f (EPSILON ï¿½Ì¸ï¿½)\n",
                 indent.c_str(),
                 donorProp->getGridX(), donorProp->getGridY(),
                 acceptorProp->getGridX(), acceptorProp->getGridY(),
@@ -654,7 +659,7 @@ void Prop::transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectr
     {
         if (isGroundTransfer)
         {
-            std::wprintf(L"%s[Àü¼Û GND] (%d,%d)[%.2f¡æ%.2f] ¡æ (%d,%d) Àü¼Û:%.2f ¼Õ½Ç:%.2f ºÎÇÏ:%.2f/%d\n",
+            std::wprintf(L"%s[ï¿½ï¿½ï¿½ï¿½ GND] (%d,%d)[%.2fï¿½ï¿½%.2f] ï¿½ï¿½ (%d,%d) ï¿½ï¿½ï¿½ï¿½:%.2f ï¿½Õ½ï¿½:%.2f ï¿½ï¿½ï¿½ï¿½:%.2f/%d\n",
                 indent.c_str(),
                 donorProp->getGridX(), donorProp->getGridY(),
                 donorProp->nodeElectron + requiredFromDonor, donorProp->nodeElectron,
@@ -664,7 +669,7 @@ void Prop::transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectr
         }
         else
         {
-            std::wprintf(L"%s[Àü¼Û] (%d,%d)[%.2f¡æ%.2f] ¡æ (%d,%d)[%.2f/%d] Àü¼Û:%.2f ¼Õ½Ç:%.2f\n",
+            std::wprintf(L"%s[ï¿½ï¿½ï¿½ï¿½] (%d,%d)[%.2fï¿½ï¿½%.2f] ï¿½ï¿½ (%d,%d)[%.2f/%d] ï¿½ï¿½ï¿½ï¿½:%.2f ï¿½Õ½ï¿½:%.2f\n",
                 indent.c_str(),
                 donorProp->getGridX(), donorProp->getGridY(),
                 donorProp->nodeElectron + requiredFromDonor, donorProp->nodeElectron,
