@@ -63,6 +63,8 @@ void Prop::updateCircuitNetwork()
                 {
                     circuitMaxEnergy += currentProp->leadItem.electricMaxPower;
                     voltagePropVec.push_back(currentProp);
+                    if (DEBUG_CIRCUIT_LOG) std::wprintf(L"[BFS] 전압원 %p (%d,%d) 추가됨 (총 %zu개)\n",
+                        currentProp, current.x, current.y, voltagePropVec.size());
                 }
             }
 
@@ -210,6 +212,16 @@ void Prop::updateCircuitNetwork()
     // 3. ���п� ���� ����
     //==============================================================================
     double totalPushedElectron = 0;
+
+    // ⚠️ 중복 전압원 제거 (BFS에서 같은 전압원이 2번 추가될 수 있음)
+    size_t beforeSize = voltagePropVec.size();
+    std::unordered_set<Prop*> uniqueVoltageSet(voltagePropVec.begin(), voltagePropVec.end());
+    voltagePropVec.assign(uniqueVoltageSet.begin(), uniqueVoltageSet.end());
+    if (DEBUG_CIRCUIT_LOG && beforeSize != voltagePropVec.size())
+    {
+        std::wprintf(L"[중복 제거] 전압원 벡터: %zu개 → %zu개 (중복 %zu개 제거됨)\n",
+            beforeSize, voltagePropVec.size(), beforeSize - voltagePropVec.size());
+    }
 
     randomVectorShuffle(voltagePropVec);
 
