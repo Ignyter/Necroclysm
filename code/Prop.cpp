@@ -346,6 +346,7 @@ void Prop::runPropFunc()
 
 
 
+//주의 : 트랜지스터떄문에 Undo가 가능해야하기 때문에 ON<->OFF 양방향 변경 간에 에너지 소모가 있어서는 안된다.(다시 ON/OFF를 넣으면 원래대로 돌아가야함)
 void Prop::propTurnOn()
 {
     leadItem.eraseFlag(itemFlag::PROP_POWER_OFF);
@@ -356,7 +357,26 @@ void Prop::propTurnOn()
     {
         leadItem.lightPtr = std::make_unique<Light>(getGridX() + leadItem.lightDelX, getGridY() + leadItem.lightDelY, getGridZ(), leadItem.lightRange, leadItem.lightIntensity, SDL_Color{ leadItem.lightR,leadItem.lightG,leadItem.lightB });
     }
-
+    else if (iCode == itemRefCode::transistorR || iCode == itemRefCode::transistorL)
+    {
+        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
+        Point3 upCoord = { currentCoord.x, currentCoord.y - 1, currentCoord.z };
+        Point3 downCoord = { currentCoord.x, currentCoord.y + 1, currentCoord.z };
+        saveVisitedSet.insert(currentCoord);
+        saveFrontierQueue.push(upCoord);
+        saveFrontierQueue.push(downCoord);
+        runUsed = false;
+    }
+    else if (iCode == itemRefCode::transistorU || iCode == itemRefCode::transistorD)
+    {
+        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
+        Point3 leftCoord = { currentCoord.x - 1, currentCoord.y, currentCoord.z };
+        Point3 rightCoord = { currentCoord.x + 1, currentCoord.y, currentCoord.z };
+        saveVisitedSet.insert(currentCoord);
+        saveFrontierQueue.push(leftCoord);
+        saveFrontierQueue.push(rightCoord);
+        runUsed = false;
+    }
 }
 
 void Prop::propTurnOff()
@@ -369,4 +389,6 @@ void Prop::propTurnOff()
     {
         leadItem.lightPtr = nullptr;
     }
+    else if (iCode == itemRefCode::transistorR || iCode == itemRefCode::transistorL) undoCircuitNetwork = true;
+    else if (iCode == itemRefCode::transistorU || iCode == itemRefCode::transistorD) undoCircuitNetwork = true;
 }

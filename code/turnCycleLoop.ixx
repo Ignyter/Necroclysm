@@ -641,36 +641,66 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
+
+	PROP_TURN_START:
+
 	finalLoadSet.clear();
 
 	for (auto pPtr : (World::ins())->getActivePropSet()) pPtr->runUsed = false;
 
-
-
 	for (auto pPtr : (World::ins())->getActivePropSet())
 	{
-		pPtr->runPropFunc();
+		pPtr->nodeInputElectron = 0;
+		pPtr->nodeOutputElectron = 0;
+		pPtr->groundChargeEnergy = 0;
 	}
 
-	//==============================================================================
-	// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
-	//==============================================================================
-	for (auto pPtr : finalLoadSet)
+	int loopCount = 0;
+	do
 	{
-		Prop* loadProp = pPtr;
-		if (loadProp->groundChargeEnergy >= static_cast<double>(loadProp->leadItem.electricUsePower))
+		saveVisitedSet.clear();
+        saveFrontierQueue = std::queue<Point3>();
+
+		loopCount++;
+		if (loopCount >= MAX_CIRCUIT_LOOP_COUNT) break;
+		if (debug::printCircuitLog) std::wprintf(L"▼루프 카운트: %d\n", loopCount);
+
+		for (auto pPtr : (World::ins())->getActivePropSet())
 		{
-			if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
-				loadProp->propTurnOn();
-		}
-		else
-		{
-			if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
-				loadProp->propTurnOff();
+			pPtr->runPropFunc();
 		}
 
-		loadProp->groundChargeEnergy = 0;
-	}
+		//==============================================================================
+		// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
+		//==============================================================================
+		for (auto pPtr : finalLoadSet)
+		{
+			Prop* loadProp = pPtr;
+			if (loadProp->groundChargeEnergy >= static_cast<double>(loadProp->leadItem.electricUsePower))
+			{
+				if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+				{
+					loadProp->propTurnOn();
+				}
+			}
+			else
+			{
+				if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+				{
+					loadProp->propTurnOff();
+				}
+			}
+		}
+
+		if (undoCircuitNetwork)
+		{
+			undoCircuitNetwork = false;
+			goto PROP_TURN_START;
+		}
+	} while (saveFrontierQueue.size()>0 && saveVisitedSet.size()>0);
+
+	//에너지 소모 확정 페이즈
+	//윗 단계에서 계산된 에너지만큼 발전기에서 소모됨
 
 	////다음 턴에 종료할 택트스위치
 	//for (auto pPtr : (World::ins())->getActivePropSet())

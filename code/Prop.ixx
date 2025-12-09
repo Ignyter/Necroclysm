@@ -33,6 +33,8 @@ public:
     double prevPushedElectron = 0;
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
 
+
+
     Prop(Point3 inputCoor, int leadItemCode);
 
     ~Prop();

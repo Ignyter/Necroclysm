@@ -6,7 +6,7 @@ import globalVar;
 import constVar;
 import wrapVar;
 
-constexpr bool DEBUG_CIRCUIT_LOG = true;
+
 constexpr double SYSTEM_VOLTAGE = 24.0;
 constexpr double TIME_PER_TURN = 60.0;
 constexpr double EPSILON = 0.000001;
@@ -16,13 +16,13 @@ constexpr double EPSILON = 0.000001;
 
 void Prop::updateCircuitNetwork()
 {
+    if(debug::printCircuitLog) std::wprintf(L"------------------------- 회로망 업데이트 시작 ------------------------\n");
     int cursorX = getGridX();
     int cursorY = getGridY();
     int cursorZ = getGridZ();
 
     std::queue<Point3> frontierQueue;
     std::unordered_set<Point3, Point3::Hash> visitedSet;
-    std::vector<Point3> visitedVec;//디버그용 나중에 지울 것
     std::vector<Prop*> voltagePropVec;
     std::vector<Prop*> loadVec; //부하가 가해지는 전자기기들
 
@@ -32,17 +32,18 @@ void Prop::updateCircuitNetwork()
     int circuitTotalLoad = 0;
     bool hasGround = false;
 
-    //std::wprintf(L"[BFS] 시작점 : %d,%d,%d \n", cursorX, cursorY, cursorZ);
-
-    if (cursorX == 13 && cursorY == -15)
-    {
-        int a = 2;
-    }
-
     //==============================================================================
     // 1. 회로 최초 탐색(BFS)
     //==============================================================================
-    frontierQueue.push({ cursorX, cursorY, cursorZ });
+
+    if(saveFrontierQueue.size()>0 && saveVisitedSet.size()>0)
+    {
+        if (debug::printCircuitLog) std::wprintf(L"------------------------- 이전 회로망 탐색 결과 불러오기 ------------------------\n");
+        frontierQueue = saveFrontierQueue;
+        visitedSet = saveVisitedSet;
+    }
+    else frontierQueue.push({ cursorX, cursorY, cursorZ });
+    
     while (!frontierQueue.empty())
     {
 
@@ -51,19 +52,13 @@ void Prop::updateCircuitNetwork()
 
         if (visitedSet.find(current) != visitedSet.end()) continue;
         visitedSet.insert(current);
-        visitedVec.push_back(current);
-
-
-        //std::wprintf(L"[BFS] 탐색 중 : %d,%d,%d \n", current.x, current.y, current.z);
 
         Prop* currentProp = TileProp(current.x, current.y, current.z);
+        if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
 
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
             currentProp->runUsed = true;
-
-            currentProp->nodeInputElectron = 0;
-            currentProp->nodeOutputElectron = 0;
 
             if (currentProp->leadItem.checkFlag(itemFlag::VOLTAGE_SOURCE))
             {
@@ -248,7 +243,7 @@ void Prop::updateCircuitNetwork()
         voltProp->prevPushedElectron = 0;
         voltOutputPower *= LOSS_COMPENSATION_FACTOR;  // 저항손실 보존 변수 (기본값 110%)
 
-        if (DEBUG_CIRCUIT_LOG) std::wprintf(L"========================▼전압원 %p : 밀어내기 시작▼========================\n", voltProp);
+        if (debug::printCircuitLog) std::wprintf(L"========================▼전압원 %p : 밀어내기 시작▼========================\n", voltProp);
         if (voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON) || voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF) == false)
         {
             if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_RIGHT) && isConnected({ x,y,z }, dir16::right))
@@ -264,43 +259,6 @@ void Prop::updateCircuitNetwork()
             voltProp->nodeElectron = voltProp->nodeMaxElectron;
         }
     }
-
-
-    //==============================================================================
-    // 5. 최종 상태 출력
-    //==============================================================================
-    //std::wprintf(L"\n┌────────────────────────────────────┐\n");
-    //std::wprintf(L"│ 최종 회로 상태                     │\n");
-    //std::wprintf(L"├────────────────────────────────────┤\n");
-
-    //for (auto coord : visitedVec)
-    //{
-    //    Prop* propPtr = TileProp(coord.x, coord.y, coord.z);
-    //    if (propPtr != nullptr)
-    //    {
-    //        std::wstring nodeType = L"Wire";
-    //        if (propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_SOURCE)) nodeType = L"Gen ";
-    //        else if (propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_GND_ALL) ||
-    //            propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP) ||
-    //            propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN) ||
-    //            propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT) ||
-    //            propPtr->leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT))
-    //            nodeType = L"GND ";
-
-    //        wchar_t status = L'○';
-    //        if (propPtr->nodeElectron == 0) status = L'○';
-    //        else if (propPtr->nodeElectron == propPtr->nodeMaxElectron) status = L'●';
-    //        else status = L'◐';
-
-    //        std::wprintf(L"│ %s (%3d,%3d): %3d/%3d %c     │\n",
-    //            nodeType.c_str(),
-    //            coord.x, coord.y,
-    //            propPtr->nodeElectron, propPtr->nodeMaxElectron,
-    //            status);
-    //    }
-    //}
-
-    //std::wprintf(L"└────────────────────────────────────┘\n\n");
 }
 
 bool Prop::isConnected(Point3 currentCoord, dir16 dir)
@@ -501,7 +459,8 @@ double Prop::pushElectron(Prop* donorProp, dir16 txDir, double txElectronAmount,
 
     // 들여쓰기 생성
     std::wstring indent(depth * 2, L' ');  // depth마다 2칸씩
-    std::wprintf(L"%s[PUSH] (%d,%d) → (%d,%d) 시도: %.2f\n",
+
+    if (debug::printCircuitLog) std::wprintf(L"%s[PUSH] (%d,%d) → (%d,%d) 시도: %.2f\n",
         indent.c_str(),
         donorProp->getGridX(), donorProp->getGridY(),
         acceptorProp->getGridX(), acceptorProp->getGridY(),
@@ -641,7 +600,7 @@ void Prop::transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectr
 {
     if (txElectronAmount < EPSILON)
     {
-        if (DEBUG_CIRCUIT_LOG)
+        if (debug::printCircuitLog)
         {
             std::wprintf(L"%s[전송 스킵] (%d,%d) → (%d,%d) 양:%.8f (EPSILON 미만)\n",
                 indent.c_str(),
@@ -672,7 +631,7 @@ void Prop::transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectr
 
     acceptorProp->nodeInputElectron += txElectronAmount;
 
-    if (DEBUG_CIRCUIT_LOG)
+    if (debug::printCircuitLog)
     {
         if (isGroundTransfer)
         {

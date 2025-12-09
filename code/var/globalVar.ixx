@@ -40,7 +40,8 @@ export namespace option
 export namespace debug
 {
     bool chunkLineDraw = false;
-    bool noCraftMaterialNeed = true; //활성화할 경우 CRAFT에서 재료없이 조합 ㅇ가능
+    bool noCraftMaterialNeed = true; //활성화할 경우 CRAFT에서 재료없이 조합 가능
+    bool printCircuitLog = true; //활성화할 경우 회로 관련 로그들을 출력함
 };
 
 export std::vector<std::wstring> sysStr;
@@ -278,6 +279,12 @@ public:
 export std::vector<std::unique_ptr<Snowflake>> snowflakes;
 export std::vector<std::unique_ptr<Raindrop>> raindrops;
 export std::vector<std::unique_ptr<Spatter>> spatters;
+
+//트랜지스터의 연결 상태가 변경되었을 경우 다음 updateCircuitNetwork에서 이 컨테이너들로 BFS를 다시 돌림
+//만약 두 컨테이너가 nullptr이면은 세이브 데이터가 없는 것임
+export std::queue<Point3> saveFrontierQueue;
+export std::unordered_set<Point3, Point3::Hash> saveVisitedSet;
+export bool undoCircuitNetwork = false; //트랜지스터의 상태가 꺼져서 기존에 있었던 업데이트를 무효화시켜야 할 경우 true
 
 
 

@@ -87,6 +87,7 @@ export constexpr float FATIGUE_SPEED = 1.0;
 
 export constexpr int MAX_BATCH = 4096;
 
+export constexpr int MAX_CIRCUIT_LOOP_COUNT = 50; //전자회로가 트랜지스터 게이트로 인해 중복 업데이트될 때의 한계값
 
 
 
