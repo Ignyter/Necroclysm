@@ -567,7 +567,17 @@ double Prop::divideElectron(Prop* propPtr, double inputElectron, std::vector<dir
                 if (branchPushedElectron < EPSILON) dirsToRemove.push_back(dir);
             }
 
-            for (auto dir : dirsToRemove) possibleDirs.erase(std::remove(possibleDirs.begin(), possibleDirs.end(), dir), possibleDirs.end());
+            possibleDirs.erase
+            (
+                std::remove_if
+                (
+                    possibleDirs.begin(), 
+                    possibleDirs.end(),
+                    [&dirsToRemove](dir16 d) { return std::find(dirsToRemove.begin(), dirsToRemove.end(), d) != dirsToRemove.end(); }
+                ),
+                 possibleDirs.end()
+            );
+
             remainingElectron -= gndPushedElectron;
         }
 

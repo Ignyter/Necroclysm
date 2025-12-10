@@ -646,9 +646,11 @@ __int64 propTurn()
 
 	finalLoadSet.clear();
 
-	for (auto pPtr : (World::ins())->getActivePropSet()) pPtr->runUsed = false;
+    auto actviePropSet = (World::ins())->getActivePropSet();
 
-	for (auto pPtr : (World::ins())->getActivePropSet())
+	for (auto pPtr : actviePropSet) pPtr->runUsed = false;
+
+	for (auto pPtr : actviePropSet)
 	{
 		pPtr->nodeInputElectron = 0;
 		pPtr->nodeOutputElectron = 0;
@@ -665,10 +667,7 @@ __int64 propTurn()
 		if (loopCount >= MAX_CIRCUIT_LOOP_COUNT) break;
 		if (debug::printCircuitLog) std::wprintf(L"▼루프 카운트: %d\n", loopCount);
 
-		for (auto pPtr : (World::ins())->getActivePropSet())
-		{
-			pPtr->runPropFunc();
-		}
+		for (auto pPtr : actviePropSet) pPtr->runPropFunc();
 
 		//==============================================================================
 		// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
@@ -702,18 +701,5 @@ __int64 propTurn()
 	//에너지 소모 확정 페이즈
 	//윗 단계에서 계산된 에너지만큼 발전기에서 소모됨
 
-	////다음 턴에 종료할 택트스위치
-	//for (auto pPtr : (World::ins())->getActivePropSet())
-	//{
-	//	if (pPtr->leadItem.itemCode == itemRefCode::tactSwitchRL || pPtr->leadItem.itemCode == itemRefCode::tactSwitchUD)
-	//	{
-	//		if (pPtr->leadItem.checkFlag(itemFlag::PROP_POWER_ON) && pPtr->leadItem.checkFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF) == false)
-	//		{
- //               pPtr->leadItem.addFlag(itemFlag::PROP_NEXT_TURN_POWER_OFF);
-	//		}
-	//	}
-	//}
-
-    //updateLog(L"Prop turn started.");
 	return 0;
 }
