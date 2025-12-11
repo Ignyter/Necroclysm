@@ -68,4 +68,6 @@ public:
     void propTurnOn();
 
     void propTurnOff();
+
+    void initChargeBFS(std::queue<Point3> startPointSet);
 };

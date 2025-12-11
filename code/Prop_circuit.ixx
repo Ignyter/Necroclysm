@@ -74,6 +74,8 @@ void Prop::updateCircuitNetwork()
         Prop* currentProp = TileProp(current.x, current.y, current.z);
         if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
 
+        if (currentProp->leadItem.electricUsePower > 0) finalLoadSet.insert(currentProp);
+
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
             currentProp->runUsed = true;
@@ -265,7 +267,7 @@ void Prop::updateCircuitNetwork()
         double voltRatio = (double)voltProp->leadItem.electricMaxPower / (double)totalAvailablePower;
         double voltOutputPower = myMin(std::ceil(circuitTotalLoad * voltRatio), voltProp->leadItem.electricMaxPower);
         voltProp->prevPushedCharge = 0;
-        voltOutputPower *= LOSS_COMPENSATION_FACTOR;  // 저항손실 보존 변수 (기본값 110%)
+        voltOutputPower *= LOSS_COMPENSATION_FACTOR;  // 저항손실 보존 변수 (기본값 120%)
 
         if (debug::printCircuitLog) std::wprintf(L"========================▼전압원 %p : 밀어내기 시작▼========================\n", voltProp);
         if (voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON) || voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF) == false)
@@ -392,17 +394,16 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     {
         if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
     }
-    //게이트 출력 다이오드 바이패스
+    //논리게이트 출력 다이오드 바이패스
     else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::andGateR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::andGateL)return false;
 
 
 
 
-    //메인라인에서 베이스로 나가는 방향 절연
-
     ItemData& crtItem = currentProp->leadItem;
 
+    //(트랜지스터) 메인라인에서 베이스 방향 절연
     if (crtItem.itemCode == itemRefCode::transistorL && dir == dir16::left) return false;
     else if(crtItem.itemCode == itemRefCode::transistorU && dir == dir16::up) return false;
     else if(crtItem.itemCode == itemRefCode::transistorR && dir == dir16::right) return false;
@@ -734,6 +735,39 @@ void Prop::transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAm
                 acceptorProp->getGridX(), acceptorProp->getGridY(),
                 acceptorProp->nodeCharge, acceptorProp->nodeMaxCharge,
                 txChargeAmount, electricLoss);
+        }
+    }
+}
+
+void Prop::initChargeBFS(std::queue<Point3> startPointSet)
+{
+    std::queue<Point3> frontierQueue = startPointSet;
+    std::unordered_set<Point3, Point3::Hash> visitedSet;
+
+    while (!frontierQueue.empty())
+    {
+        Point3 current = frontierQueue.front();
+        frontierQueue.pop();
+
+        if (visitedSet.find(current) != visitedSet.end()) continue;
+        visitedSet.insert(current);
+
+        Prop* currentProp = TileProp(current.x, current.y, current.z);
+
+        currentProp->nodeCharge = currentProp->nodeMaxCharge;
+        currentProp->groundCharge = 0;
+        currentProp->nodeInputCharge = 0;
+        currentProp->nodeOutputCharge = 0;
+        const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::ascend, dir16::descend };
+        for (int i = 0; i < 6; ++i)
+        {
+            if (isConnected(current, directions[i]))
+            {
+                int dx, dy, dz;
+                dirToXYZ(directions[i], dx, dy, dz);
+                Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
+                frontierQueue.push(nextCoord);
+            }
         }
     }
 }

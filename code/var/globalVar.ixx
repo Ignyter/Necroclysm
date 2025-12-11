@@ -284,6 +284,9 @@ export std::vector<std::unique_ptr<Spatter>> spatters;
 //만약 두 컨테이너가 nullptr이면은 세이브 데이터가 없는 것임
 export std::queue<Point3> saveFrontierQueue;
 export std::unordered_set<Point3, Point3::Hash> saveVisitedSet;
+
+export std::queue<Point3> nextCircuitStartQueue; //전자스위치로 상태가 변경된 네트워크를 다시 계산할 때의 시작점 좌표들
+
 export bool undoCircuitNetwork = false; //트랜지스터의 상태가 꺼져서 기존에 있었던 업데이트를 무효화시켜야 할 경우 true
 
 

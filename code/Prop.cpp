@@ -352,50 +352,32 @@ void Prop::propTurnOn()
     leadItem.eraseFlag(itemFlag::PROP_POWER_OFF);
     leadItem.addFlag(itemFlag::PROP_POWER_ON);
 
+    Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
+    Point3 rightCoord = { getGridX() + 1, getGridY(), getGridZ() };
+    Point3 upCoord = { getGridX(), getGridY() - 1, getGridZ() };
+    Point3 leftCoord = { getGridX() - 1, getGridY(), getGridZ() };
+    Point3 downCoord = { getGridX(), getGridY() + 1, getGridZ() };
+
     int iCode = leadItem.itemCode;
     if (iCode == itemRefCode::bollardLight)
     {
         leadItem.lightPtr = std::make_unique<Light>(getGridX() + leadItem.lightDelX, getGridY() + leadItem.lightDelY, getGridZ(), leadItem.lightRange, leadItem.lightIntensity, SDL_Color{ leadItem.lightR,leadItem.lightG,leadItem.lightB });
     }
-    else if (iCode == itemRefCode::transistorR || iCode == itemRefCode::transistorL)
+    else if (iCode == itemRefCode::transistorR 
+        || iCode == itemRefCode::transistorL 
+        || iCode == itemRefCode::transistorU 
+        || iCode == itemRefCode::transistorD
+        || iCode == itemRefCode::andGateR
+        || iCode == itemRefCode::andGateL)
     {
-        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
-        Point3 upCoord = { currentCoord.x, currentCoord.y - 1, currentCoord.z };
-        Point3 downCoord = { currentCoord.x, currentCoord.y + 1, currentCoord.z };
-        saveVisitedSet.insert(currentCoord);
-        saveFrontierQueue.push(upCoord);
-        saveFrontierQueue.push(downCoord);
-        runUsed = false;
-    }
-    else if (iCode == itemRefCode::transistorU || iCode == itemRefCode::transistorD)
-    {
-        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
-        Point3 leftCoord = { currentCoord.x - 1, currentCoord.y, currentCoord.z };
-        Point3 rightCoord = { currentCoord.x + 1, currentCoord.y, currentCoord.z };
-        saveVisitedSet.insert(currentCoord);
-        saveFrontierQueue.push(leftCoord);
-        saveFrontierQueue.push(rightCoord);
-        runUsed = false;
-    }
-    else if (iCode == itemRefCode::andGateR)
-    {
-        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
-        Point3 upCoord = { currentCoord.x, currentCoord.y - 1, currentCoord.z };
-        Point3 rightCoord = { currentCoord.x + 1, currentCoord.y, currentCoord.z };
-        saveVisitedSet.insert(currentCoord);
-        saveFrontierQueue.push(upCoord);
-        saveFrontierQueue.push(rightCoord);
-        runUsed = false;
-    }
-    else if (iCode == itemRefCode::andGateL)
-    {
-        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
-        Point3 upCoord = { currentCoord.x, currentCoord.y - 1, currentCoord.z };
-        Point3 leftCoord = { currentCoord.x - 1, currentCoord.y, currentCoord.z };
-        saveVisitedSet.insert(currentCoord);
-        saveFrontierQueue.push(upCoord);
-        saveFrontierQueue.push(leftCoord);
-        runUsed = false;
+        //접지 추가
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) nextCircuitStartQueue.push(downCoord);
+
+        //현재 위치 추가
+        nextCircuitStartQueue.push(currentCoord);
     }
 }
 
@@ -404,12 +386,37 @@ void Prop::propTurnOff()
     leadItem.eraseFlag(itemFlag::PROP_POWER_ON);
     leadItem.addFlag(itemFlag::PROP_POWER_OFF);
 
+    Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
+    Point3 rightCoord = { getGridX() + 1, getGridY(), getGridZ() };
+    Point3 upCoord = { getGridX(), getGridY() - 1, getGridZ() };
+    Point3 leftCoord = { getGridX() - 1, getGridY(), getGridZ() };
+    Point3 downCoord = { getGridX(), getGridY() + 1, getGridZ() };
+
     int iCode = leadItem.itemCode;
     if (iCode == itemRefCode::bollardLight)
     {
         leadItem.lightPtr = nullptr;
     }
-    else if (iCode == itemRefCode::transistorR || iCode == itemRefCode::transistorL) undoCircuitNetwork = true;
-    else if (iCode == itemRefCode::transistorU || iCode == itemRefCode::transistorD) undoCircuitNetwork = true;
-    else if (iCode == itemRefCode::andGateR || iCode == itemRefCode::andGateL) undoCircuitNetwork = true;
+    else if (iCode == itemRefCode::transistorR
+        || iCode == itemRefCode::transistorL
+        || iCode == itemRefCode::transistorU
+        || iCode == itemRefCode::transistorD
+        || iCode == itemRefCode::andGateR
+        || iCode == itemRefCode::andGateL)
+    {
+        //접지 우선 추가
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);
+        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) nextCircuitStartQueue.push(downCoord);
+
+        //일반 연결핀들 추가
+        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
+        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
+        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);
+        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) nextCircuitStartQueue.push(downCoord);
+
+        initChargeBFS(nextCircuitStartQueue);
+
+    }
 }

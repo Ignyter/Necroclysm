@@ -642,7 +642,6 @@ __int64 entityAITurn()
 __int64 propTurn()
 {
 	debug::printCircuitLog = true;
-	PROP_TURN_START:
 
 	finalLoadSet.clear();
 
@@ -660,15 +659,23 @@ __int64 propTurn()
 	int loopCount = 0;
 	do
 	{
-		saveVisitedSet.clear();
-        saveFrontierQueue = std::queue<Point3>();
-
 		loopCount++;
 		if (loopCount >= MAX_CIRCUIT_LOOP_COUNT) break;
 		if (debug::printCircuitLog) std::wprintf(L"▼루프 카운트: %d\n", loopCount);
 
-		for (auto pPtr : actviePropSet) pPtr->runPropFunc();
-
+		if (nextCircuitStartQueue.empty() == false)
+		{
+			Point3 tgtCoord = nextCircuitStartQueue.front();
+            nextCircuitStartQueue.pop();
+            Prop* tgtProp = TileProp(tgtCoord);
+			if (tgtProp) tgtProp->updateCircuitNetwork();
+		}
+		else for (auto pPtr : actviePropSet)
+		{
+			if (pPtr->runUsed) continue;
+			if (pPtr->leadItem.checkFlag(itemFlag::CIRCUIT)) pPtr->updateCircuitNetwork();
+		}
+\
 		//==============================================================================
 		// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
 		//==============================================================================
@@ -698,16 +705,14 @@ __int64 propTurn()
                 pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_DOWN);
             }
 		}
+		//finalLoadSet.clear();
 
-		if (undoCircuitNetwork)
-		{
-			undoCircuitNetwork = false;
-			goto PROP_TURN_START;
-		}
-	} while (saveFrontierQueue.size()>0 && saveVisitedSet.size()>0);
+	} while (nextCircuitStartQueue.empty()==false);
+
 
 	//에너지 소모 확정 페이즈
 	//윗 단계에서 계산된 에너지만큼 발전기에서 소모됨
+
 
 	return 0;
 }
