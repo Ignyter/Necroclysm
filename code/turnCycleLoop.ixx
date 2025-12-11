@@ -641,7 +641,7 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
-
+	debug::printCircuitLog = true;
 	PROP_TURN_START:
 
 	finalLoadSet.clear();
@@ -652,9 +652,9 @@ __int64 propTurn()
 
 	for (auto pPtr : actviePropSet)
 	{
-		pPtr->nodeInputElectron = 0;
-		pPtr->nodeOutputElectron = 0;
-		pPtr->groundChargeEnergy = 0;
+		pPtr->nodeInputCharge = 0;
+		pPtr->nodeOutputCharge = 0;
+		pPtr->groundCharge = 0;
 	}
 
 	int loopCount = 0;
@@ -675,7 +675,7 @@ __int64 propTurn()
 		for (auto pPtr : finalLoadSet)
 		{
 			Prop* loadProp = pPtr;
-			if (loadProp->groundChargeEnergy >= static_cast<double>(loadProp->leadItem.electricUsePower))
+			if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.electricUsePower))
 			{
 				if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
 				{
@@ -689,6 +689,14 @@ __int64 propTurn()
 					loadProp->propTurnOff();
 				}
 			}
+
+			if(pPtr->leadItem.itemCode == itemRefCode::andGateL|| pPtr->leadItem.itemCode == itemRefCode::andGateR)
+			{
+				pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_RIGHT);
+                pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_LEFT);
+				pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_UP);
+                pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_DOWN);
+            }
 		}
 
 		if (undoCircuitNetwork)

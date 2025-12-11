@@ -24,13 +24,13 @@ public:
 
     bool runUsed = false; //runProp
 
-    int nodeMaxElectron = 0;
-    double nodeElectron = 0;
-    double nodeInputElectron = 0;
-    double nodeOutputElectron = 0;
-    double groundChargeEnergy = 0; //전자기기 사용되기 전에 저장된 에너지(접지 방향)
+    int nodeMaxCharge = 0;
+    double nodeCharge = 0;
+    double nodeInputCharge = 0;
+    double nodeOutputCharge = 0;
+    double groundCharge = 0; //전자기기 사용되기 전에 저장된 에너지(접지 방향)
 
-    double prevPushedElectron = 0;
+    double prevPushedCharge = 0;
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
 
 
@@ -59,11 +59,11 @@ public:
 
     void runPropFunc();
 
-    void transferElectron(Prop* donorProp, Prop* acceptorProp, double txElectronAmount, const std::wstring& indent, bool isGroundTransfer);
+    void transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAmount, const std::wstring& indent, bool isGroundTransfer);
 
-    double pushElectron(Prop* donorProp, dir16 txDir, double txElectronAmount, std::unordered_set<Prop*> pathVisited, int depth);
+    double pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std::unordered_set<Prop*> pathVisited, int depth);
 
-    double divideElectron(Prop* propPtr, double inputElectron, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth);
+    double divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth);
 
     void propTurnOn();
 

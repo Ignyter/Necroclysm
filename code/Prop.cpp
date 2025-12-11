@@ -377,6 +377,26 @@ void Prop::propTurnOn()
         saveFrontierQueue.push(rightCoord);
         runUsed = false;
     }
+    else if (iCode == itemRefCode::andGateR)
+    {
+        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
+        Point3 upCoord = { currentCoord.x, currentCoord.y - 1, currentCoord.z };
+        Point3 rightCoord = { currentCoord.x + 1, currentCoord.y, currentCoord.z };
+        saveVisitedSet.insert(currentCoord);
+        saveFrontierQueue.push(upCoord);
+        saveFrontierQueue.push(rightCoord);
+        runUsed = false;
+    }
+    else if (iCode == itemRefCode::andGateL)
+    {
+        Point3 currentCoord = { getGridX(), getGridY(), getGridZ() };
+        Point3 upCoord = { currentCoord.x, currentCoord.y - 1, currentCoord.z };
+        Point3 leftCoord = { currentCoord.x - 1, currentCoord.y, currentCoord.z };
+        saveVisitedSet.insert(currentCoord);
+        saveFrontierQueue.push(upCoord);
+        saveFrontierQueue.push(leftCoord);
+        runUsed = false;
+    }
 }
 
 void Prop::propTurnOff()
@@ -391,4 +411,5 @@ void Prop::propTurnOff()
     }
     else if (iCode == itemRefCode::transistorR || iCode == itemRefCode::transistorL) undoCircuitNetwork = true;
     else if (iCode == itemRefCode::transistorU || iCode == itemRefCode::transistorD) undoCircuitNetwork = true;
+    else if (iCode == itemRefCode::andGateR || iCode == itemRefCode::andGateL) undoCircuitNetwork = true;
 }

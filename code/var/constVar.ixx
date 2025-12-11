@@ -576,6 +576,12 @@ export enum class itemFlag
     VOLTAGE_GND_LEFT,
     VOLTAGE_GND_DOWN,
     VOLTAGE_GND_ALL,
+
+    //트랜지스터와 게이트들 핀에 1J이라도 인가되면 활성화
+    GND_ACTIVE_RIGHT,
+    GND_ACTIVE_UP,
+    GND_ACTIVE_LEFT,
+    GND_ACTIVE_DOWN,
 };
 
 export enum class walkFlag
@@ -1332,6 +1338,9 @@ export namespace itemRefCode
     constexpr int relayU = 166;
     constexpr int relayL = 167;
     constexpr int relayD = 168;
+
+    constexpr int andGateR = 488;
+    constexpr int andGateL = 489;
 };
 
 export namespace entityRefCode
