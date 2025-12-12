@@ -49,15 +49,13 @@ public:
 
     void drawSelf() override;
 
-    void updateCircuitNetwork();
+    std::unordered_set<Prop*> updateCircuitNetwork();
 
     bool isConnected(Point3 currentCoord, dir16 dir);
 
     bool isConnected(Prop* currentProp, dir16 dir);
 
     bool isGround(Point3 currentCoord, dir16 dir);
-
-    void runPropFunc();
 
     void transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAmount, const std::wstring& indent, bool isGroundTransfer);
 

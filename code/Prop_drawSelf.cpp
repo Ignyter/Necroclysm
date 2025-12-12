@@ -244,10 +244,15 @@ void Prop::drawSelf()
             }
         }
     }
-    else if (leadItem.itemCode == itemRefCode::andGateR || leadItem.itemCode == itemRefCode::andGateL)
+    else if (leadItem.itemCode == itemRefCode::andGateR 
+        || leadItem.itemCode == itemRefCode::andGateL
+        || leadItem.itemCode == itemRefCode::orGateR
+        || leadItem.itemCode == itemRefCode::orGateL
+        )
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON)) sprIndex += 1;
     }
+ 
 
 
     drawSpriteCenter

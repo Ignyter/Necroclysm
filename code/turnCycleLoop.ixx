@@ -641,10 +641,9 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
-	debug::printCircuitLog = true;
+	debug::printCircuitLog = false;
 
-	finalLoadSet.clear();
-
+	nextCircuitStartQueue = std::queue<Point3>();
     auto actviePropSet = (World::ins())->getActivePropSet();
 
 	for (auto pPtr : actviePropSet) pPtr->runUsed = false;
@@ -657,8 +656,10 @@ __int64 propTurn()
 	}
 
 	int loopCount = 0;
+	std::unordered_set<Prop*> loadSet;
 	do
 	{
+		loadSet.clear();
 		loopCount++;
 		if (loopCount >= MAX_CIRCUIT_LOOP_COUNT) break;
 		if (debug::printCircuitLog) std::wprintf(L"▼루프 카운트: %d\n", loopCount);
@@ -668,36 +669,83 @@ __int64 propTurn()
 			Point3 tgtCoord = nextCircuitStartQueue.front();
             nextCircuitStartQueue.pop();
             Prop* tgtProp = TileProp(tgtCoord);
-			if (tgtProp) tgtProp->updateCircuitNetwork();
+			if (tgtProp) loadSet = tgtProp->updateCircuitNetwork();
 		}
 		else for (auto pPtr : actviePropSet)
 		{
 			if (pPtr->runUsed) continue;
-			if (pPtr->leadItem.checkFlag(itemFlag::CIRCUIT)) pPtr->updateCircuitNetwork();
+			if (pPtr->leadItem.checkFlag(itemFlag::CIRCUIT))
+			{
+				auto newLoads = pPtr->updateCircuitNetwork();
+				loadSet.insert(newLoads.begin(), newLoads.end());
+			}
 		}
-\
+
 		//==============================================================================
 		// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
 		//==============================================================================
-		for (auto pPtr : finalLoadSet)
+
+		for (auto pPtr : loadSet)
 		{
 			Prop* loadProp = pPtr;
-			if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.electricUsePower))
+
+			
+            //모든 계산이 종료된 후 부하에 공급된 전하량이 usePower 이상인지 이하인지 판단하여 부하 프롭이 켜지거나 꺼짐
+			//단 논리게이트들은 공급된 전하량이 아니라 별도의 로직으로 처리
+
+			if (loadProp->leadItem.itemCode == itemRefCode::orGateR || loadProp->leadItem.itemCode == itemRefCode::orGateL)
 			{
-				if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+				bool firstInput, secondInput;
+
+				if (loadProp->leadItem.itemCode == itemRefCode::orGateR)
 				{
-					loadProp->propTurnOn();
+					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT);
+					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+				}
+				else
+				{
+					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_RIGHT);
+					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+				}
+
+				if (firstInput || secondInput)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
 				}
 			}
-			else
+            else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
-				if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+				if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.electricUsePower))
 				{
-					loadProp->propTurnOff();
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
 				}
 			}
 
-			if(pPtr->leadItem.itemCode == itemRefCode::andGateL|| pPtr->leadItem.itemCode == itemRefCode::andGateR)
+			if(pPtr->leadItem.itemCode == itemRefCode::andGateL
+				|| pPtr->leadItem.itemCode == itemRefCode::andGateR
+				|| pPtr->leadItem.itemCode == itemRefCode::orGateR
+				|| pPtr->leadItem.itemCode == itemRefCode::orGateL
+				)
 			{
 				pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_RIGHT);
                 pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_LEFT);
@@ -705,7 +753,6 @@ __int64 propTurn()
                 pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_DOWN);
             }
 		}
-		//finalLoadSet.clear();
 
 	} while (nextCircuitStartQueue.empty()==false);
 

@@ -325,22 +325,6 @@ bool Prop::runAnimation(bool shutdown)
 
 
 
-
-
-void Prop::runPropFunc()
-{
-    if (leadItem.electricUsePower > 0) finalLoadSet.insert(this);
-    if (runUsed) return;
-
-    if (leadItem.checkFlag(itemFlag::CIRCUIT))
-    {
-        updateCircuitNetwork();
-    }
-
-    runUsed = true;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -368,16 +352,16 @@ void Prop::propTurnOn()
         || iCode == itemRefCode::transistorU 
         || iCode == itemRefCode::transistorD
         || iCode == itemRefCode::andGateR
-        || iCode == itemRefCode::andGateL)
+        || iCode == itemRefCode::andGateL
+        || iCode == itemRefCode::orGateR
+        || iCode == itemRefCode::orGateL
+        )
     {
-        //접지 추가
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) nextCircuitStartQueue.push(downCoord);
-
         //현재 위치 추가
         nextCircuitStartQueue.push(currentCoord);
+        initChargeBFS(nextCircuitStartQueue);
+
+        auto& debugStartQueue = nextCircuitStartQueue;
     }
 }
 
@@ -402,15 +386,12 @@ void Prop::propTurnOff()
         || iCode == itemRefCode::transistorU
         || iCode == itemRefCode::transistorD
         || iCode == itemRefCode::andGateR
-        || iCode == itemRefCode::andGateL)
+        || iCode == itemRefCode::andGateL
+        || iCode == itemRefCode::orGateR
+        || iCode == itemRefCode::orGateL
+        )
     {
-        //접지 우선 추가
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);
-        if (leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) nextCircuitStartQueue.push(downCoord);
-
-        //일반 연결핀들 추가
+        //접지가 아닌 메인라인 핀들 추가
         if (leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
         if (leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
         if (leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);

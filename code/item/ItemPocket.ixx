@@ -9,7 +9,7 @@ export class ItemPocket
 private:
 	storageType type;//스토리지의 타입, 0:일반_1:장비
 public:
-	static std::unique_ptr<ItemPocket> availableRecipe;
+	static std::unique_ptr<ItemPocket> unlockRecipes;
 	std::vector<ItemData> itemInfo;
 
 	ItemPocket(storageType inputType);
@@ -90,7 +90,7 @@ public:
 	void popTopBullet();
 };
 
-inline std::unique_ptr<ItemPocket> ItemPocket::availableRecipe = std::make_unique<ItemPocket>(storageType::recipe);
+inline std::unique_ptr<ItemPocket> ItemPocket::unlockRecipes = std::make_unique<ItemPocket>(storageType::recipe);
 
 //현재 이 총에 장전된 모든 총알을 벡터 형태로 반환
 export ItemPocket* getBulletPocket(ItemData& inputGun);

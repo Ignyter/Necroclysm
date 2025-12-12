@@ -1341,6 +1341,17 @@ export namespace itemRefCode
 
     constexpr int andGateR = 488;
     constexpr int andGateL = 489;
+
+    constexpr int orGateR = 490;
+    constexpr int orGateL = 491;
+
+    constexpr int notGateR = 492;
+    constexpr int notGateL = 493;
+
+    constexpr int xorGateR = 494;
+    constexpr int xorGateL = 495;
+
+
 };
 
 export namespace entityRefCode

@@ -22,6 +22,8 @@ constexpr double EPSILON = 0.000001;
 * andGateR : 출력핀이 우측(R), vcc 입력은 항상 상단, 좌측과 하단은 입력핀
 * andGateL : 출력핀이 좌측(L), vcc 입력은 항상 상단, 우측과 하단은 입력핀
 * 
+* orGateR & orGateL : andGate와 동일
+* 
 * leverRL : 좌우만 연결
 * leverUD : 상하만 연결
 * 
@@ -32,7 +34,7 @@ constexpr double EPSILON = 0.000001;
 */
 
 
-void Prop::updateCircuitNetwork()
+std::unordered_set<Prop*> Prop::updateCircuitNetwork()
 {
     if(debug::printCircuitLog) std::wprintf(L"------------------------- 회로망 업데이트 시작 ------------------------\n");
     int cursorX = getGridX();
@@ -42,9 +44,9 @@ void Prop::updateCircuitNetwork()
     std::queue<Point3> frontierQueue;
     std::unordered_set<Point3, Point3::Hash> visitedSet;
     std::vector<Prop*> voltagePropVec;
-    std::vector<Prop*> loadVec; //부하가 가해지는 전자기기들
 
     std::unordered_set<Point3, Point3::Hash> skipBFSSet;
+    std::unordered_set<Prop*> loadSet; //부하가 가해지는 전자기기들
 
     int circuitMaxEnergy = 0;
     int circuitTotalLoad = 0;
@@ -74,8 +76,6 @@ void Prop::updateCircuitNetwork()
         Prop* currentProp = TileProp(current.x, current.y, current.z);
         if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
 
-        if (currentProp->leadItem.electricUsePower > 0) finalLoadSet.insert(currentProp);
-
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
             currentProp->runUsed = true;
@@ -87,12 +87,62 @@ void Prop::updateCircuitNetwork()
                 {
                     circuitMaxEnergy += currentProp->leadItem.electricMaxPower;
                     voltagePropVec.push_back(currentProp);
-                    
-                    
                 }
             }
 
-            if (currentProp->leadItem.electricUsePower > 0) loadVec.push_back(currentProp);
+            if (currentProp->leadItem.electricUsePower > 0)
+            {
+                ItemData& currentLeadItem = currentProp->leadItem;
+                int iCode = currentLeadItem.itemCode;
+
+                if (iCode == itemRefCode::transistorR
+                    || iCode == itemRefCode::transistorU
+                    || iCode == itemRefCode::transistorL
+                    || iCode == itemRefCode::transistorD
+                    || iCode == itemRefCode::andGateR 
+                    || iCode == itemRefCode::andGateL
+                    || iCode == itemRefCode::orGateR
+                    || iCode == itemRefCode::orGateL
+                    )
+                {
+                    Point3 currentCoord = { current.x, current.y, current.z };
+                    Point3 rightCoord = { current.x + 1, current.y, current.z };
+                    Point3 upCoord = { current.x, current.y - 1, current.z };
+                    Point3 leftCoord = { current.x - 1, current.y, current.z };
+                    Point3 downCoord = { current.x, current.y + 1, current.z };
+
+                    if (currentLeadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT))
+                    {
+                        if(visitedSet.find(rightCoord) != visitedSet.end())
+                        {
+                            loadSet.insert(currentProp);
+                        }
+                    }
+                    if (currentLeadItem.checkFlag(itemFlag::VOLTAGE_GND_UP))
+                    {
+                        if(visitedSet.find(upCoord) != visitedSet.end())
+                        {
+                            loadSet.insert(currentProp);
+                        }
+                    }
+                    if (currentLeadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT))
+                    {
+                        if(visitedSet.find(leftCoord) != visitedSet.end())
+                        {
+                            loadSet.insert(currentProp);
+                        }
+                    }
+                    if (currentLeadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN))
+                    {
+                        if(visitedSet.find(downCoord) != visitedSet.end())
+                        {
+                            loadSet.insert(currentProp);
+                        }
+                    }
+                }
+                else loadSet.insert(currentProp);
+                
+            }
 
             //택트스위치일 경우 다음 턴 시작 시에 종료
             if (currentProp->leadItem.itemCode == itemRefCode::tactSwitchRL || currentProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
@@ -183,6 +233,11 @@ void Prop::updateCircuitNetwork()
                                 skipBFSSet.insert(nextCoord);
                             else if (nextProp->leadItem.itemCode == itemRefCode::andGateL && (directions[i] == dir16::left || directions[i] == dir16::up)) 
                                 skipBFSSet.insert(nextCoord);
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::orGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::orGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
                         }
 
                         frontierQueue.push(nextCoord);
@@ -201,16 +256,16 @@ void Prop::updateCircuitNetwork()
         }
     }
 
-    for (int i = 0; i < loadVec.size(); i++)
+    for(auto propPtr : loadSet)
     {
-        circuitTotalLoad += loadVec[i]->leadItem.electricUsePower;
+        circuitTotalLoad += propPtr->leadItem.electricUsePower;
     }
 
     // 노드가 2개 미만이면 출력하지 않음
     if (visitedSet.size() < 2)
     {
         runUsed = true;
-        return;
+        return loadSet;
     }
 
 
@@ -285,6 +340,8 @@ void Prop::updateCircuitNetwork()
             voltProp->nodeCharge = voltProp->nodeMaxCharge;
         }
     }
+
+    return loadSet;
 }
 
 bool Prop::isConnected(Point3 currentCoord, dir16 dir)
@@ -398,6 +455,12 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::andGateR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::andGateL)return false;
 
+    if (dir == dir16::down && (tgtItem.itemCode == itemRefCode::orGateR || tgtItem.itemCode == itemRefCode::orGateL))
+    {
+        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::orGateR) return false;
+    else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::orGateL) return false;
 
 
 
@@ -417,6 +480,9 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     //(논리게이트) 메인라인에서 입력핀1,2 방향 절연
     if (crtItem.itemCode == itemRefCode::andGateR && (dir == dir16::left || dir == dir16::down)) return false;
     else if (crtItem.itemCode == itemRefCode::andGateL && (dir == dir16::right || dir == dir16::down)) return false;
+
+    if (crtItem.itemCode == itemRefCode::orGateR && (dir == dir16::left || dir == dir16::down)) return false;
+    else if (crtItem.itemCode == itemRefCode::orGateL && (dir == dir16::right || dir == dir16::down)) return false;
 
 
     if (dir == dir16::ascend || dir == dir16::descend)
@@ -537,7 +603,11 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
         double remainEnergy = acceptorProp->leadItem.electricUsePower - acceptorProp->groundCharge;
         int iCode = acceptorProp->leadItem.itemCode;
 
-        if (iCode == itemRefCode::andGateR || iCode == itemRefCode::andGateL)
+        if (iCode == itemRefCode::andGateR 
+            || iCode == itemRefCode::andGateL
+            || iCode == itemRefCode::orGateR
+            || iCode == itemRefCode::orGateL
+            )
         {
             if (txDir == dir16::right && acceptorProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT) == false)
             {
@@ -753,11 +823,14 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
         visitedSet.insert(current);
 
         Prop* currentProp = TileProp(current.x, current.y, current.z);
+        if (currentProp)
+        {
+            currentProp->nodeCharge = currentProp->nodeMaxCharge;
+            currentProp->groundCharge = 0;
+            currentProp->nodeInputCharge = 0;
+            currentProp->nodeOutputCharge = 0;
+        }
 
-        currentProp->nodeCharge = currentProp->nodeMaxCharge;
-        currentProp->groundCharge = 0;
-        currentProp->nodeInputCharge = 0;
-        currentProp->nodeOutputCharge = 0;
         const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::ascend, dir16::descend };
         for (int i = 0; i < 6; ++i)
         {
