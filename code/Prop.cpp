@@ -400,10 +400,14 @@ void Prop::propTurnOff()
         )
     {
         //접지가 아닌 메인라인 핀들 추가
-        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) nextCircuitStartQueue.push(rightCoord);
-        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) nextCircuitStartQueue.push(upCoord);
-        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) nextCircuitStartQueue.push(leftCoord);
-        if (leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) nextCircuitStartQueue.push(downCoord);
+        if (TileProp(rightCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT)) 
+            nextCircuitStartQueue.push(rightCoord);
+        if (TileProp(upCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP)) 
+            nextCircuitStartQueue.push(upCoord);
+        if (TileProp(leftCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT)) 
+            nextCircuitStartQueue.push(leftCoord);
+        if (TileProp(downCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN)) 
+            nextCircuitStartQueue.push(downCoord);
 
         initChargeBFS(nextCircuitStartQueue);
 

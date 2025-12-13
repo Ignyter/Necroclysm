@@ -158,7 +158,13 @@ export struct ItemDataBase
     unsigned __int16 propInstallCode = 0; //이게 0이 아닐 경우 주변 타일에 설치 가능
     unsigned __int16 propUninstallCode = 0; //이게 0이 아닐 경우 주변 타일에 해체 가능
 
-    __int16 electricMaxPower = 0; //전력원 순간 출력 (kJ/turn)
-    __int16 electricUsePower = 0; //전자기기 소비 전력 (kJ/turn)
     double electricResistance = 0; //전자기기 저항 (Ω)
+
+    __int16 electricMaxPower = 0; //전력원 순간 출력 (kJ/turn)
+    __int16 gndUsePower = 0; //전자기기 소비 전력 (kJ/turn)
+
+    __int16 gndUsePowerRight = 0;
+    __int16 gndUsePowerUp = 0;
+    __int16 gndUsePowerLeft = 0;
+    __int16 gndUsePowerDown = 0;
 };

@@ -163,9 +163,15 @@ namespace csvItem
     constexpr int propInstallCode = 134; //이게 0이 아닐 경우 주변 타일에 설치 가능
     constexpr int propUninstallCode = 135; //이게 0이 아닐 경우 프롭을 손에 드는 행위 등이 가능
 
-    constexpr int electricMaxPower = 136;
-    constexpr int electricUsePower = 137; //전자기기 소비전력
-    constexpr int electricResistance = 138;
+    constexpr int electricResistance = 136;
+    constexpr int electricMaxPower = 137;
+
+    constexpr int gndUsePower = 138; //전자기기 소비전력
+
+    constexpr int gndUsePowerRight = 139;
+    constexpr int gndUsePowerUp = 140;
+    constexpr int gndUsePowerLeft = 141;
+    constexpr int gndUsePowerDown = 142;
 };
 
 export int readItemDex(const wchar_t* file)
@@ -519,11 +525,15 @@ export int readItemDex(const wchar_t* file)
                             { L"CABLE_Z_ASCEND", itemFlag::CABLE_Z_ASCEND },
                             { L"CABLE_Z_DESCEND", itemFlag::CABLE_Z_DESCEND },
 
+                            { L"HAS_GROUND", itemFlag::HAS_GROUND },
                             { L"VOLTAGE_GND_UP", itemFlag::VOLTAGE_GND_UP },
                             { L"VOLTAGE_GND_DOWN", itemFlag::VOLTAGE_GND_DOWN },
                             { L"VOLTAGE_GND_LEFT", itemFlag::VOLTAGE_GND_LEFT },
                             { L"VOLTAGE_GND_RIGHT", itemFlag::VOLTAGE_GND_RIGHT },
                             { L"VOLTAGE_GND_ALL", itemFlag::VOLTAGE_GND_ALL },
+                            
+                            { L"TRANSISTOR", itemFlag::TRANSISTOR },
+                            { L"LOGIC_GATE", itemFlag::LOGIC_GATE },
                         };
 
                         size_t pos = 0;
@@ -1063,14 +1073,26 @@ export int readItemDex(const wchar_t* file)
                     case csvItem::propUninstallCode:
                         itemDex[tgtIndex].propUninstallCode = wtoi(strFragment.c_str());
                         break;
+                    case csvItem::electricResistance:
+                        itemDex[tgtIndex].electricResistance = wtof(strFragment.c_str());
+                        break;
                     case csvItem::electricMaxPower:
 						itemDex[tgtIndex].electricMaxPower = wtoi(strFragment.c_str());
                         break;
-                    case csvItem::electricUsePower:
-                        itemDex[tgtIndex].electricUsePower = wtoi(strFragment.c_str());
+                    case csvItem::gndUsePower:
+                        itemDex[tgtIndex].gndUsePower = wtoi(strFragment.c_str());
                         break;
-                    case csvItem::electricResistance:
-                        itemDex[tgtIndex].electricResistance = wtof(strFragment.c_str());
+                    case csvItem::gndUsePowerRight:
+                        itemDex[tgtIndex].gndUsePowerRight = wtoi(strFragment.c_str());
+                        break;
+                    case csvItem::gndUsePowerUp:
+                        itemDex[tgtIndex].gndUsePowerUp = wtoi(strFragment.c_str());
+                        break;
+                    case csvItem::gndUsePowerLeft:
+                        itemDex[tgtIndex].gndUsePowerLeft = wtoi(strFragment.c_str());
+                        break;
+                    case csvItem::gndUsePowerDown:
+                        itemDex[tgtIndex].gndUsePowerDown = wtoi(strFragment.c_str());
                         break;
                     default:
                         errorBox(L"readItemDex.ixx에서 오류 발생. csv의 잘못된 장소를 읽었다.");

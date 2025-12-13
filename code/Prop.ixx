@@ -30,8 +30,18 @@ public:
     double nodeOutputCharge = 0;
     double groundCharge = 0; //전자기기 사용되기 전에 저장된 에너지(접지 방향)
 
+    //특정 방향의 gnd 입력, 아직은 논리게이트같이 입력핀이 여러개인 부품에서만 사용
+    double gndChargeRight = 0;
+    double gndChargeUp = 0;
+    double gndChargeLeft = 0;
+    double gndChargeDown = 0;
+    
+
     double prevPushedCharge = 0;
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
+
+    int gndVisitCount = -1;
+       
 
 
 
@@ -57,7 +67,7 @@ public:
 
     bool isGround(Point3 currentCoord, dir16 dir);
 
-    void transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAmount, const std::wstring& indent, bool isGroundTransfer);
+    void transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAmount, const std::wstring& indent, dir16 txDir, bool isGroundTransfer);
 
     double pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std::unordered_set<Prop*> pathVisited, int depth);
 

@@ -653,6 +653,10 @@ __int64 propTurn()
 		pPtr->nodeInputCharge = 0;
 		pPtr->nodeOutputCharge = 0;
 		pPtr->groundCharge = 0;
+		pPtr->gndChargeRight = 0;
+		pPtr->gndChargeUp = 0;
+		pPtr->gndChargeLeft = 0;
+		pPtr->gndChargeDown = 0;
 	}
 
 	int loopCount = 0;
@@ -692,20 +696,49 @@ __int64 propTurn()
 			
             //모든 계산이 종료된 후 부하에 공급된 전하량이 usePower 이상인지 이하인지 판단하여 부하 프롭이 켜지거나 꺼짐
 			//단 논리게이트들은 공급된 전하량이 아니라 별도의 로직으로 처리
+			if (loadProp->leadItem.itemCode == itemRefCode::andGateR || loadProp->leadItem.itemCode == itemRefCode::andGateL)
+			{
+				bool firstInput, secondInput;
 
-			if (loadProp->leadItem.itemCode == itemRefCode::orGateR || loadProp->leadItem.itemCode == itemRefCode::orGateL)
+				if (loadProp->leadItem.itemCode == itemRefCode::andGateR)
+				{
+					firstInput = loadProp->gndChargeLeft >= 1.0;
+					secondInput = loadProp->gndChargeDown >= 1.0;
+				}
+				else
+				{
+					firstInput = loadProp->gndChargeRight >= 1.0;
+					secondInput = loadProp->gndChargeDown >= 1.0;
+				}
+
+				if (firstInput && secondInput)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
+				}
+			}
+			else if (loadProp->leadItem.itemCode == itemRefCode::orGateR || loadProp->leadItem.itemCode == itemRefCode::orGateL)
 			{
 				bool firstInput, secondInput;
 
 				if (loadProp->leadItem.itemCode == itemRefCode::orGateR)
 				{
-					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT);
-					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+					firstInput = loadProp->gndChargeLeft >= 1.0;
+					secondInput = loadProp->gndChargeDown >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_RIGHT);
-					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+					firstInput = loadProp->gndChargeRight >= 1.0;
+					secondInput = loadProp->gndChargeDown >= 1.0;
 				}
 
 				if (firstInput || secondInput)
@@ -729,13 +762,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::xorGateR)
 				{
-					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT);
-					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+					firstInput = loadProp->gndChargeLeft >= 1.0;
+					secondInput = loadProp->gndChargeDown >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_RIGHT);
-					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+					firstInput = loadProp->gndChargeRight >= 1.0;
+					secondInput = loadProp->gndChargeDown >= 1.0;
 				}
 
 				if (firstInput != secondInput)
@@ -756,8 +789,8 @@ __int64 propTurn()
 			else if (loadProp->leadItem.itemCode == itemRefCode::notGateR || loadProp->leadItem.itemCode == itemRefCode::notGateL)
 			{
 				bool inputActive;
-				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT);
-				else inputActive = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_RIGHT);
+				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->gndChargeLeft >= 1.0;
+				else inputActive = loadProp->gndChargeRight >= 1.0;
 
 				if (inputActive == false)
 				{
@@ -776,7 +809,7 @@ __int64 propTurn()
 			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
-				if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.electricUsePower))
+				if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.gndUsePower))
 				{
 					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
 					{

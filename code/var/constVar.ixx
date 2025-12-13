@@ -571,6 +571,7 @@ export enum class itemFlag
     CABLE_Z_ASCEND, //위층의 현재 타일과 연결된 케이블
     CABLE_Z_DESCEND, //아래층의 현재 타일과 연결된 케이블
 
+    HAS_GROUND,
     VOLTAGE_GND_RIGHT,
     VOLTAGE_GND_UP,
     VOLTAGE_GND_LEFT,
@@ -582,6 +583,11 @@ export enum class itemFlag
     GND_ACTIVE_UP,
     GND_ACTIVE_LEFT,
     GND_ACTIVE_DOWN,
+
+    MULTI_GND, //GND를 여러 방향에 독립적으로 가지고 있는 경우
+
+    TRANSISTOR, //아직 미사용
+    LOGIC_GATE, //BFS에 포함되기만 해도 loadSet에 포함되는 플래그(2개 이상의 경로 가짐)
 };
 
 export enum class walkFlag
