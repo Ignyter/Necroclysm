@@ -12,17 +12,25 @@ constexpr double TIME_PER_TURN = 60.0;
 constexpr double EPSILON = 0.000001;
 
 /*
+* 
+* relayR,U,L,D : 트랜지스터와 동일한 방향성 가짐
+* 
+* 
+* <트랜지스터>
 * transistorR : 게이트핀이 우측, 상단과 하단이 메인라인
 * transistorU : 게이트핀이 상단, 좌측과 우측이 메인라인
 * transistorL : 게이트핀이 좌측, 상단과 하단이 메인라인
 * transistorD : 게이트핀이 하단, 좌측과 우측이 메인라인
 * 
-* relayR,U,L,D : 트랜지스터와 동일한 방향성 가짐
-* 
+* <논리게이트>
 * andGateR : 출력핀이 우측(R), vcc 입력은 항상 상단, 좌측과 하단은 입력핀
 * andGateL : 출력핀이 좌측(L), vcc 입력은 항상 상단, 우측과 하단은 입력핀
+* andGate는 단순히 소모전력이 2고, 각 핀은 최대 1을 받는데 받은 전력이 2 이상이면 작동함
 * 
-* orGateR & orGateL : andGate와 동일
+* orGateR & orGateL : andGate와 동일, 다만 ON/OFF 판정을 ACTIVE 플래그로 함
+* xorGateR & xorGateL : andGate와 동일, 다만 ON/OFF 판정을 ACTIVE 플래그로 함
+* notGateR : 출력핀이 우측(R), vcc 입력은 항상 상단, 좌측은 입력핀(GND)
+* notGateL : 출력핀이 좌측(L), vcc 입력은 항상 상단, 우측은 입력핀(GND)
 * 
 * leverRL : 좌우만 연결
 * leverUD : 상하만 연결
@@ -103,6 +111,10 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                     || iCode == itemRefCode::andGateL
                     || iCode == itemRefCode::orGateR
                     || iCode == itemRefCode::orGateL
+                    || iCode == itemRefCode::xorGateR
+                    || iCode == itemRefCode::xorGateL
+                    || iCode == itemRefCode::notGateR
+                    || iCode == itemRefCode::notGateL
                     )
                 {
                     Point3 currentCoord = { current.x, current.y, current.z };
@@ -237,6 +249,16 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                             if (nextProp->leadItem.itemCode == itemRefCode::orGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
                                 skipBFSSet.insert(nextCoord);
                             else if (nextProp->leadItem.itemCode == itemRefCode::orGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::xorGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::xorGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::notGateR && (directions[i] == dir16::right))
+                                skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::notGateL && (directions[i] == dir16::left))
                                 skipBFSSet.insert(nextCoord);
                         }
 
@@ -462,6 +484,21 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::orGateR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::orGateL) return false;
 
+    if (dir == dir16::down && (tgtItem.itemCode == itemRefCode::xorGateR || tgtItem.itemCode == itemRefCode::xorGateL))
+    {
+        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::xorGateR) return false;
+    else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::xorGateL) return false;
+
+
+    if (dir == dir16::down && (tgtItem.itemCode == itemRefCode::notGateR || tgtItem.itemCode == itemRefCode::notGateL))
+    {
+        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    if (dir == dir16::left && tgtItem.itemCode == itemRefCode::notGateR) return false;
+    else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::notGateL) return false;
+
 
 
     ItemData& crtItem = currentProp->leadItem;
@@ -483,6 +520,13 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
 
     if (crtItem.itemCode == itemRefCode::orGateR && (dir == dir16::left || dir == dir16::down)) return false;
     else if (crtItem.itemCode == itemRefCode::orGateL && (dir == dir16::right || dir == dir16::down)) return false;
+
+    if (crtItem.itemCode == itemRefCode::xorGateR && (dir == dir16::left || dir == dir16::down)) return false;
+    else if (crtItem.itemCode == itemRefCode::xorGateL && (dir == dir16::right || dir == dir16::down)) return false;
+
+    //(NOT게이트) 메인라인에서 입력핀 방향 절연
+    if (crtItem.itemCode == itemRefCode::notGateR && dir == dir16::left) return false;
+    else if (crtItem.itemCode == itemRefCode::notGateL && dir == dir16::right) return false;
 
 
     if (dir == dir16::ascend || dir == dir16::descend)
@@ -607,6 +651,10 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
             || iCode == itemRefCode::andGateL
             || iCode == itemRefCode::orGateR
             || iCode == itemRefCode::orGateL
+            || iCode == itemRefCode::xorGateR
+            || iCode == itemRefCode::xorGateL
+            || iCode == itemRefCode::notGateR
+            || iCode == itemRefCode::notGateL
             )
         {
             if (txDir == dir16::right && acceptorProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT) == false)

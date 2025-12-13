@@ -355,6 +355,10 @@ void Prop::propTurnOn()
         || iCode == itemRefCode::andGateL
         || iCode == itemRefCode::orGateR
         || iCode == itemRefCode::orGateL
+        || iCode == itemRefCode::xorGateR
+        || iCode == itemRefCode::xorGateL
+        || iCode == itemRefCode::notGateR
+        || iCode == itemRefCode::notGateL
         )
     {
         //현재 위치 추가
@@ -389,6 +393,10 @@ void Prop::propTurnOff()
         || iCode == itemRefCode::andGateL
         || iCode == itemRefCode::orGateR
         || iCode == itemRefCode::orGateL
+        || iCode == itemRefCode::xorGateR
+        || iCode == itemRefCode::xorGateL
+        || iCode == itemRefCode::notGateR
+        || iCode == itemRefCode::notGateL
         )
     {
         //접지가 아닌 메인라인 핀들 추가

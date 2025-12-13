@@ -248,6 +248,8 @@ void Prop::drawSelf()
         || leadItem.itemCode == itemRefCode::andGateL
         || leadItem.itemCode == itemRefCode::orGateR
         || leadItem.itemCode == itemRefCode::orGateL
+        || leadItem.itemCode == itemRefCode::xorGateR
+        || leadItem.itemCode == itemRefCode::xorGateL
         )
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON)) sprIndex += 1;

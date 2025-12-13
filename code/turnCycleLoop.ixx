@@ -723,6 +723,57 @@ __int64 propTurn()
 					}
 				}
 			}
+            else if (loadProp->leadItem.itemCode == itemRefCode::xorGateR || loadProp->leadItem.itemCode == itemRefCode::xorGateL)
+			{
+				bool firstInput, secondInput;
+
+				if (loadProp->leadItem.itemCode == itemRefCode::xorGateR)
+				{
+					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT);
+					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+				}
+				else
+				{
+					firstInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_RIGHT);
+					secondInput = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_DOWN);
+				}
+
+				if (firstInput != secondInput)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
+				}
+			}
+			else if (loadProp->leadItem.itemCode == itemRefCode::notGateR || loadProp->leadItem.itemCode == itemRefCode::notGateL)
+			{
+				bool inputActive;
+				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_LEFT);
+				else inputActive = loadProp->leadItem.checkFlag(itemFlag::GND_ACTIVE_RIGHT);
+
+				if (inputActive == false)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
+                }
+			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
 				if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.electricUsePower))
@@ -745,6 +796,10 @@ __int64 propTurn()
 				|| pPtr->leadItem.itemCode == itemRefCode::andGateR
 				|| pPtr->leadItem.itemCode == itemRefCode::orGateR
 				|| pPtr->leadItem.itemCode == itemRefCode::orGateL
+				|| pPtr->leadItem.itemCode == itemRefCode::xorGateR
+				|| pPtr->leadItem.itemCode == itemRefCode::xorGateL
+                || pPtr->leadItem.itemCode == itemRefCode::notGateR
+                || pPtr->leadItem.itemCode == itemRefCode::notGateL
 				)
 			{
 				pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_RIGHT);

@@ -1345,11 +1345,11 @@ export namespace itemRefCode
     constexpr int orGateR = 490;
     constexpr int orGateL = 491;
 
-    constexpr int notGateR = 492;
-    constexpr int notGateL = 493;
+    constexpr int xorGateR = 492;
+    constexpr int xorGateL = 493;
 
-    constexpr int xorGateR = 494;
-    constexpr int xorGateL = 495;
+    constexpr int notGateR = 494;
+    constexpr int notGateL = 495;
 
 
 };
