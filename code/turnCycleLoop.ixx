@@ -650,13 +650,7 @@ __int64 propTurn()
 
 	for (auto pPtr : actviePropSet)
 	{
-		pPtr->nodeInputCharge = 0;
-		pPtr->nodeOutputCharge = 0;
-		pPtr->groundCharge = 0;
-		pPtr->gndChargeRight = 0;
-		pPtr->gndChargeUp = 0;
-		pPtr->gndChargeLeft = 0;
-		pPtr->gndChargeDown = 0;
+		pPtr->initChargeFlux();
 	}
 
 	int loopCount = 0;
@@ -702,13 +696,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::andGateR)
 				{
-					firstInput = loadProp->gndChargeLeft >= 1.0;
-					secondInput = loadProp->gndChargeDown >= 1.0;
+					firstInput = loadProp->fluxCharge[dir16::left] >= 1.0;
+					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->gndChargeRight >= 1.0;
-					secondInput = loadProp->gndChargeDown >= 1.0;
+					firstInput = loadProp->fluxCharge[dir16::right] >= 1.0;
+					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
 				}
 
 				if (firstInput && secondInput)
@@ -732,13 +726,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::orGateR)
 				{
-					firstInput = loadProp->gndChargeLeft >= 1.0;
-					secondInput = loadProp->gndChargeDown >= 1.0;
+					firstInput = loadProp->fluxCharge[dir16::left] >= 1.0;
+					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->gndChargeRight >= 1.0;
-					secondInput = loadProp->gndChargeDown >= 1.0;
+					firstInput = loadProp->fluxCharge[dir16::right] >= 1.0;
+					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
 				}
 
 				if (firstInput || secondInput)
@@ -762,13 +756,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::xorGateR)
 				{
-					firstInput = loadProp->gndChargeLeft >= 1.0;
-					secondInput = loadProp->gndChargeDown >= 1.0;
+					firstInput = loadProp->fluxCharge[dir16::left] >= 1.0;
+					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->gndChargeRight >= 1.0;
-					secondInput = loadProp->gndChargeDown >= 1.0;
+					firstInput = loadProp->fluxCharge[dir16::right] >= 1.0;
+					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
 				}
 
 				if (firstInput != secondInput)
@@ -789,8 +783,8 @@ __int64 propTurn()
 			else if (loadProp->leadItem.itemCode == itemRefCode::notGateR || loadProp->leadItem.itemCode == itemRefCode::notGateL)
 			{
 				bool inputActive;
-				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->gndChargeLeft >= 1.0;
-				else inputActive = loadProp->gndChargeRight >= 1.0;
+				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->fluxCharge[dir16::left] >= 1.0;
+				else inputActive = loadProp->fluxCharge[dir16::right] >= 1.0;
 
 				if (inputActive == false)
 				{
@@ -809,7 +803,7 @@ __int64 propTurn()
 			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
-				if (loadProp->groundCharge >= static_cast<double>(loadProp->leadItem.gndUsePower))
+				if (loadProp->getTotalChargeFlux() >= static_cast<double>(loadProp->leadItem.gndUsePower))
 				{
 					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
 					{

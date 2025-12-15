@@ -100,7 +100,7 @@ void Prop::drawSelf()
             );
 
 
-            if (nodeInputCharge > 0)
+            if (isChargeFlowing())
             {
 
                 bool rConnected = isConnected(this, dir16::right);
@@ -111,28 +111,28 @@ void Prop::drawSelf()
                 if (rConnected)
                 {
                     Prop* rProp = TileProp({ getGridX() + 1,getGridY(),getGridZ() });
-                    if (rProp->nodeInputCharge > 0 || rProp->nodeOutputCharge > 0)
+                    if (rProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 3041, drawX, drawY);
                 }
 
                 if (uConnected)
                 {
                     Prop* uProp = TileProp({ getGridX(),getGridY() - 1,getGridZ() });
-                    if (uProp->nodeInputCharge > 0 || uProp->nodeOutputCharge > 0)
+                    if (uProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 3042, drawX, drawY);
                 }
 
                 if (lConnected)
                 {
                     Prop* lProp = TileProp({ getGridX() - 1,getGridY(),getGridZ() });
-                    if (lProp->nodeInputCharge > 0 || lProp->nodeOutputCharge > 0)
+                    if (lProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 3043, drawX, drawY);
                 }
 
                 if (dConnected)
                 {
                     Prop* dProp = TileProp({ getGridX(),getGridY() + 1,getGridZ() });
-                    if (dProp->nodeInputCharge > 0 || dProp->nodeOutputCharge > 0)
+                    if (dProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 3044, drawX, drawY);
                 }
             }
@@ -180,7 +180,7 @@ void Prop::drawSelf()
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
         {
-            if (nodeInputCharge > 0 || nodeOutputCharge > 0) sprIndex += 2;
+            if (isChargeFlowing()) sprIndex += 2;
             else sprIndex += 1;
         }
     }
@@ -188,7 +188,7 @@ void Prop::drawSelf()
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
         {
-            if (nodeInputCharge > 0 || nodeOutputCharge > 0) sprIndex += 2;
+            if (isChargeFlowing()) sprIndex += 2;
             else sprIndex += 1;
         }
     }
@@ -196,7 +196,7 @@ void Prop::drawSelf()
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
         {
-            if (nodeInputCharge > 0 || nodeOutputCharge > 0) sprIndex += 2;
+            if (isChargeFlowing()) sprIndex += 2;
             else sprIndex += 1;
         }
     }
@@ -208,16 +208,16 @@ void Prop::drawSelf()
             {
                 Prop* leftProp = TileProp(getGridX() - 1, getGridY(), getGridZ());
                 Prop* rightProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
-                if (leftProp != nullptr && (leftProp->nodeInputCharge > 0 || leftProp->nodeOutputCharge > 0)) sprIndex += 2;
-                else if (rightProp != nullptr && (rightProp->nodeInputCharge > 0 || rightProp->nodeOutputCharge > 0)) sprIndex += 2;
+                if (leftProp != nullptr && leftProp->isChargeFlowing()) sprIndex += 2;
+                else if (rightProp != nullptr && rightProp->isChargeFlowing()) sprIndex += 2;
                 else sprIndex += 1;
             }
             else if (leadItem.itemCode == itemRefCode::transistorR || leadItem.itemCode == itemRefCode::transistorL)
             {
                 Prop* upProp = TileProp(getGridX(), getGridY() - 1, getGridZ());
                 Prop* downProp = TileProp(getGridX(), getGridY() + 1, getGridZ());
-                if (upProp != nullptr && (upProp->nodeInputCharge > 0 || upProp->nodeOutputCharge > 0)) sprIndex += 2;
-                else if (downProp != nullptr && (downProp->nodeInputCharge > 0 || downProp->nodeOutputCharge > 0)) sprIndex += 2;
+                if (upProp != nullptr && upProp->isChargeFlowing()) sprIndex += 2;
+                else if (downProp != nullptr && downProp->isChargeFlowing()) sprIndex += 2;
                 else sprIndex += 1;
             }
         }
@@ -230,16 +230,16 @@ void Prop::drawSelf()
             {
                 Prop* leftProp = TileProp(getGridX() - 1, getGridY(), getGridZ());
                 Prop* rightProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
-                if (leftProp != nullptr && (leftProp->nodeInputCharge > 0 || leftProp->nodeOutputCharge > 0)) sprIndex += 2;
-                else if (rightProp != nullptr && (rightProp->nodeInputCharge > 0 || rightProp->nodeOutputCharge > 0)) sprIndex += 2;
+                if (leftProp != nullptr && leftProp->isChargeFlowing()) sprIndex += 2;
+                else if (rightProp != nullptr && rightProp->isChargeFlowing()) sprIndex += 2;
                 else sprIndex += 1;
             }
             else if (leadItem.itemCode == itemRefCode::relayR || leadItem.itemCode == itemRefCode::relayL)
             {
                 Prop* upProp = TileProp(getGridX(), getGridY() - 1, getGridZ());
                 Prop* downProp = TileProp(getGridX(), getGridY() + 1, getGridZ());
-                if (upProp != nullptr && (upProp->nodeInputCharge > 0 || upProp->nodeOutputCharge > 0)) sprIndex += 2;
-                else if (downProp != nullptr && (downProp->nodeInputCharge > 0 || downProp->nodeOutputCharge > 0)) sprIndex += 2;
+                if (upProp != nullptr && upProp->isChargeFlowing()) sprIndex += 2;
+                else if (downProp != nullptr && downProp->isChargeFlowing()) sprIndex += 2;
                 else sprIndex += 1;
             }
         }
@@ -344,7 +344,7 @@ void Prop::drawSelf()
         bool lConnected = lProp != nullptr && (lProp->leadItem.checkFlag(itemFlag::CABLE) || lProp->leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT));
         bool dConnected = dProp != nullptr && (dProp->leadItem.checkFlag(itemFlag::CABLE) || dProp->leadItem.checkFlag(itemFlag::CABLE_CNCT_UP));
 
-        if (nodeInputCharge > 0 || nodeOutputCharge > 0)
+        if (isChargeFlowing())
         {
             if (rConnected && lConnected && !uConnected && !dConnected) //─
             {
@@ -360,25 +360,25 @@ void Prop::drawSelf()
 
                 if (rConnected)
                 {
-                    if (rProp->nodeInputCharge > 0 || rProp->nodeOutputCharge > 0)
+                    if (rProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 2945, drawX, drawY);
                 }
                 
                 if (uConnected)
                 {
-                    if (uProp->nodeInputCharge > 0 || uProp->nodeOutputCharge > 0)
+                    if (uProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 2946, drawX, drawY);
                 }
 
                 if(lConnected)
                 {
-                    if (lProp->nodeInputCharge > 0 || lProp->nodeOutputCharge > 0)
+                    if (lProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 2947, drawX, drawY);
                 }
 
                 if(dConnected)
                 {
-                    if (dProp->nodeInputCharge > 0 || dProp->nodeOutputCharge > 0)
+                    if (dProp->isChargeFlowing())
                         drawSpriteCenter(spr::propset, 2948, drawX, drawY);
                 }
             }
@@ -396,7 +396,7 @@ void Prop::drawSelf()
             if (leadItem.itemCode == itemRefCode::copperCable) drawSpriteCenter(spr::propset, 2993 + downConnected, drawX, drawY);
             if (leadItem.itemCode == itemRefCode::silverCable) drawSpriteCenter(spr::propset, 2993 + 16 + downConnected, drawX, drawY);
 
-            if (nodeInputCharge > 0) drawSpriteCenter(spr::propset, 2944, drawX, drawY);
+            if (isChargeFlowing()) drawSpriteCenter(spr::propset, 2944, drawX, drawY);
         }
 
         if (leadItem.checkFlag(itemFlag::CABLE_Z_ASCEND))
@@ -410,7 +410,7 @@ void Prop::drawSelf()
                 drawSpriteCenter(spr::propset, 2995 + 16, drawX, drawY);//상단으로 이어진 은 케이블
             }
 
-            if (nodeInputCharge > 0) drawSpriteCenter(spr::propset, 2951, drawX, drawY);
+            if (isChargeFlowing()) drawSpriteCenter(spr::propset, 2951, drawX, drawY);
         }
 
         if (leadItem.checkFlag(itemFlag::CABLE_Z_DESCEND))
@@ -424,7 +424,7 @@ void Prop::drawSelf()
                 drawSpriteCenter(spr::propset, 2997 + 16, drawX, drawY);//하단으로 이어진 은 케이블
             }
 
-            if (nodeInputCharge > 0) drawSpriteCenter(spr::propset, 2952, drawX, drawY);
+            if (isChargeFlowing()) drawSpriteCenter(spr::propset, 2952, drawX, drawY);
         }
 
         setFlip(SDL_FLIP_NONE);

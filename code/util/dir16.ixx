@@ -32,8 +32,8 @@ export enum class dir16
 	downLeft = dir5,
 	down = dir6,
 	downRight = dir7,
-    ascend,//+Z
-    descend,//-Z
+    above,//+Z
+    below,//-Z
 };
 
 export dir16 ACW(dir16 input)
@@ -106,8 +106,8 @@ export dir16 reverse(dir16 input)
     else if (input == dir16::dir6_5) return dir16::dir2_5;
     else if (input == dir16::dir7) return dir16::dir3;
     else if (input == dir16::dir7_5) return dir16::dir3_5;
-    else if (input == dir16::ascend) return dir16::descend;
-    else if (input == dir16::descend) return dir16::ascend;
+    else if (input == dir16::above) return dir16::below;
+    else if (input == dir16::below) return dir16::above;
     else errorBox(L"[utility] reverse에서 알 수 없는 방향이 입력되었다.");
 }
 
@@ -216,8 +216,8 @@ export void dirToXYZ(dir16 inputDir, int& dx, int& dy, int& dz)
 {
     switch (inputDir)
     {
-    case dir16::ascend: dx =  0; dy =  0; dz = 1; break;
-    case dir16::descend:dx =  0; dy =  0; dz = -1; break;
+    case dir16::above: dx =  0; dy =  0; dz = 1; break;
+    case dir16::below:dx =  0; dy =  0; dz = -1; break;
 
     case dir16::right:     dx = 1; dy = 0; dz = 0; break;
     case dir16::upRight:   dx = 1; dy = -1; dz = 0; break;

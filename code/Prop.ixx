@@ -26,16 +26,8 @@ public:
 
     int nodeMaxCharge = 0;
     double nodeCharge = 0;
-    double nodeInputCharge = 0;
-    double nodeOutputCharge = 0;
-    double groundCharge = 0; //전자기기 사용되기 전에 저장된 에너지(접지 방향)
 
-    //특정 방향의 gnd 입력, 아직은 논리게이트같이 입력핀이 여러개인 부품에서만 사용
-    double gndChargeRight = 0;
-    double gndChargeUp = 0;
-    double gndChargeLeft = 0;
-    double gndChargeDown = 0;
-    
+    std::unordered_map<dir16, double> fluxCharge = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
     double prevPushedCharge = 0;
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
@@ -59,6 +51,20 @@ public:
 
     void drawSelf() override;
 
+    double getTotalChargeFlux();
+
+    bool isChargeFlowing();
+
+    void initChargeFlux()
+    {
+        fluxCharge[dir16::right] = 0;
+        fluxCharge[dir16::up] = 0;
+        fluxCharge[dir16::left] = 0;
+        fluxCharge[dir16::down] = 0;
+        fluxCharge[dir16::above] = 0;
+        fluxCharge[dir16::below] = 0;
+    }
+
     std::unordered_set<Prop*> updateCircuitNetwork();
 
     bool isConnected(Point3 currentCoord, dir16 dir);
@@ -78,4 +84,5 @@ public:
     void propTurnOff();
 
     void initChargeBFS(std::queue<Point3> startPointSet);
+
 };

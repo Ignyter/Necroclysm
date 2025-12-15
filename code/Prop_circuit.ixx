@@ -41,6 +41,20 @@ constexpr double EPSILON = 0.000001;
 * 메인라인->게이트로 누설이 안되게 하려면 isConnected 함수에서 체크해주면 됨
 */
 
+double Prop::getTotalChargeFlux()
+{
+    return (fluxCharge[dir16::right] + fluxCharge[dir16::up] + fluxCharge[dir16::left] + fluxCharge[dir16::down] + fluxCharge[dir16::above] + fluxCharge[dir16::below]);
+}
+
+bool Prop::isChargeFlowing()
+{
+    return fluxCharge[dir16::right] != 0
+        || fluxCharge[dir16::up] != 0
+        || fluxCharge[dir16::left] != 0
+        || fluxCharge[dir16::down] != 0
+        || fluxCharge[dir16::above] != 0
+        || fluxCharge[dir16::below] != 0;
+}
 
 std::unordered_set<Prop*> Prop::updateCircuitNetwork()
 {
@@ -163,7 +177,7 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
             }
 
 
-            const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::ascend, dir16::descend };
+            const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::above, dir16::below };
 
             if (skipBFSSet.find(current) == skipBFSSet.end())
             {
@@ -347,12 +361,12 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
         hostFlag = itemFlag::CABLE_CNCT_DOWN;
         guestFlag = itemFlag::CABLE_CNCT_UP;
         break;
-    case dir16::ascend:
+    case dir16::above:
         delCoord = { 0,0,+1 };
         hostFlag = itemFlag::CABLE_Z_ASCEND;
         guestFlag = itemFlag::CABLE_Z_DESCEND;
         break;
-    case dir16::descend:
+    case dir16::below:
         delCoord = { 0,0,-1 };
         hostFlag = itemFlag::CABLE_Z_DESCEND;
         guestFlag = itemFlag::CABLE_Z_ASCEND;
@@ -482,7 +496,7 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     else if (crtItem.itemCode == itemRefCode::notGateL && dir == dir16::right) return false;
 
 
-    if (dir == dir16::ascend || dir == dir16::descend)
+    if (dir == dir16::above || dir == dir16::below)
     {
         if (currentProp->leadItem.checkFlag(itemFlag::CABLE) && currentProp->leadItem.checkFlag(hostFlag) &&
             targetProp->leadItem.checkFlag(itemFlag::CABLE) && targetProp->leadItem.checkFlag(guestFlag))
@@ -572,15 +586,15 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
         double remainEnergy;
 
         if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->gndChargeLeft;
+            remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->fluxCharge[dir16::left];
         else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->gndChargeDown;
+            remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->fluxCharge[dir16::down];
         else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->gndChargeRight;
+            remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->fluxCharge[dir16::right];
         else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->gndChargeUp;
+            remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->fluxCharge[dir16::up];
         else
-            remainEnergy = nextProp->leadItem.gndUsePower - nextProp->groundCharge;
+            remainEnergy = nextProp->leadItem.gndUsePower - nextProp->getTotalChargeFlux();
 
         if (remainEnergy > EPSILON)
         {
@@ -597,7 +611,7 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
     if (pushedCharge > EPSILON)
     {
         std::vector<dir16> possibleDirs;
-        for (auto dir : { dir16::right, dir16::up, dir16::left, dir16::down, dir16::ascend, dir16::descend })
+        for (auto dir : { dir16::right, dir16::up, dir16::left, dir16::down, dir16::above, dir16::below })
         {
             if (dir == reverse(txDir)) continue;
             if (isConnected({ nextProp->getGridX(), nextProp->getGridY(), nextProp->getGridZ() }, dir))
@@ -698,7 +712,7 @@ double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> 
     return totalPushedCharge;
 }
 
-void Prop::transferCharge(Prop* currentProp, Prop* nextProp, double txChargeAmount, const std::wstring& indent, dir16 txDir, bool isGroundTransfer = false)
+void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount, const std::wstring& indent, dir16 txDir, bool isGroundTransfer = false)
 {
     if (txChargeAmount < EPSILON)
     {
@@ -706,7 +720,7 @@ void Prop::transferCharge(Prop* currentProp, Prop* nextProp, double txChargeAmou
         {
             std::wprintf(L"%s[전송 스킵] (%d,%d) → (%d,%d) 양:%.8f (EPSILON 미만)\n",
                 indent.c_str(),
-                currentProp->getGridX(), currentProp->getGridY(),
+                thisProp->getGridX(), thisProp->getGridY(),
                 nextProp->getGridX(), nextProp->getGridY(),
                 txChargeAmount);
         }
@@ -717,28 +731,19 @@ void Prop::transferCharge(Prop* currentProp, Prop* nextProp, double txChargeAmou
     double electricLoss = current * current * nextProp->leadItem.electricResistance * TIME_PER_TURN;
     double requiredFromDonor = txChargeAmount + electricLoss;
 
-    if (requiredFromDonor > currentProp->nodeCharge + EPSILON)
+    if (requiredFromDonor > thisProp->nodeCharge + EPSILON)
     {
-        double availableRatio = currentProp->nodeCharge / requiredFromDonor;
-        requiredFromDonor = currentProp->nodeCharge;
+        double availableRatio = thisProp->nodeCharge / requiredFromDonor;
+        requiredFromDonor = thisProp->nodeCharge;
         txChargeAmount *= availableRatio;
         electricLoss = requiredFromDonor - txChargeAmount;
     }
 
-    currentProp->nodeCharge -= requiredFromDonor;
-    currentProp->nodeOutputCharge += requiredFromDonor;
+    thisProp->nodeCharge -= requiredFromDonor;
+    thisProp->fluxCharge[txDir] -= txChargeAmount;
 
-    if (isGroundTransfer)
-    {
-        if (nextProp->leadItem.gndUsePower > 0) nextProp->groundCharge += txChargeAmount;
-        else if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0) nextProp->gndChargeLeft += txChargeAmount;
-        else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0) nextProp->gndChargeDown += txChargeAmount;
-        else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0) nextProp->gndChargeRight += txChargeAmount;
-        else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) nextProp->gndChargeUp += txChargeAmount;
-    }
-    else nextProp->nodeCharge += txChargeAmount;
-
-    nextProp->nodeInputCharge += txChargeAmount;
+    nextProp->nodeCharge += txChargeAmount;
+    nextProp->fluxCharge[reverse(txDir)] += txChargeAmount;
 
     if (debug::printCircuitLog)
     {
@@ -746,18 +751,18 @@ void Prop::transferCharge(Prop* currentProp, Prop* nextProp, double txChargeAmou
         {
             std::wprintf(L"%s[전송 GND] (%d,%d)[%.2f→%.2f] → (%d,%d) 전송:%.2f 손실:%.2f 부하:%.2f/%d\n",
                 indent.c_str(),
-                currentProp->getGridX(), currentProp->getGridY(),
-                currentProp->nodeCharge + requiredFromDonor, currentProp->nodeCharge,
+                thisProp->getGridX(), thisProp->getGridY(),
+                thisProp->nodeCharge + requiredFromDonor, thisProp->nodeCharge,
                 nextProp->getGridX(), nextProp->getGridY(),
                 txChargeAmount, electricLoss,
-                nextProp->groundCharge, nextProp->leadItem.gndUsePower);
+                nextProp->getTotalChargeFlux(), nextProp->leadItem.gndUsePower);
         }
         else
         {
             std::wprintf(L"%s[전송] (%d,%d)[%.2f→%.2f] → (%d,%d)[%.2f/%d] 전송:%.2f 손실:%.2f\n",
                 indent.c_str(),
-                currentProp->getGridX(), currentProp->getGridY(),
-                currentProp->nodeCharge + requiredFromDonor, currentProp->nodeCharge,
+                thisProp->getGridX(), thisProp->getGridY(),
+                thisProp->nodeCharge + requiredFromDonor, thisProp->nodeCharge,
                 nextProp->getGridX(), nextProp->getGridY(),
                 nextProp->nodeCharge, nextProp->nodeMaxCharge,
                 txChargeAmount, electricLoss);
@@ -778,17 +783,14 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
         if (visitedSet.find(current) != visitedSet.end()) continue;
         visitedSet.insert(current);
 
-        Prop* currentProp = TileProp(current.x, current.y, current.z);
-        ItemData& currentItem = currentProp->leadItem;
-        if (currentProp)
+        Prop* thisProp = TileProp(current.x, current.y, current.z);
+        ItemData& currentItem = thisProp->leadItem;
+        if (thisProp)
         {
-            currentProp->nodeCharge = currentProp->nodeMaxCharge;
-            currentProp->groundCharge = 0;
-            currentProp->nodeInputCharge = 0;
-            currentProp->nodeOutputCharge = 0;
+            thisProp->nodeCharge = thisProp->nodeMaxCharge;
         }
 
-        const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::ascend, dir16::descend };
+        const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::above, dir16::below };
         for (int i = 0; i < 6; ++i)
         {
             if (isConnected(current, directions[i]))
@@ -801,11 +803,8 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
                 {
                     //만약 BFS로 해당 방향으로 추가했을 때 GND가 지향성 GND 전력요구를 가지고 있을 경우
                     ItemData& nextItem = nextProp->leadItem;
-                    if (directions[i] == dir16::right && nextItem.gndUsePowerLeft > 0) nextProp->gndChargeLeft = 0;
-                    else if (directions[i] == dir16::up && nextItem.gndUsePowerDown > 0) nextProp->gndChargeDown = 0;
-                    else if (directions[i] == dir16::left && nextItem.gndUsePowerRight > 0) nextProp->gndChargeRight = 0;
-                    else if (directions[i] == dir16::down && nextItem.gndUsePowerUp > 0) nextProp->gndChargeUp = 0;
-                    
+                    thisProp->fluxCharge[directions[i]] = 0;
+                    nextProp->fluxCharge[reverse(directions[i])] = 0;
                 }
                 frontierQueue.push(nextCoord);
             }
