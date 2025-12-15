@@ -399,36 +399,33 @@ void Prop::propTurnOff()
         || iCode == itemRefCode::notGateL
         )
     {
-
-        
-
         //접지가 아닌 메인라인 핀들 추가
         if (TileProp(rightCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT))
         {
-            fluxCharge[dir16::right] = 0;
+            chargeFlux[dir16::right] = 0;
             Prop* nextProp = TileProp(rightCoord);
-            if (nextProp) nextProp->fluxCharge[reverse(dir16::right)] = 0;
+            if (nextProp) nextProp->chargeFlux[reverse(dir16::right)] = 0;
             nextCircuitStartQueue.push(rightCoord);
         }
         if (TileProp(upCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP))
         {
-            fluxCharge[dir16::up] = 0;
+            chargeFlux[dir16::up] = 0;
             Prop* nextProp = TileProp(upCoord);
-            if (nextProp) nextProp->fluxCharge[reverse(dir16::up)] = 0;
+            if (nextProp) nextProp->chargeFlux[reverse(dir16::up)] = 0;
             nextCircuitStartQueue.push(upCoord);
         }
         if (TileProp(leftCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT))
         {
-            fluxCharge[dir16::left] = 0;
+            chargeFlux[dir16::left] = 0;
             Prop* nextProp = TileProp(leftCoord);
-            if (nextProp) nextProp->fluxCharge[reverse(dir16::left)] = 0;
+            if (nextProp) nextProp->chargeFlux[reverse(dir16::left)] = 0;
             nextCircuitStartQueue.push(leftCoord);
         }
         if (TileProp(downCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN))
         {
-            fluxCharge[dir16::down] = 0;
+            chargeFlux[dir16::down] = 0;
             Prop* nextProp = TileProp(downCoord);
-            if (nextProp) nextProp->fluxCharge[reverse(dir16::down)] = 0;
+            if (nextProp) nextProp->chargeFlux[reverse(dir16::down)] = 0;
             nextCircuitStartQueue.push(downCoord);
         }
 

@@ -27,7 +27,7 @@ public:
     int nodeMaxCharge = 0;
     double nodeCharge = 0;
 
-    std::unordered_map<dir16, double> fluxCharge = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
+    std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
     double prevPushedCharge = 0;
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
@@ -57,12 +57,12 @@ public:
 
     void initChargeFlux()
     {
-        fluxCharge[dir16::right] = 0;
-        fluxCharge[dir16::up] = 0;
-        fluxCharge[dir16::left] = 0;
-        fluxCharge[dir16::down] = 0;
-        fluxCharge[dir16::above] = 0;
-        fluxCharge[dir16::below] = 0;
+        chargeFlux[dir16::right] = 0;
+        chargeFlux[dir16::up] = 0;
+        chargeFlux[dir16::left] = 0;
+        chargeFlux[dir16::down] = 0;
+        chargeFlux[dir16::above] = 0;
+        chargeFlux[dir16::below] = 0;
     }
 
     std::unordered_set<Prop*> updateCircuitNetwork();

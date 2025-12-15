@@ -696,13 +696,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::andGateR)
 				{
-					firstInput = loadProp->fluxCharge[dir16::left] >= 1.0;
-					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
+					firstInput = loadProp->chargeFlux[dir16::left] >= 1.0;
+					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->fluxCharge[dir16::right] >= 1.0;
-					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
+					firstInput = loadProp->chargeFlux[dir16::right] >= 1.0;
+					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
 				}
 
 				if (firstInput && secondInput)
@@ -726,13 +726,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::orGateR)
 				{
-					firstInput = loadProp->fluxCharge[dir16::left] >= 1.0;
-					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
+					firstInput = loadProp->chargeFlux[dir16::left] >= 1.0;
+					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->fluxCharge[dir16::right] >= 1.0;
-					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
+					firstInput = loadProp->chargeFlux[dir16::right] >= 1.0;
+					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
 				}
 
 				if (firstInput || secondInput)
@@ -756,13 +756,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::xorGateR)
 				{
-					firstInput = loadProp->fluxCharge[dir16::left] >= 1.0;
-					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
+					firstInput = loadProp->chargeFlux[dir16::left] >= 1.0;
+					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->fluxCharge[dir16::right] >= 1.0;
-					secondInput = loadProp->fluxCharge[dir16::down] >= 1.0;
+					firstInput = loadProp->chargeFlux[dir16::right] >= 1.0;
+					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
 				}
 
 				if (firstInput != secondInput)
@@ -783,8 +783,8 @@ __int64 propTurn()
 			else if (loadProp->leadItem.itemCode == itemRefCode::notGateR || loadProp->leadItem.itemCode == itemRefCode::notGateL)
 			{
 				bool inputActive;
-				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->fluxCharge[dir16::left] >= 1.0;
-				else inputActive = loadProp->fluxCharge[dir16::right] >= 1.0;
+				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->chargeFlux[dir16::left] >= 1.0;
+				else inputActive = loadProp->chargeFlux[dir16::right] >= 1.0;
 
 				if (inputActive == false)
 				{

@@ -43,17 +43,17 @@ constexpr double EPSILON = 0.000001;
 
 double Prop::getTotalChargeFlux()
 {
-    return (fluxCharge[dir16::right] + fluxCharge[dir16::up] + fluxCharge[dir16::left] + fluxCharge[dir16::down] + fluxCharge[dir16::above] + fluxCharge[dir16::below]);
+    return (chargeFlux[dir16::right] + chargeFlux[dir16::up] + chargeFlux[dir16::left] + chargeFlux[dir16::down] + chargeFlux[dir16::above] + chargeFlux[dir16::below]);
 }
 
 bool Prop::isChargeFlowing()
 {
-    return fluxCharge[dir16::right] != 0
-        || fluxCharge[dir16::up] != 0
-        || fluxCharge[dir16::left] != 0
-        || fluxCharge[dir16::down] != 0
-        || fluxCharge[dir16::above] != 0
-        || fluxCharge[dir16::below] != 0;
+    return chargeFlux[dir16::right] != 0
+        || chargeFlux[dir16::up] != 0
+        || chargeFlux[dir16::left] != 0
+        || chargeFlux[dir16::down] != 0
+        || chargeFlux[dir16::above] != 0
+        || chargeFlux[dir16::below] != 0;
 }
 
 std::unordered_set<Prop*> Prop::updateCircuitNetwork()
@@ -586,13 +586,13 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
         double remainEnergy;
 
         if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->fluxCharge[dir16::left];
+            remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->chargeFlux[dir16::left];
         else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->fluxCharge[dir16::down];
+            remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->chargeFlux[dir16::down];
         else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->fluxCharge[dir16::right];
+            remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->chargeFlux[dir16::right];
         else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->fluxCharge[dir16::up];
+            remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->chargeFlux[dir16::up];
         else
             remainEnergy = nextProp->leadItem.gndUsePower - nextProp->getTotalChargeFlux();
 
@@ -740,10 +740,10 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
     }
 
     thisProp->nodeCharge -= requiredFromDonor;
-    thisProp->fluxCharge[txDir] -= txChargeAmount;
+    thisProp->chargeFlux[txDir] -= txChargeAmount;
 
     nextProp->nodeCharge += txChargeAmount;
-    nextProp->fluxCharge[reverse(txDir)] += txChargeAmount;
+    nextProp->chargeFlux[reverse(txDir)] += txChargeAmount;
 
     if (debug::printCircuitLog)
     {
@@ -803,8 +803,8 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
                 {
                     //만약 BFS로 해당 방향으로 추가했을 때 GND가 지향성 GND 전력요구를 가지고 있을 경우
                     ItemData& nextItem = nextProp->leadItem;
-                    thisProp->fluxCharge[directions[i]] = 0;
-                    nextProp->fluxCharge[reverse(directions[i])] = 0;
+                    thisProp->chargeFlux[directions[i]] = 0;
+                    nextProp->chargeFlux[reverse(directions[i])] = 0;
                 }
                 frontierQueue.push(nextCoord);
             }
