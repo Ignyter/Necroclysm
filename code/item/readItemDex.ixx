@@ -282,13 +282,14 @@ export int readItemDex(const wchar_t* file)
                     case csvItem::name:
                         itemDex[tgtIndex].name = strFragment;
                         break;
+                    case csvItem::dir:
+                        itemDex[tgtIndex].dir = strFragment;
+                        break;
                     case csvItem::itemCode:
                         itemDex[tgtIndex].itemCode = wtoi(strFragment.c_str());
                         break;
                     case csvItem::sprIndex:
                         itemDex[tgtIndex].itemSprIndex = wtoi(strFragment.c_str());
-                        break;
-                    case csvItem::dir:
                         break;
                     case csvItem::nativeDescript:
                         break;

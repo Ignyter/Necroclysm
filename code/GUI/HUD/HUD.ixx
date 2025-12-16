@@ -78,6 +78,7 @@ private:
 	int fakeThirst = thirst;
 	int fakeFatigue = fatigue;
 
+
 public:
 	SkillData* targetSkill; //GUI들이 가리키는 스킬
 	HUD() : GUI(false)
@@ -1043,4 +1044,6 @@ public:
 	}
 
 	void drawBodyParts();
+
+	void drawCircuitInfo();
 };

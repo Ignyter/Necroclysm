@@ -8,6 +8,7 @@ import constVar;
 export enum class fontType
 {
     mainFont,
+    mainFontMedium,
     mainFontBold,
     mainFontSemiBold,
     mainFontExtraBold,
@@ -17,6 +18,7 @@ export enum class fontType
 };
 
 export TTF_Font* mainFont[MAX_FONT_SIZE] = { nullptr, };
+export TTF_Font* mainFontMedium[MAX_FONT_SIZE] = { nullptr, };
 export TTF_Font* mainFontBold[MAX_FONT_SIZE] = { nullptr, };
 export TTF_Font* mainFontSemiBold[MAX_FONT_SIZE] = { nullptr, };
 export TTF_Font* mainFontExtraBold[MAX_FONT_SIZE] = { nullptr, };
@@ -46,6 +48,7 @@ export void setFont(fontType inputFont)
         setFontSolidRender(true);
     }
     else if (inputFont == fontType::mainFont) s_currentFont = mainFont;
+    else if (inputFont == fontType::mainFontMedium) s_currentFont = mainFontMedium;
     else if (inputFont == fontType::mainFontSemiBold) s_currentFont = mainFontSemiBold;
     else if (inputFont == fontType::mainFontBold) s_currentFont = mainFontBold;
     else if (inputFont == fontType::mainFontExtraBold) s_currentFont = mainFontExtraBold;

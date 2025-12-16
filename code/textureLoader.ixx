@@ -24,6 +24,8 @@ export void textureLoader()
 	texture::hpGaugeWhiteShadow = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 95, 13);
 	SDL_SetTextureScaleMode(texture::hpGaugeWhiteShadow, SDL_SCALEMODE_NEAREST);
 
+	texture::circuitInfo = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 300, 69);
+
 	spr::charsetHero = new Sprite(renderer, "image/charset/baseCharset.png", 48, 48);//new Sprite(renderer, "image/charset/baseCharset.png");
 	spr::defaultMonster = new Sprite(renderer, "image/charset/zombie1.png", 48, 48);
 	spr::effectBash1 = new Sprite(renderer, "image/effect/effectBash1.png", 48, 48);
@@ -202,4 +204,9 @@ export void textureLoader()
 	spr::icon80 = new Sprite(renderer, "image/UI/icon80.png", 80, 80);
 
     spr::gearStick = new Sprite(renderer, "image/UI/GUI/Vehicle/gearStick.png", 80, 144);
+
+	spr::coordCraftBox = new Sprite(renderer, "image/UI/GUI/coordCraftBox.png", 234, 134);
+	spr::coordCraftMarker = new Sprite(renderer, "image/UI/GUI/coordCraftMarker.png", 80, 80);
+
+	spr::fluxArrow = new Sprite(renderer, "image/UI/GUI/HUD/fluxArrow.png", 48, 48);
 }

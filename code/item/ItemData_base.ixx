@@ -7,6 +7,7 @@ import constVar;
 export struct ItemDataBase
 {
     std::wstring name; //기본 이름을 지정해두면 인텔리센스 오류가 발생함
+    std::wstring dir; //프롭의 방향을 표시하는 특수문자
     unsigned __int16 itemCode = 1;
     unsigned __int16 itemSprIndex = 1;
     unsigned __int16 tooltipIndex = 0;

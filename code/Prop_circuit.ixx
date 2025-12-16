@@ -106,6 +106,7 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
             currentProp->runUsed = true;
+            currentProp->totalLossCharge = 0;
 
             if (currentProp->leadItem.checkFlag(itemFlag::VOLTAGE_SOURCE))
             {
@@ -728,8 +729,9 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
     }
 
     double current = txChargeAmount / (SYSTEM_VOLTAGE * TIME_PER_TURN);
-    double electricLoss = current * current * nextProp->leadItem.electricResistance * TIME_PER_TURN;
+    double electricLoss = current * current * thisProp->leadItem.electricResistance * TIME_PER_TURN;
     double requiredFromDonor = txChargeAmount + electricLoss;
+    thisProp->totalLossCharge += electricLoss;
 
     if (requiredFromDonor > thisProp->nodeCharge + EPSILON)
     {

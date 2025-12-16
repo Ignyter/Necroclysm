@@ -38,10 +38,10 @@ private:
 	int targetGridY = 0;
 	int rotatedItemCode = 0;
 
-	SDL_Rect selectBox = { cameraW/2 - 90, cameraH/2 + 42, 180, 52 };
-	SDL_Rect confirmBtn = { selectBox.x + 8, selectBox.y + 11, 51, 30 };
-	SDL_Rect rotateBtn = { selectBox.x + 8 + 57 * 1, selectBox.y + 11, 51, 30 };
-	SDL_Rect cancelBtn = { selectBox.x + 8 + 57 * 2, selectBox.y + 11, 51, 30 };
+	SDL_Rect selectBox = { cameraW/2 - 117, cameraH/2 + 72, 234, 108 };
+	SDL_Rect confirmBtn = { selectBox.x + 12, selectBox.y + 34, 64, 64 };
+	SDL_Rect rotateBtn = { selectBox.x + 12 + 73 * 1, selectBox.y + 34 , 64, 64 };
+	SDL_Rect cancelBtn = { selectBox.x + 12 + 73 * 2, selectBox.y + 34, 64, 64 };
 
 public:
 
@@ -241,7 +241,12 @@ public:
 			SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255);
 			setZoom(1.0);
 
-			drawEdgeWindow(selectBox.x, selectBox.y, selectBox.w, selectBox.h, 16, dir16::dir2);
+			//drawEdgeWindow(selectBox.x, selectBox.y, selectBox.w, selectBox.h, 16, dir16::dir2);
+
+			drawSpriteCenter(spr::coordCraftBox, 0, selectBox.x + selectBox.w / 2, selectBox.y + selectBox.h / 2 - 14);
+
+			setFontSize(18);
+			drawText(itemDex[rotatedItemCode].name +L" " + itemDex[rotatedItemCode].dir, selectBox.x + 12, selectBox.y + 6);
 
 			auto drawBtn = [](int iconIndex, SDL_Rect targetBtn)
 				{
@@ -257,14 +262,26 @@ public:
 					drawFillRect(targetBtn, btnColor);
 					drawRect(targetBtn, outlineColor);
 
-					drawSpriteCenter(spr::icon16, iconIndex, targetBtn.x + targetBtn.w / 2, targetBtn.y + targetBtn.h / 2);
+					drawSpriteCenter(spr::icon48, iconIndex, targetBtn.x + targetBtn.w / 2, targetBtn.y + targetBtn.h / 2);
+
+					int markerIndex = 0;
+					if (timer::timer600 % 30 < 5) { markerIndex = 0; }
+					else if (timer::timer600 % 30 < 10) { markerIndex = 1; }
+					else if (timer::timer600 % 30 < 15) { markerIndex = 2; }
+					else if (timer::timer600 % 30 < 20) { markerIndex = 1; }
+					else { markerIndex = 0; }
+
+					if (checkCursor(&targetBtn)) drawSpriteCenter(spr::coordCraftMarker, markerIndex, targetBtn.x + targetBtn.w / 2, targetBtn.y + targetBtn.h / 2);
 				};
 
-			drawBtn(41, confirmBtn);
+
+			if(checkCursor(&confirmBtn)==false) drawBtn(186, confirmBtn);
+			else drawBtn(189, confirmBtn);
 			
+
 			if (itemDex[rotatedItemCode].dirChangeItemCode != 0)
 			{
-				drawBtn(42, rotateBtn);
+				drawBtn(187, rotateBtn);
 			}
 			else
 			{
@@ -274,11 +291,11 @@ public:
 				drawFillRect(rotateBtn, btnColor);
 				drawRect(rotateBtn, outlineColor);
 
-				drawSpriteCenter(spr::icon16, 42, rotateBtn.x + rotateBtn.w / 2, rotateBtn.y + rotateBtn.h / 2);
+				drawSpriteCenter(spr::icon16, 187, rotateBtn.x + rotateBtn.w / 2, rotateBtn.y + rotateBtn.h / 2);
 				drawFillRect(rotateBtn, btnColor, 150);
 			}
 
-			drawBtn(43, cancelBtn);
+			drawBtn(188, cancelBtn);
 		}
 	}
 	void clickUpGUI()

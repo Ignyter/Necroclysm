@@ -650,6 +650,7 @@ __int64 propTurn()
 
 	for (auto pPtr : actviePropSet)
 	{
+		pPtr->totalLossCharge = 0;
 		pPtr->initChargeFlux();
 	}
 

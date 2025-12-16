@@ -26,6 +26,7 @@ public:
 
     int nodeMaxCharge = 0;
     double nodeCharge = 0;
+    double totalLossCharge = 0; //이번 턴에 저항으로 손실된 모든 에너지값
 
     std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
@@ -63,6 +64,32 @@ public:
         chargeFlux[dir16::down] = 0;
         chargeFlux[dir16::above] = 0;
         chargeFlux[dir16::below] = 0;
+    }
+
+    double getInletCharge()
+    {
+        double totalInlet = 0;
+        if (chargeFlux[dir16::right] > 0) totalInlet += chargeFlux[dir16::right];
+        if (chargeFlux[dir16::up] > 0) totalInlet += chargeFlux[dir16::up];
+        if (chargeFlux[dir16::left] > 0) totalInlet += chargeFlux[dir16::left];
+        if (chargeFlux[dir16::down] > 0) totalInlet += chargeFlux[dir16::down];
+        if (chargeFlux[dir16::above] > 0) totalInlet += chargeFlux[dir16::above];
+        if (chargeFlux[dir16::below] > 0) totalInlet += chargeFlux[dir16::below];
+
+        return totalInlet;
+    }
+    
+    double getOutletCharge()
+    {
+        double totalOutlet = 0;
+        if (chargeFlux[dir16::right] < 0) totalOutlet -= chargeFlux[dir16::right];
+        if (chargeFlux[dir16::up] < 0) totalOutlet -= chargeFlux[dir16::up];
+        if (chargeFlux[dir16::left] < 0) totalOutlet -= chargeFlux[dir16::left];
+        if (chargeFlux[dir16::down] < 0) totalOutlet -= chargeFlux[dir16::down];
+        if (chargeFlux[dir16::above] < 0) totalOutlet -= chargeFlux[dir16::above];
+        if (chargeFlux[dir16::below] < 0) totalOutlet -= chargeFlux[dir16::below];
+
+        return totalOutlet;
     }
 
     std::unordered_set<Prop*> updateCircuitNetwork();

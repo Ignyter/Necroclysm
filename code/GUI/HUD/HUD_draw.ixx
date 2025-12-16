@@ -506,6 +506,7 @@ void HUD::drawGUI()
 	if(option::inputMethod != input::gamepad) drawTab();
 	if (option::inputMethod != input::gamepad) drawQuickSlot();
 	drawQuest();
+	drawCircuitInfo();
 	//drawHoverItemInfo();
 
 }
@@ -1656,4 +1657,147 @@ void HUD::drawBodyParts()
 		cameraH - 1 - 282, 
 		L"Head",
 		PlayerPtr->headHP, PlayerPtr->headFakeHP, PART_MAX_HP, PlayerPtr->headFakeHPAlpha);
+}
+
+
+void HUD::drawCircuitInfo()
+{
+	static Point2 prevHoverGrid = { std::numeric_limits<int>::min(),std::numeric_limits<int>::min() };
+	static int hoverTime = 0;
+	Point2 currentHoverGrid = getAbsMouseGrid();
+
+	if (prevHoverGrid != currentHoverGrid)
+	{
+		hoverTime = 0;
+		prevHoverGrid = currentHoverGrid;
+	}
+	else hoverTime += 1;
+
+	if (hoverTime > 30)
+	{
+		Prop* tgtProp = TileProp(prevHoverGrid.x, prevHoverGrid.y, PlayerPtr->getGridZ());
+		if (tgtProp != nullptr && tgtProp->leadItem.checkFlag(itemFlag::CIRCUIT) && tgtProp->isChargeFlowing())
+		{
+			std::wstring firstString = L"Power:";
+			std::wstring firstNumber = L"534.6";
+			std::wstring firstColStr = L"";
+			std::wstring firstUnit = L"J/turn";
+
+			std::wstring secondString = L"Loss:";
+			std::wstring secondNumber = L"0.2";
+			std::wstring secondColStr = L"";
+			std::wstring secondUnit = L"J/turn";
+
+			if (tgtProp->leadItem.electricMaxPower > 0)
+			{
+				firstString = L"Output:";
+				firstNumber = decimalCutter(tgtProp->getOutletCharge(), 1);
+
+				secondString = L"Max:";
+				secondNumber = std::to_wstring(tgtProp->leadItem.electricMaxPower);
+
+				if (tgtProp->getOutletCharge() <= tgtProp->leadItem.electricMaxPower) firstColStr = col2Str(lowCol::green);
+				else firstColStr = col2Str(lowCol::red);
+			}
+			else if (tgtProp->leadItem.gndUsePower > 0)
+			{
+				firstString = L"Input:";
+				firstNumber = decimalCutter(tgtProp->getInletCharge(),1);
+
+				secondString = L"Need:";
+				secondNumber = std::to_wstring(tgtProp->leadItem.gndUsePower);
+
+				if (tgtProp->getInletCharge() <= tgtProp->leadItem.gndUsePower) firstColStr = col2Str(lowCol::green);
+				else firstColStr = col2Str(lowCol::red);
+			}
+			else
+			{
+				firstString = L"Flow:";
+				firstNumber = decimalCutter(tgtProp->getInletCharge(), 1);
+
+				secondString = L"Loss:";
+				secondNumber = decimalCutter(tgtProp->totalLossCharge, 2);
+			}
+			
+
+
+			Uint8 windowAlpha = 255;
+			//SDL_Rect infoBox = { 100,100,200,200 };
+			//drawFillRect(infoBox, col::black);
+
+			SDL_SetRenderTarget(renderer, texture::circuitInfo);
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+			SDL_RenderClear(renderer);
+
+
+
+			SDL_Rect window = { 0,0,236,69 };
+			int strMaxFirst = myMax(queryTextWidth(firstString), queryTextWidth(secondString));
+			int strMaxSecond = myMax(queryTextWidth(firstNumber), queryTextWidth(secondNumber));
+			if (strMaxFirst + strMaxSecond > 80)
+			{
+				window.w += strMaxFirst + strMaxSecond - 80;
+			}
+			drawWindow(window.x, window.y, window.w, window.h);
+
+			
+
+
+			drawSpriteCenter(spr::fluxArrow, 0, 23, 46);
+
+			if (tgtProp->chargeFlux[dir16::right] < 0) drawSpriteCenter(spr::fluxArrow, 1, 23, 46);
+			else if (tgtProp->chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::fluxArrow, 2, 23, 46);
+
+			if (tgtProp->chargeFlux[dir16::up] < 0) drawSpriteCenter(spr::fluxArrow, 3, 23, 46);
+			else if (tgtProp->chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::fluxArrow, 4, 23, 46);
+
+			if (tgtProp->chargeFlux[dir16::left] < 0) drawSpriteCenter(spr::fluxArrow, 5, 23, 46);
+			else if (tgtProp->chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::fluxArrow, 6, 23, 46);
+
+			if (tgtProp->chargeFlux[dir16::down] < 0) drawSpriteCenter(spr::fluxArrow, 7, 23, 46);
+			else if (tgtProp->chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::fluxArrow, 8, 23, 46);
+
+			if (tgtProp->chargeFlux[dir16::above] < 0) drawSpriteCenter(spr::fluxArrow, 9, 23, 46);
+			else if (tgtProp->chargeFlux[dir16::above] > 0) drawSpriteCenter(spr::fluxArrow, 10, 23, 46);
+
+			if (tgtProp->chargeFlux[dir16::below] < 0) drawSpriteCenter(spr::fluxArrow, 11, 23, 46);
+			else if (tgtProp->chargeFlux[dir16::below] > 0) drawSpriteCenter(spr::fluxArrow, 12, 23, 46);
+
+			setFont(fontType::mainFontMedium);
+			setFontSize(22);
+			drawTextCenter(tgtProp->leadItem.name, window.w/2, 14);
+			setFont(fontType::mainFont);
+
+			setFontSize(18);
+			drawText(firstString, 49, 25);
+
+			drawText(firstColStr+firstNumber, 49 + strMaxFirst + 26, 25);
+			drawText(firstUnit, window.w - 6 - queryTextWidth(firstUnit), 25);
+
+
+			setFontSize(18);
+			drawText(secondString, 49, 29 + 16);
+
+			drawText(secondNumber, 49 + strMaxFirst + 26, 29 + 16);
+			drawText(secondUnit, window.w - 6 - queryTextWidth(secondUnit), 29 + 16);
+
+
+
+
+
+			SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+			SDL_SetRenderTarget(renderer, nullptr);
+
+			Point2 mouseCoord = getAbsMouseGrid();
+			SDL_Rect dst;
+			dst.x = cameraW / 2 + zoomScale * ((16 * mouseCoord.x + 8) - cameraX) - ((16 * zoomScale) / 2) + 16 * zoomScale;
+			dst.y = cameraH / 2 + zoomScale * ((16 * mouseCoord.y + 8) - cameraY) - ((16 * zoomScale) / 2) + 16 * zoomScale;
+			Point2 windowCoord = { dst.x, dst.y };
+
+			SDL_SetTextureAlphaMod(texture::circuitInfo, windowAlpha);
+			drawTexture(texture::circuitInfo, windowCoord.x, windowCoord.y);
+			SDL_SetTextureAlphaMod(texture::circuitInfo, 255);
+		}
+	}
+
 }

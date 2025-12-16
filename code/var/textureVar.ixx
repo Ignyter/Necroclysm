@@ -14,6 +14,7 @@ export namespace texture
 	SDL_Texture* navimap = nullptr;
 	SDL_Texture* mainGaugeWhiteShadow = nullptr;
 	SDL_Texture* hpGaugeWhiteShadow = nullptr;
+	SDL_Texture* circuitInfo = nullptr;
 }
 
 export namespace spr
@@ -170,4 +171,8 @@ export namespace spr
 	Sprite* icon80 = nullptr;
 
 	Sprite* gearStick = nullptr;
+
+	Sprite* coordCraftBox = nullptr;
+	Sprite* coordCraftMarker = nullptr;
+	Sprite* fluxArrow = nullptr;
 }
