@@ -54,6 +54,7 @@ export void debugConsole()
 	prt(L"26. 청크 덮어쓰기\n");
 	prt(L"27. Lua 스크립트 실행\n");
 	prt(L"28. 게임오버\n");
+	prt(L"99. 콘솔 클리어\n");
 	prt(L"////////////////////////////////////////\n");
 	int select;
 	std::cin >> select;
@@ -388,6 +389,11 @@ export void debugConsole()
 	case 28://Lua 스크립트 실행
 	{
 		GameOver::create(L"테스트 사망 문구입니다.");
+		break;
+	}
+	case 99://콘솔 출력 초기화
+	{
+		system("cls");
 		break;
 	}
 

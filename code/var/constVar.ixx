@@ -572,17 +572,6 @@ export enum class itemFlag
     CABLE_Z_DESCEND, //아래층의 현재 타일과 연결된 케이블
 
     HAS_GROUND,
-    VOLTAGE_GND_RIGHT,
-    VOLTAGE_GND_UP,
-    VOLTAGE_GND_LEFT,
-    VOLTAGE_GND_DOWN,
-    VOLTAGE_GND_ALL,
-
-    //트랜지스터와 게이트들 핀에 1J이라도 인가되면 활성화
-    GND_ACTIVE_RIGHT,
-    GND_ACTIVE_UP,
-    GND_ACTIVE_LEFT,
-    GND_ACTIVE_DOWN,
 
     MULTI_GND, //GND를 여러 방향에 독립적으로 가지고 있는 경우
 
@@ -1356,6 +1345,9 @@ export namespace itemRefCode
 
     constexpr int notGateR = 494;
     constexpr int notGateL = 495;
+
+    constexpr int srLatchR = 496;
+    constexpr int srLatchL = 497;
 
 
 };

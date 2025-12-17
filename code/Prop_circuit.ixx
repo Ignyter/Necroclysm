@@ -32,6 +32,9 @@ constexpr double EPSILON = 0.000001;
 * notGateR : 출력핀이 우측(R), vcc 입력은 항상 상단, 좌측은 입력핀(GND)
 * notGateL : 출력핀이 좌측(L), vcc 입력은 항상 상단, 우측은 입력핀(GND)
 * 
+* srLatchR : 출력핀이 우측(R), vcc 입력은 항상 상단, 좌측은 S(set)핀 하단은 R(reset)핀
+* srLatchL : 출력핀이 좌측(L), vcc 입력은 항상 상단, 우측은 S(set)핀 하단은 R(reset)핀
+* 
 * leverRL : 좌우만 연결
 * leverUD : 상하만 연결
 * 
@@ -92,15 +95,32 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
         Point3 current = frontierQueue.front();
         frontierQueue.pop();
 
-        if (visitedSet.find(current) != visitedSet.end()) continue;
-        visitedSet.insert(current);
-
         Prop* currentProp = TileProp(current.x, current.y, current.z);
+
+        //visitedSet이 문제다. 하단에서 이미 방문해서 위에서 방문할 때 멈춰버리는거야
+        if (visitedSet.find(current) != visitedSet.end())
+        {
+            //이 부분 무한루프 발생할 가능성 있으니까 나중에 카운트 제한 넣을 것(아마 GND끼리 순환으로 연결하면 게임 터질 듯)
+            if(currentProp->leadItem.checkFlag(itemFlag::HAS_GROUND)==false) continue;
+        }
+        else visitedSet.insert(current);
+
         if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
         if (currentProp == nullptr)
         {
             std::wprintf(L"[경고] BFS가 nullptr 프롭에 도달함 (%d,%d,%d)\n", current.x, current.y, current.z);
             continue;
+        }
+
+        if (current.x == 2 && current.y == -13)
+            int a = 3;
+
+        if (current.x == 2 && current.y == -14)
+            int a = 3;
+
+        if (current.x == 2 && current.y == -15)
+        {
+            int a = 3;
         }
 
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
@@ -224,10 +244,18 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                             else if (nextProp->leadItem.itemCode == itemRefCode::notGateL && (directions[i] == dir16::left))
                                 skipBFSSet.insert(nextCoord);
 
+                            if (nextProp->leadItem.itemCode == itemRefCode::srLatchR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::srLatchL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+
 
                             ////////////////////////////////////////////////////////////////////////////////
                             if (nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND))
                             {
+                                
+                                loadSet.insert(nextProp);//아래랑 관계없이 그냥 추가해도 되지않나?
+
                                 Point3 rightCoord = { current.x + 1, current.y, current.z };
                                 Point3 upCoord = { current.x, current.y - 1, current.z };
                                 Point3 leftCoord = { current.x - 1, current.y, current.z };
@@ -467,6 +495,13 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     if (dir == dir16::left && tgtItem.itemCode == itemRefCode::notGateR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::notGateL) return false;
 
+    if (dir == dir16::down && (tgtItem.itemCode == itemRefCode::srLatchR || tgtItem.itemCode == itemRefCode::srLatchL))
+    {
+        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::srLatchR) return false;
+    else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::srLatchL) return false;
+
 
 
     ItemData& crtItem = currentProp->leadItem;
@@ -496,6 +531,9 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     if (crtItem.itemCode == itemRefCode::notGateR && dir == dir16::left) return false;
     else if (crtItem.itemCode == itemRefCode::notGateL && dir == dir16::right) return false;
 
+    if (crtItem.itemCode == itemRefCode::srLatchR && (dir == dir16::left || dir == dir16::down)) return false;
+    else if (crtItem.itemCode == itemRefCode::srLatchL && (dir == dir16::right || dir == dir16::down)) return false;
+
 
     if (dir == dir16::above || dir == dir16::below)
     {
@@ -520,6 +558,9 @@ bool Prop::isGround(Point3 current, dir16 dir)
 {
     Prop* currentProp = TileProp(current.x, current.y, current.z);
     itemFlag groundFlag;
+
+    if (current.x == 0 && current.y == -14)
+        int a = 3;
 
     Point3 rightCoord = { current.x + 1, current.y, current.z };
     Point3 upCoord = { current.x, current.y - 1, current.z };
@@ -744,7 +785,7 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
     thisProp->nodeCharge -= requiredFromDonor;
     thisProp->chargeFlux[txDir] -= txChargeAmount;
 
-    nextProp->nodeCharge += txChargeAmount;
+    if(isGroundTransfer == false) nextProp->nodeCharge += txChargeAmount;
     nextProp->chargeFlux[reverse(txDir)] += txChargeAmount;
 
     if (debug::printCircuitLog)

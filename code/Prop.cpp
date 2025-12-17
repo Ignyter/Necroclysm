@@ -359,6 +359,8 @@ void Prop::propTurnOn()
         || iCode == itemRefCode::xorGateL
         || iCode == itemRefCode::notGateR
         || iCode == itemRefCode::notGateL
+        || iCode == itemRefCode::srLatchR
+        || iCode == itemRefCode::srLatchL
         )
     {
         //현재 위치 추가
@@ -397,31 +399,35 @@ void Prop::propTurnOff()
         || iCode == itemRefCode::xorGateL
         || iCode == itemRefCode::notGateR
         || iCode == itemRefCode::notGateL
+        || iCode == itemRefCode::srLatchR
+        || iCode == itemRefCode::srLatchL
         )
     {
+
+        
         //접지가 아닌 메인라인 핀들 추가
-        if (TileProp(rightCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_RIGHT))
+        if (TileProp(rightCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && leadItem.gndUsePowerRight == 0)
         {
             chargeFlux[dir16::right] = 0;
             Prop* nextProp = TileProp(rightCoord);
             if (nextProp) nextProp->chargeFlux[reverse(dir16::right)] = 0;
             nextCircuitStartQueue.push(rightCoord);
         }
-        if (TileProp(upCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_UP))
+        if (TileProp(upCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && leadItem.gndUsePowerUp == 0)
         {
             chargeFlux[dir16::up] = 0;
             Prop* nextProp = TileProp(upCoord);
             if (nextProp) nextProp->chargeFlux[reverse(dir16::up)] = 0;
             nextCircuitStartQueue.push(upCoord);
         }
-        if (TileProp(leftCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_LEFT))
+        if (TileProp(leftCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && leadItem.gndUsePowerLeft == 0)
         {
             chargeFlux[dir16::left] = 0;
             Prop* nextProp = TileProp(leftCoord);
             if (nextProp) nextProp->chargeFlux[reverse(dir16::left)] = 0;
             nextCircuitStartQueue.push(leftCoord);
         }
-        if (TileProp(downCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && !leadItem.checkFlag(itemFlag::VOLTAGE_GND_DOWN))
+        if (TileProp(downCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && leadItem.gndUsePowerDown == 0)
         {
             chargeFlux[dir16::down] = 0;
             Prop* nextProp = TileProp(downCoord);

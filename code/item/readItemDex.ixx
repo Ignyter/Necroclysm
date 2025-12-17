@@ -527,11 +527,6 @@ export int readItemDex(const wchar_t* file)
                             { L"CABLE_Z_DESCEND", itemFlag::CABLE_Z_DESCEND },
 
                             { L"HAS_GROUND", itemFlag::HAS_GROUND },
-                            { L"VOLTAGE_GND_UP", itemFlag::VOLTAGE_GND_UP },
-                            { L"VOLTAGE_GND_DOWN", itemFlag::VOLTAGE_GND_DOWN },
-                            { L"VOLTAGE_GND_LEFT", itemFlag::VOLTAGE_GND_LEFT },
-                            { L"VOLTAGE_GND_RIGHT", itemFlag::VOLTAGE_GND_RIGHT },
-                            { L"VOLTAGE_GND_ALL", itemFlag::VOLTAGE_GND_ALL },
                             
                             { L"TRANSISTOR", itemFlag::TRANSISTOR },
                             { L"LOGIC_GATE", itemFlag::LOGIC_GATE },

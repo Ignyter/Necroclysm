@@ -641,7 +641,7 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
-	debug::printCircuitLog = false;
+	debug::printCircuitLog = true;
 
 	nextCircuitStartQueue = std::queue<Point3>();
     auto actviePropSet = (World::ins())->getActivePropSet();
@@ -691,7 +691,61 @@ __int64 propTurn()
 			
             //모든 계산이 종료된 후 부하에 공급된 전하량이 usePower 이상인지 이하인지 판단하여 부하 프롭이 켜지거나 꺼짐
 			//단 논리게이트들은 공급된 전하량이 아니라 별도의 로직으로 처리
-			if (loadProp->leadItem.itemCode == itemRefCode::andGateR || loadProp->leadItem.itemCode == itemRefCode::andGateL)
+			if (loadProp->leadItem.itemCode == itemRefCode::transistorR
+				|| loadProp->leadItem.itemCode == itemRefCode::transistorU
+				|| loadProp->leadItem.itemCode == itemRefCode::transistorL
+				|| loadProp->leadItem.itemCode == itemRefCode::transistorD)
+			{
+				bool baseInput = false;
+
+				if (loadProp->leadItem.itemCode == itemRefCode::transistorR && loadProp->chargeFlux[dir16::right] >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::transistorU && loadProp->chargeFlux[dir16::up] >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::transistorL && loadProp->chargeFlux[dir16::left] >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::transistorD && loadProp->chargeFlux[dir16::down] >= 1.0) baseInput = true;
+
+				if (baseInput)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
+				}
+			}
+			else if (loadProp->leadItem.itemCode == itemRefCode::relayR
+				|| loadProp->leadItem.itemCode == itemRefCode::relayU
+				|| loadProp->leadItem.itemCode == itemRefCode::relayL
+				|| loadProp->leadItem.itemCode == itemRefCode::relayD)
+			{
+				bool baseInput = false;
+
+				if (loadProp->leadItem.itemCode == itemRefCode::relayR && loadProp->chargeFlux[dir16::right] >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::relayU && loadProp->chargeFlux[dir16::up] >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::relayL && loadProp->chargeFlux[dir16::left] >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::relayD && loadProp->chargeFlux[dir16::down] >= 1.0) baseInput = true;
+
+				if (baseInput)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
+				}
+				else
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
+				}
+			}
+			else if (loadProp->leadItem.itemCode == itemRefCode::andGateR || loadProp->leadItem.itemCode == itemRefCode::andGateL)
 			{
 				bool firstInput, secondInput;
 
@@ -802,6 +856,45 @@ __int64 propTurn()
 					}
                 }
 			}
+			else if (loadProp->leadItem.itemCode == itemRefCode::srLatchR || loadProp->leadItem.itemCode == itemRefCode::srLatchL)
+			{
+				bool setInput, resetInput;
+
+				if (loadProp->leadItem.itemCode == itemRefCode::srLatchR)
+				{
+					setInput = loadProp->chargeFlux[dir16::left] >= 1.0;
+					resetInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+				}
+				else
+				{
+					setInput = loadProp->chargeFlux[dir16::right] >= 1.0;
+					resetInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+				}
+
+				if (setInput && resetInput) // 금지상태는 랜덤
+				{
+					if (randomRange(0,1) == 0)
+					{
+						if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+							loadProp->propTurnOn();
+					}
+					else
+					{
+						if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+							loadProp->propTurnOff();
+					}
+				}
+				else if (setInput) // Set
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+						loadProp->propTurnOn();
+				}
+				else if (resetInput) // Reset
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+						loadProp->propTurnOff();
+				}
+			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
 				if (loadProp->getTotalChargeFlux() >= static_cast<double>(loadProp->leadItem.gndUsePower))
@@ -819,22 +912,6 @@ __int64 propTurn()
 					}
 				}
 			}
-
-			if(pPtr->leadItem.itemCode == itemRefCode::andGateL
-				|| pPtr->leadItem.itemCode == itemRefCode::andGateR
-				|| pPtr->leadItem.itemCode == itemRefCode::orGateR
-				|| pPtr->leadItem.itemCode == itemRefCode::orGateL
-				|| pPtr->leadItem.itemCode == itemRefCode::xorGateR
-				|| pPtr->leadItem.itemCode == itemRefCode::xorGateL
-                || pPtr->leadItem.itemCode == itemRefCode::notGateR
-                || pPtr->leadItem.itemCode == itemRefCode::notGateL
-				)
-			{
-				pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_RIGHT);
-                pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_LEFT);
-				pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_UP);
-                pPtr->leadItem.eraseFlag(itemFlag::GND_ACTIVE_DOWN);
-            }
 		}
 
 	} while (nextCircuitStartQueue.empty()==false);
