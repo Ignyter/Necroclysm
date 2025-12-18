@@ -35,7 +35,7 @@ public:
 
     int gndVisitCount = -1;
 
-    int delayMaxStack = 3;
+    double delayMaxStack = 3.0;
     int delayStack = 0;
 
     double delayStartTurn = 0;

@@ -25,6 +25,9 @@ import GameOver;
 import GUI;
 import Sleep;
 import Prop;
+import globalVar;
+
+constexpr double EPSILON = 0.000001;
 
 extern "C" 
 {
@@ -656,8 +659,11 @@ __int64 propTurn()
 
 	int loopCount = 0;
 	std::unordered_set<Prop*> loadSet;
+	static std::unordered_set<Prop*> reserveDelayInit;
+	reserveDelayInit.clear();
 	do
 	{
+
 		loadSet.clear();
 		loopCount++;
 		if (loopCount >= MAX_CIRCUIT_LOOP_COUNT) break;
@@ -897,21 +903,24 @@ __int64 propTurn()
 			}
 			else if (loadProp->leadItem.itemCode == itemRefCode::delayR || loadProp->leadItem.itemCode == itemRefCode::delayL)
 			{
+				reserveDelayInit.erase(loadProp);
+
 				bool inputActive;
 				if (loadProp->leadItem.itemCode == itemRefCode::delayR) inputActive = loadProp->chargeFlux[dir16::left] >= 1.0;
 				else inputActive = loadProp->chargeFlux[dir16::right] >= 1.0;
 
 				if (inputActive == true)
 				{
+					if (loadProp->delayStartTurn == 0.0) loadProp->delayStartTurn = getElapsedTurn();
+
 					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
 					{
-						if (loadProp->delayStack >= loadProp->delayMaxStack) loadProp->propTurnOn();
-						else loadProp->delayStack++;
+						if (getElapsedTurn() - loadProp->delayStartTurn >= loadProp->delayMaxStack - EPSILON) loadProp->propTurnOn();
 					}
 				}
 				else
 				{
-					loadProp->delayStack = 0;
+					reserveDelayInit.insert(loadProp);
 					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
 					{
 						loadProp->propTurnOff();
@@ -937,8 +946,13 @@ __int64 propTurn()
 			}
 		}
 
+
 	} while (nextCircuitStartQueue.empty()==false);
 
+	for (auto tgtDelay : reserveDelayInit)
+	{
+		tgtDelay->delayStartTurn = 0.0;
+	}
 
 	//에너지 소모 확정 페이즈
 	//윗 단계에서 계산된 에너지만큼 발전기에서 소모됨

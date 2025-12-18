@@ -446,15 +446,7 @@ void Prop::propTurnOff()
     }
     else if (iCode == itemRefCode::delayR || iCode == itemRefCode::delayL)
     {
-        Point3 leftCoord = { getGridX() - 1, getGridY(), getGridZ() };
-        Prop* leftProp = TileProp(leftCoord);
-        Point3 rightCoord = { getGridX() + 1, getGridY(), getGridZ() };
-        Prop* rightProp = TileProp(rightCoord);
-
-        if (leftProp) nextCircuitStartQueue.push(leftCoord);
-        if (rightProp) nextCircuitStartQueue.push(rightCoord);
-
-        initChargeBFS(nextCircuitStartQueue);
+        //꺼질 때는 재계산 로직 필요없음 (신호선=전력입력)
 
         leadItem.addFlag(itemFlag::HAS_GROUND);
     }
