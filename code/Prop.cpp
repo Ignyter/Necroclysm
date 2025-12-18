@@ -347,9 +347,9 @@ void Prop::propTurnOn()
     {
         leadItem.lightPtr = std::make_unique<Light>(getGridX() + leadItem.lightDelX, getGridY() + leadItem.lightDelY, getGridZ(), leadItem.lightRange, leadItem.lightIntensity, SDL_Color{ leadItem.lightR,leadItem.lightG,leadItem.lightB });
     }
-    else if (iCode == itemRefCode::transistorR 
-        || iCode == itemRefCode::transistorL 
-        || iCode == itemRefCode::transistorU 
+    else if (iCode == itemRefCode::transistorR
+        || iCode == itemRefCode::transistorL
+        || iCode == itemRefCode::transistorU
         || iCode == itemRefCode::transistorD
         || iCode == itemRefCode::andGateR
         || iCode == itemRefCode::andGateL
@@ -366,8 +366,13 @@ void Prop::propTurnOn()
         //현재 위치 추가
         nextCircuitStartQueue.push(currentCoord);
         initChargeBFS(nextCircuitStartQueue);
-
-        auto& debugStartQueue = nextCircuitStartQueue;
+    }
+    else if (iCode == itemRefCode::delayR || iCode == itemRefCode::delayL)
+    {
+        //현재 위치 추가
+        nextCircuitStartQueue.push(currentCoord);
+        initChargeBFS(nextCircuitStartQueue);
+        leadItem.eraseFlag(itemFlag::HAS_GROUND);
     }
 }
 
@@ -438,5 +443,19 @@ void Prop::propTurnOff()
         
         initChargeBFS(nextCircuitStartQueue);
 
+    }
+    else if (iCode == itemRefCode::delayR || iCode == itemRefCode::delayL)
+    {
+        Point3 leftCoord = { getGridX() - 1, getGridY(), getGridZ() };
+        Prop* leftProp = TileProp(leftCoord);
+        Point3 rightCoord = { getGridX() + 1, getGridY(), getGridZ() };
+        Prop* rightProp = TileProp(rightCoord);
+
+        if (leftProp) nextCircuitStartQueue.push(leftCoord);
+        if (rightProp) nextCircuitStartQueue.push(rightCoord);
+
+        initChargeBFS(nextCircuitStartQueue);
+
+        leadItem.addFlag(itemFlag::HAS_GROUND);
     }
 }

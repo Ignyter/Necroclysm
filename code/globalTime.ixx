@@ -170,3 +170,14 @@ export int calculateMoonPhase()
     int phaseIndex = (int)(cycleProgress * 8.0);
     return std::max(0, std::min(7, phaseIndex)); 
 };
+
+export double getElapsedTurn()
+{
+    // 1턴 = 1분
+    double totalMin = 0.0;
+    totalMin += (double)getElapsedDays() * 24.0 * 60.0;
+    totalMin += (double)getHour() * 60.0;
+    totalMin += (double)getMin();
+    totalMin += (double)getSec() / 60.0; 
+    return totalMin;
+}

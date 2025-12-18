@@ -102,39 +102,10 @@ void Prop::drawSelf()
 
             if (isChargeFlowing())
             {
-
-                bool rConnected = isConnected(this, dir16::right);
-                bool uConnected = isConnected(this, dir16::up);
-                bool lConnected = isConnected(this, dir16::left);
-                bool dConnected = isConnected(this, dir16::down);
-
-                if (rConnected)
-                {
-                    Prop* rProp = TileProp({ getGridX() + 1,getGridY(),getGridZ() });
-                    if (rProp->isChargeFlowing())
-                        drawSpriteCenter(spr::propset, 3041, drawX, drawY);
-                }
-
-                if (uConnected)
-                {
-                    Prop* uProp = TileProp({ getGridX(),getGridY() - 1,getGridZ() });
-                    if (uProp->isChargeFlowing())
-                        drawSpriteCenter(spr::propset, 3042, drawX, drawY);
-                }
-
-                if (lConnected)
-                {
-                    Prop* lProp = TileProp({ getGridX() - 1,getGridY(),getGridZ() });
-                    if (lProp->isChargeFlowing())
-                        drawSpriteCenter(spr::propset, 3043, drawX, drawY);
-                }
-
-                if (dConnected)
-                {
-                    Prop* dProp = TileProp({ getGridX(),getGridY() + 1,getGridZ() });
-                    if (dProp->isChargeFlowing())
-                        drawSpriteCenter(spr::propset, 3044, drawX, drawY);
-                }
+                if (chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);;
+                if (chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;
+                if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);;
+                if (chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);;
             }
         }
     }

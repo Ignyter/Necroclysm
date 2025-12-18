@@ -211,7 +211,7 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                         Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
                         Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
 
-                        if (nextProp != nullptr)
+                        if (nextProp != nullptr && nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND))
                         {
                             //베이스에서 메인라인으로 BFS를 추가하는 것을 막음
                             if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) skipBFSSet.insert(nextCoord);
@@ -250,40 +250,35 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                                 skipBFSSet.insert(nextCoord);
 
 
-                            ////////////////////////////////////////////////////////////////////////////////
-                            if (nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND))
-                            {
-                                
-                                loadSet.insert(nextProp);//아래랑 관계없이 그냥 추가해도 되지않나?
+                            loadSet.insert(nextProp);//아래랑 관계없이 그냥 추가해도 되지않나?
 
-                                Point3 rightCoord = { current.x + 1, current.y, current.z };
-                                Point3 upCoord = { current.x, current.y - 1, current.z };
-                                Point3 leftCoord = { current.x - 1, current.y, current.z };
-                                Point3 downCoord = { current.x, current.y + 1, current.z };
-                                if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
-                                {
-                                    loadSet.insert(nextProp);
-                                    circuitTotalLoad += nextProp->leadItem.gndUsePowerLeft;
-                                    hasGround = true;
-                                }
-                                else if (directions[i] == dir16::up && nextProp->leadItem.gndUsePowerDown > 0) 
-                                {
-                                    loadSet.insert(nextProp);
-                                    circuitTotalLoad += nextProp->leadItem.gndUsePowerDown;
-                                    hasGround = true;
-                                }
-                                else if (directions[i] == dir16::left && nextProp->leadItem.gndUsePowerRight > 0) 
-                                {
-                                    loadSet.insert(nextProp);
-                                    circuitTotalLoad += nextProp->leadItem.gndUsePowerRight;
-                                    hasGround = true;
-                                }
-                                else if (directions[i] == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) 
-                                {
-                                    loadSet.insert(nextProp);
-                                    circuitTotalLoad += nextProp->leadItem.gndUsePowerUp;
-                                    hasGround = true;
-                                }
+                            Point3 rightCoord = { current.x + 1, current.y, current.z };
+                            Point3 upCoord = { current.x, current.y - 1, current.z };
+                            Point3 leftCoord = { current.x - 1, current.y, current.z };
+                            Point3 downCoord = { current.x, current.y + 1, current.z };
+                            if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
+                            {
+                                loadSet.insert(nextProp);
+                                circuitTotalLoad += nextProp->leadItem.gndUsePowerLeft;
+                                hasGround = true;
+                            }
+                            else if (directions[i] == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
+                            {
+                                loadSet.insert(nextProp);
+                                circuitTotalLoad += nextProp->leadItem.gndUsePowerDown;
+                                hasGround = true;
+                            }
+                            else if (directions[i] == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
+                            {
+                                loadSet.insert(nextProp);
+                                circuitTotalLoad += nextProp->leadItem.gndUsePowerRight;
+                                hasGround = true;
+                            }
+                            else if (directions[i] == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
+                            {
+                                loadSet.insert(nextProp);
+                                circuitTotalLoad += nextProp->leadItem.gndUsePowerUp;
+                                hasGround = true;
                             }
                         }
 
@@ -502,6 +497,16 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::srLatchR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::srLatchL) return false;
 
+    if (dir == dir16::right && tgtItem.itemCode == itemRefCode::notGateR)
+    {
+        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    if (dir == dir16::left && tgtItem.itemCode == itemRefCode::notGateL)
+    {
+        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
+    }
+    if (dir == dir16::left && tgtItem.itemCode == itemRefCode::delayR) return false;
+    else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::delayL) return false;
 
 
     ItemData& crtItem = currentProp->leadItem;
@@ -534,6 +539,15 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     if (crtItem.itemCode == itemRefCode::srLatchR && (dir == dir16::left || dir == dir16::down)) return false;
     else if (crtItem.itemCode == itemRefCode::srLatchL && (dir == dir16::right || dir == dir16::down)) return false;
 
+    if (crtItem.itemCode == itemRefCode::delayR && dir == dir16::right && crtItem.checkFlag(itemFlag::PROP_POWER_OFF))
+    {
+        return false;
+    }
+    if (crtItem.itemCode == itemRefCode::delayL && dir == dir16::left && crtItem.checkFlag(itemFlag::PROP_POWER_OFF))
+    {
+        return false;
+    }
+
 
     if (dir == dir16::above || dir == dir16::below)
     {
@@ -559,6 +573,7 @@ bool Prop::isGround(Point3 current, dir16 dir)
     Prop* currentProp = TileProp(current.x, current.y, current.z);
     itemFlag groundFlag;
 
+
     if (current.x == 0 && current.y == -14)
         int a = 3;
 
@@ -571,6 +586,7 @@ bool Prop::isGround(Point3 current, dir16 dir)
     else if (dir == dir16::up) nextProp = TileProp(upCoord);
     else if (dir == dir16::left) nextProp = TileProp(leftCoord);
     else if (dir == dir16::down) nextProp = TileProp(downCoord);
+    if (nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND) == false) return false;
 
     if (nextProp == nullptr) return false;
     else

@@ -641,7 +641,7 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
-	debug::printCircuitLog = true;
+	debug::printCircuitLog = false;
 
 	nextCircuitStartQueue = std::queue<Point3>();
     auto actviePropSet = (World::ins())->getActivePropSet();
@@ -893,6 +893,29 @@ __int64 propTurn()
 				{
 					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
 						loadProp->propTurnOff();
+				}
+			}
+			else if (loadProp->leadItem.itemCode == itemRefCode::delayR || loadProp->leadItem.itemCode == itemRefCode::delayL)
+			{
+				bool inputActive;
+				if (loadProp->leadItem.itemCode == itemRefCode::delayR) inputActive = loadProp->chargeFlux[dir16::left] >= 1.0;
+				else inputActive = loadProp->chargeFlux[dir16::right] >= 1.0;
+
+				if (inputActive == true)
+				{
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						if (loadProp->delayStack >= loadProp->delayMaxStack) loadProp->propTurnOn();
+						else loadProp->delayStack++;
+					}
+				}
+				else
+				{
+					loadProp->delayStack = 0;
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					{
+						loadProp->propTurnOff();
+					}
 				}
 			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐

@@ -34,8 +34,14 @@ public:
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
 
     int gndVisitCount = -1;
-       
 
+    int delayMaxStack = 3;
+    int delayStack = 0;
+
+    double delayStartTurn = 0;
+
+    bool reserveDelayStackAdd = false;
+    bool reserveDelayStackInit = false;
 
 
     Prop(Point3 inputCoor, int leadItemCode);

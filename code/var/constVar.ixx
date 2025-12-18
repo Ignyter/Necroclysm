@@ -1349,6 +1349,9 @@ export namespace itemRefCode
     constexpr int srLatchR = 496;
     constexpr int srLatchL = 497;
 
+    constexpr int delayR = 498;
+    constexpr int delayL = 499;
+
 
 };
 
