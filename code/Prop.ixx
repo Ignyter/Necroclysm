@@ -10,6 +10,8 @@ import Light;
 import Coord;
 import Drawable;
 
+export CircuitAxis axisFromDir(dir16 dir);
+
 export class Prop : public Ani, public AI, public Coord, public Drawable
 {
 private:
@@ -23,12 +25,20 @@ public:
     float treeAngle = 0.0; //벌목 때 나무들이 가지는 앵글, 0이 아닐 경우 활성화됨
 
     bool runUsed = false; //runProp
+    bool runUsedH = false;
+    bool runUsedV = false;
 
     int nodeMaxCharge = 0;
+    int nodeMaxChargeH = 0;
+    int nodeMaxChargeV = 0;
     double nodeCharge = 0;
+    double nodeChargeH = 0;
+    double nodeChargeV = 0;
     double totalLossCharge = 0; //이번 턴에 저항으로 손실된 모든 에너지값
 
     std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
+    std::unordered_map<dir16, double> chargeFluxH = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
+    std::unordered_map<dir16, double> chargeFluxV = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
     double prevPushedCharge = 0;
     double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
@@ -57,64 +67,49 @@ public:
 
     void drawSelf() override;
 
-    double getTotalChargeFlux();
+    bool usesAxisSplit() const { return leadItem.checkFlag(itemFlag::CROSSED_CABLE); }
 
-    bool isChargeFlowing();
+    void resetRunUsed();
+    bool isAxisProcessed(CircuitAxis axis) const;
+    bool isFullyProcessed() const;
+    void markAxisProcessed(CircuitAxis axis);
 
-    void initChargeFlux()
-    {
-        chargeFlux[dir16::right] = 0;
-        chargeFlux[dir16::up] = 0;
-        chargeFlux[dir16::left] = 0;
-        chargeFlux[dir16::down] = 0;
-        chargeFlux[dir16::above] = 0;
-        chargeFlux[dir16::below] = 0;
-    }
+    std::unordered_map<dir16, double>& getChargeFluxMap(CircuitAxis axis);
+    const std::unordered_map<dir16, double>& getChargeFluxMap(CircuitAxis axis) const;
+    double getChargeFlux(dir16 dir) const;
+    void setChargeFlux(dir16 dir, double value);
 
-    double getInletCharge()
-    {
-        double totalInlet = 0;
-        if (chargeFlux[dir16::right] > 0) totalInlet += chargeFlux[dir16::right];
-        if (chargeFlux[dir16::up] > 0) totalInlet += chargeFlux[dir16::up];
-        if (chargeFlux[dir16::left] > 0) totalInlet += chargeFlux[dir16::left];
-        if (chargeFlux[dir16::down] > 0) totalInlet += chargeFlux[dir16::down];
-        if (chargeFlux[dir16::above] > 0) totalInlet += chargeFlux[dir16::above];
-        if (chargeFlux[dir16::below] > 0) totalInlet += chargeFlux[dir16::below];
+    double& nodeChargeForAxis(CircuitAxis axis);
+    int& nodeMaxChargeForAxis(CircuitAxis axis);
 
-        return totalInlet;
-    }
+    double getTotalChargeFlux(CircuitAxis axis = CircuitAxis::omni);
+
+    bool isChargeFlowing(CircuitAxis axis = CircuitAxis::omni);
+
+    void initChargeFlux();
+
+    double getInletCharge(CircuitAxis axis = CircuitAxis::omni);
     
-    double getOutletCharge()
-    {
-        double totalOutlet = 0;
-        if (chargeFlux[dir16::right] < 0) totalOutlet -= chargeFlux[dir16::right];
-        if (chargeFlux[dir16::up] < 0) totalOutlet -= chargeFlux[dir16::up];
-        if (chargeFlux[dir16::left] < 0) totalOutlet -= chargeFlux[dir16::left];
-        if (chargeFlux[dir16::down] < 0) totalOutlet -= chargeFlux[dir16::down];
-        if (chargeFlux[dir16::above] < 0) totalOutlet -= chargeFlux[dir16::above];
-        if (chargeFlux[dir16::below] < 0) totalOutlet -= chargeFlux[dir16::below];
+    double getOutletCharge(CircuitAxis axis = CircuitAxis::omni);
 
-        return totalOutlet;
-    }
-
-    std::unordered_set<Prop*> updateCircuitNetwork();
+    std::unordered_set<Prop*> updateCircuitNetwork(CircuitAxis startAxis = CircuitAxis::omni);
 
     bool isConnected(Point3 currentCoord, dir16 dir);
 
     bool isConnected(Prop* currentProp, dir16 dir);
 
-    bool isGround(Point3 currentCoord, dir16 dir);
+    bool isGround(Point3 currentCoord, dir16 dir, CircuitAxis axis);
 
-    void transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAmount, const std::wstring& indent, dir16 txDir, bool isGroundTransfer);
+    void transferCharge(Prop* donorProp, Prop* acceptorProp, double txChargeAmount, const std::wstring& indent, dir16 txDir, bool isGroundTransfer, CircuitAxis axis);
 
-    double pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std::unordered_set<Prop*> pathVisited, int depth);
+    double pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std::unordered_set<Prop*> pathVisited, int depth, CircuitAxis axis);
 
-    double divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth);
+    double divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth, CircuitAxis axis);
 
     void propTurnOn();
 
     void propTurnOff();
 
-    void initChargeBFS(std::queue<Point3> startPointSet);
+    void initChargeBFS(std::queue<CircuitKey> startPointSet);
 
 };

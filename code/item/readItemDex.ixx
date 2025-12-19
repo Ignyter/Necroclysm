@@ -517,6 +517,7 @@ export int readItemDex(const wchar_t* file)
 
                             {L"CIRCUIT", itemFlag::CIRCUIT},
                             {L"CABLE_BEHIND", itemFlag::CABLE_BEHIND},
+                            {L"CROSSED_CABLE", itemFlag::CROSSED_CABLE},
                             {L"VOLTAGE_SOURCE", itemFlag::VOLTAGE_SOURCE},
 
                             { L"VOLTAGE_OUTPUT_RIGHT", itemFlag::VOLTAGE_OUTPUT_RIGHT },
@@ -1131,5 +1132,4 @@ export int readItemDex(const wchar_t* file)
         return 0;
     }
 }
-
 

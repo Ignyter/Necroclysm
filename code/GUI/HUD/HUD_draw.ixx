@@ -1745,23 +1745,23 @@ void HUD::drawCircuitInfo()
 
 			drawSpriteCenter(spr::fluxArrow, 0, 23, 46);
 
-			if (tgtProp->chargeFlux[dir16::right] < 0) drawSpriteCenter(spr::fluxArrow, 1, 23, 46);
-			else if (tgtProp->chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::fluxArrow, 2, 23, 46);
+			if (tgtProp->getChargeFlux(dir16::right) < 0) drawSpriteCenter(spr::fluxArrow, 1, 23, 46);
+			else if (tgtProp->getChargeFlux(dir16::right) > 0) drawSpriteCenter(spr::fluxArrow, 2, 23, 46);
 
-			if (tgtProp->chargeFlux[dir16::up] < 0) drawSpriteCenter(spr::fluxArrow, 3, 23, 46);
-			else if (tgtProp->chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::fluxArrow, 4, 23, 46);
+			if (tgtProp->getChargeFlux(dir16::up) < 0) drawSpriteCenter(spr::fluxArrow, 3, 23, 46);
+			else if (tgtProp->getChargeFlux(dir16::up) > 0) drawSpriteCenter(spr::fluxArrow, 4, 23, 46);
 
-			if (tgtProp->chargeFlux[dir16::left] < 0) drawSpriteCenter(spr::fluxArrow, 5, 23, 46);
-			else if (tgtProp->chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::fluxArrow, 6, 23, 46);
+			if (tgtProp->getChargeFlux(dir16::left) < 0) drawSpriteCenter(spr::fluxArrow, 5, 23, 46);
+			else if (tgtProp->getChargeFlux(dir16::left) > 0) drawSpriteCenter(spr::fluxArrow, 6, 23, 46);
 
-			if (tgtProp->chargeFlux[dir16::down] < 0) drawSpriteCenter(spr::fluxArrow, 7, 23, 46);
-			else if (tgtProp->chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::fluxArrow, 8, 23, 46);
+			if (tgtProp->getChargeFlux(dir16::down) < 0) drawSpriteCenter(spr::fluxArrow, 7, 23, 46);
+			else if (tgtProp->getChargeFlux(dir16::down) > 0) drawSpriteCenter(spr::fluxArrow, 8, 23, 46);
 
-			if (tgtProp->chargeFlux[dir16::above] < 0) drawSpriteCenter(spr::fluxArrow, 9, 23, 46);
-			else if (tgtProp->chargeFlux[dir16::above] > 0) drawSpriteCenter(spr::fluxArrow, 10, 23, 46);
+			if (tgtProp->getChargeFlux(dir16::above) < 0) drawSpriteCenter(spr::fluxArrow, 9, 23, 46);
+			else if (tgtProp->getChargeFlux(dir16::above) > 0) drawSpriteCenter(spr::fluxArrow, 10, 23, 46);
 
-			if (tgtProp->chargeFlux[dir16::below] < 0) drawSpriteCenter(spr::fluxArrow, 11, 23, 46);
-			else if (tgtProp->chargeFlux[dir16::below] > 0) drawSpriteCenter(spr::fluxArrow, 12, 23, 46);
+			if (tgtProp->getChargeFlux(dir16::below) < 0) drawSpriteCenter(spr::fluxArrow, 11, 23, 46);
+			else if (tgtProp->getChargeFlux(dir16::below) > 0) drawSpriteCenter(spr::fluxArrow, 12, 23, 46);
 
 			setFont(fontType::mainFontMedium);
 			setFontSize(22);

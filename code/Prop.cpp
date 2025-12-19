@@ -20,6 +20,14 @@ import Sticker;
 import Particle;
 
 
+CircuitAxis axisFromDir(dir16 dir)
+{
+    if (dir == dir16::right || dir == dir16::left) return CircuitAxis::horizontal;
+    if (dir == dir16::up || dir == dir16::down) return CircuitAxis::vertical;
+    else return CircuitAxis::omni;
+}
+
+
 Prop::Prop(Point3 inputCoor, int leadItemCode)
 {
     leadItem = cloneFromItemDex(itemDex[leadItemCode], 1);
@@ -43,6 +51,33 @@ Prop::Prop(Point3 inputCoor, int leadItemCode)
     if (leadItem.randomPropSprSize != 1)
     {
         leadItem.propSprIndex += randomRange(0, leadItem.randomPropSprSize - 1);
+    }
+
+    if (leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+    {
+        if (leadItem.checkFlag(itemFlag::CABLE_Z_ASCEND))
+        {
+            leadItem.eraseFlag(itemFlag::CABLE_Z_ASCEND);
+            Prop* abovePropPtr = TileProp(getGridX(), getGridY(), getGridZ() + 1);
+            if (abovePropPtr != nullptr) abovePropPtr->leadItem.eraseFlag(itemFlag::CABLE_Z_DESCEND);
+        }
+
+        if (leadItem.checkFlag(itemFlag::CABLE_Z_DESCEND))
+        {
+            leadItem.eraseFlag(itemFlag::CABLE_Z_DESCEND);
+            Prop* belowPropPtr = TileProp(getGridX(), getGridY(), getGridZ() - 1);
+            if (belowPropPtr != nullptr) belowPropPtr->leadItem.eraseFlag(itemFlag::CABLE_Z_ASCEND);
+        }
+
+        const std::array<Point3, 4> neighbors = { Point3{getGridX() + 1, getGridY(), getGridZ()},
+            Point3{getGridX() - 1, getGridY(), getGridZ()},
+            Point3{getGridX(), getGridY() + 1, getGridZ()},
+            Point3{getGridX(), getGridY() - 1, getGridZ()} };
+        for (const auto& nb : neighbors)
+        {
+            Prop* nbProp = TileProp(nb.x, nb.y, nb.z);
+            if (nbProp != nullptr && nbProp->leadItem.checkFlag(itemFlag::CABLE)) nbProp->updateSprIndex();
+        }
     }
 
 
@@ -79,6 +114,116 @@ Prop::~Prop()
     prt(L"[Prop:destructor] 소멸자가 호출되었다. \n");
 }
 
+void Prop::resetRunUsed()
+{
+    runUsed = false;
+    runUsedH = false;
+    runUsedV = false;
+}
+
+bool Prop::isAxisProcessed(CircuitAxis axis) const
+{
+    if (usesAxisSplit())
+    {
+        if (axis == CircuitAxis::horizontal) return runUsedH;
+        if (axis == CircuitAxis::vertical) return runUsedV;
+        return runUsedH && runUsedV;
+    }
+    return runUsed;
+}
+
+bool Prop::isFullyProcessed() const
+{
+    return usesAxisSplit() ? (runUsedH && runUsedV) : runUsed;
+}
+
+void Prop::markAxisProcessed(CircuitAxis axis)
+{
+    if (usesAxisSplit())
+    {
+        if (axis == CircuitAxis::horizontal || axis == CircuitAxis::omni) runUsedH = true;
+        if (axis == CircuitAxis::vertical || axis == CircuitAxis::omni) runUsedV = true;
+        runUsed = runUsedH && runUsedV;
+    }
+    else
+    {
+        runUsed = true;
+    }
+}
+
+std::unordered_map<dir16, double>& Prop::getChargeFluxMap(CircuitAxis axis)
+{
+    if (usesAxisSplit())
+    {
+        if (axis == CircuitAxis::horizontal) return chargeFluxH;
+        if (axis == CircuitAxis::vertical) return chargeFluxV;
+    }
+    return chargeFlux;
+}
+
+const std::unordered_map<dir16, double>& Prop::getChargeFluxMap(CircuitAxis axis) const
+{
+    if (usesAxisSplit())
+    {
+        if (axis == CircuitAxis::horizontal) return chargeFluxH;
+        if (axis == CircuitAxis::vertical) return chargeFluxV;
+    }
+    return chargeFlux;
+}
+
+double Prop::getChargeFlux(dir16 dir) const
+{
+    CircuitAxis axis = axisFromDir(dir);
+    const auto& fluxMap = getChargeFluxMap(axis);
+    auto it = fluxMap.find(dir);
+    if (it != fluxMap.end()) return it->second;
+    return 0;
+}
+
+void Prop::setChargeFlux(dir16 dir, double value)
+{
+    CircuitAxis axis = axisFromDir(dir);
+    auto& fluxMap = getChargeFluxMap(axis);
+    fluxMap[dir] = value;
+}
+
+double& Prop::nodeChargeForAxis(CircuitAxis axis)
+{
+    if (usesAxisSplit())
+    {
+        if (axis == CircuitAxis::horizontal) return nodeChargeH;
+        if (axis == CircuitAxis::vertical) return nodeChargeV;
+    }
+    return nodeCharge;
+}
+
+int& Prop::nodeMaxChargeForAxis(CircuitAxis axis)
+{
+    if (usesAxisSplit())
+    {
+        if (axis == CircuitAxis::horizontal) return nodeMaxChargeH;
+        if (axis == CircuitAxis::vertical) return nodeMaxChargeV;
+    }
+    return nodeMaxCharge;
+}
+
+void Prop::initChargeFlux()
+{
+    auto resetMap = [](auto& fluxMap)
+    {
+        fluxMap[dir16::right] = 0;
+        fluxMap[dir16::up] = 0;
+        fluxMap[dir16::left] = 0;
+        fluxMap[dir16::down] = 0;
+        fluxMap[dir16::above] = 0;
+        fluxMap[dir16::below] = 0;
+    };
+
+    resetMap(chargeFlux);
+    resetMap(chargeFluxH);
+    resetMap(chargeFluxV);
+}
+
 void Prop::setGrid(int inputGridX, int inputGridY, int inputGridZ)
 {
     Point2 prevChunkCoord = World::ins()->changeToSectorCoord(getGridX(), getGridY());
@@ -100,7 +245,12 @@ void Prop::updateSprIndex()
     bool rightTile = false;
 
 
-    if (leadItem.checkFlag(itemFlag::CABLE))//전선일 경우
+    if (leadItem.checkFlag(itemFlag::CABLE) && leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+    {
+        leadItem.extraSprIndexSingle = 0;
+        leadItem.extraSprIndex16 = 0;
+    }
+    else if (leadItem.checkFlag(itemFlag::CABLE))//전선일 경우
     {
         auto wireCheck = [this](int dx, int dy) -> bool
             {
@@ -364,13 +514,13 @@ void Prop::propTurnOn()
         )
     {
         //현재 위치 추가
-        nextCircuitStartQueue.push(currentCoord);
+        nextCircuitStartQueue.push({ currentCoord, CircuitAxis::omni });
         initChargeBFS(nextCircuitStartQueue);
     }
     else if (iCode == itemRefCode::delayR || iCode == itemRefCode::delayL)
     {
         //현재 위치 추가
-        nextCircuitStartQueue.push(currentCoord);
+        nextCircuitStartQueue.push({ currentCoord, CircuitAxis::omni });
         initChargeBFS(nextCircuitStartQueue);
         leadItem.eraseFlag(itemFlag::HAS_GROUND);
     }
@@ -413,31 +563,31 @@ void Prop::propTurnOff()
         //접지가 아닌 메인라인 핀들 추가
         if (TileProp(rightCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_RIGHT) && leadItem.gndUsePowerRight == 0)
         {
-            chargeFlux[dir16::right] = 0;
+            setChargeFlux(dir16::right, 0);
             Prop* nextProp = TileProp(rightCoord);
-            if (nextProp) nextProp->chargeFlux[reverse(dir16::right)] = 0;
-            nextCircuitStartQueue.push(rightCoord);
+            if (nextProp) nextProp->setChargeFlux(reverse(dir16::right), 0);
+            nextCircuitStartQueue.push({ rightCoord, axisFromDir(dir16::right) });
         }
         if (TileProp(upCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_UP) && leadItem.gndUsePowerUp == 0)
         {
-            chargeFlux[dir16::up] = 0;
+            setChargeFlux(dir16::up, 0);
             Prop* nextProp = TileProp(upCoord);
-            if (nextProp) nextProp->chargeFlux[reverse(dir16::up)] = 0;
-            nextCircuitStartQueue.push(upCoord);
+            if (nextProp) nextProp->setChargeFlux(reverse(dir16::up), 0);
+            nextCircuitStartQueue.push({ upCoord, axisFromDir(dir16::up) });
         }
         if (TileProp(leftCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_LEFT) && leadItem.gndUsePowerLeft == 0)
         {
-            chargeFlux[dir16::left] = 0;
+            setChargeFlux(dir16::left, 0);
             Prop* nextProp = TileProp(leftCoord);
-            if (nextProp) nextProp->chargeFlux[reverse(dir16::left)] = 0;
-            nextCircuitStartQueue.push(leftCoord);
+            if (nextProp) nextProp->setChargeFlux(reverse(dir16::left), 0);
+            nextCircuitStartQueue.push({ leftCoord, axisFromDir(dir16::left) });
         }
         if (TileProp(downCoord) != nullptr && leadItem.checkFlag(itemFlag::CABLE_CNCT_DOWN) && leadItem.gndUsePowerDown == 0)
         {
-            chargeFlux[dir16::down] = 0;
+            setChargeFlux(dir16::down, 0);
             Prop* nextProp = TileProp(downCoord);
-            if (nextProp) nextProp->chargeFlux[reverse(dir16::down)] = 0;
-            nextCircuitStartQueue.push(downCoord);
+            if (nextProp) nextProp->setChargeFlux(reverse(dir16::down), 0);
+            nextCircuitStartQueue.push({ downCoord, axisFromDir(dir16::down) });
         }
 
         

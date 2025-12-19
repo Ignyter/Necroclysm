@@ -1025,16 +1025,21 @@ public:
 
 			if (propPtr->leadItem.checkFlag(itemFlag::CABLE))
 			{
-				Prop* abovePropPtr = TileProp(targetGrid.x, targetGrid.y, PlayerZ()+ 1);
-				if (abovePropPtr != nullptr && abovePropPtr->leadItem.checkFlag(itemFlag::CABLE))
+				inputOptions.push_back(act::toggleCrossCable);
+
+				if (propPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE) == false)
 				{
-					inputOptions.push_back(act::connectPlusZ);
-				}
-				
-				Prop* belowPropPtr = TileProp(targetGrid.x, targetGrid.y, PlayerZ() - 1);
-				if (belowPropPtr != nullptr && belowPropPtr->leadItem.checkFlag(itemFlag::CABLE))
-				{
-					inputOptions.push_back(act::connectMinusZ);
+					Prop* abovePropPtr = TileProp(targetGrid.x, targetGrid.y, PlayerZ()+ 1);
+					if (abovePropPtr != nullptr && abovePropPtr->leadItem.checkFlag(itemFlag::CABLE))
+					{
+						inputOptions.push_back(act::connectPlusZ);
+					}
+					
+					Prop* belowPropPtr = TileProp(targetGrid.x, targetGrid.y, PlayerZ() - 1);
+					if (belowPropPtr != nullptr && belowPropPtr->leadItem.checkFlag(itemFlag::CABLE))
+					{
+						inputOptions.push_back(act::connectMinusZ);
+					}
 				}
 			}
 		}

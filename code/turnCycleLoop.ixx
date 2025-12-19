@@ -646,10 +646,10 @@ __int64 propTurn()
 {
 	debug::printCircuitLog = false;
 
-	nextCircuitStartQueue = std::queue<Point3>();
+	nextCircuitStartQueue = std::queue<CircuitKey>();
     auto actviePropSet = (World::ins())->getActivePropSet();
 
-	for (auto pPtr : actviePropSet) pPtr->runUsed = false;
+	for (auto pPtr : actviePropSet) pPtr->resetRunUsed();
 
 	for (auto pPtr : actviePropSet)
 	{
@@ -671,18 +671,34 @@ __int64 propTurn()
 
 		if (nextCircuitStartQueue.empty() == false)
 		{
-			Point3 tgtCoord = nextCircuitStartQueue.front();
+			CircuitKey tgtCoord = nextCircuitStartQueue.front();
             nextCircuitStartQueue.pop();
-            Prop* tgtProp = TileProp(tgtCoord);
-			if (tgtProp) loadSet = tgtProp->updateCircuitNetwork();
+            Prop* tgtProp = TileProp(tgtCoord.coord.x, tgtCoord.coord.y, tgtCoord.coord.z);
+			if (tgtProp && tgtProp->isFullyProcessed() == false) loadSet = tgtProp->updateCircuitNetwork(tgtCoord.axis);
 		}
 		else for (auto pPtr : actviePropSet)
 		{
-			if (pPtr->runUsed) continue;
+			if (pPtr->isFullyProcessed()) continue;
 			if (pPtr->leadItem.checkFlag(itemFlag::CIRCUIT))
 			{
-				auto newLoads = pPtr->updateCircuitNetwork();
-				loadSet.insert(newLoads.begin(), newLoads.end());
+				if (pPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+				{
+					if (!pPtr->isAxisProcessed(CircuitAxis::horizontal))
+					{
+						auto newLoads = pPtr->updateCircuitNetwork(CircuitAxis::horizontal);
+						loadSet.insert(newLoads.begin(), newLoads.end());
+					}
+					if (!pPtr->isAxisProcessed(CircuitAxis::vertical))
+					{
+						auto newLoads = pPtr->updateCircuitNetwork(CircuitAxis::vertical);
+						loadSet.insert(newLoads.begin(), newLoads.end());
+					}
+				}
+				else
+				{
+					auto newLoads = pPtr->updateCircuitNetwork();
+					loadSet.insert(newLoads.begin(), newLoads.end());
+				}
 			}
 		}
 
@@ -704,10 +720,10 @@ __int64 propTurn()
 			{
 				bool baseInput = false;
 
-				if (loadProp->leadItem.itemCode == itemRefCode::transistorR && loadProp->chargeFlux[dir16::right] >= 1.0) baseInput = true;
-				else if (loadProp->leadItem.itemCode == itemRefCode::transistorU && loadProp->chargeFlux[dir16::up] >= 1.0) baseInput = true;
-				else if (loadProp->leadItem.itemCode == itemRefCode::transistorL && loadProp->chargeFlux[dir16::left] >= 1.0) baseInput = true;
-				else if (loadProp->leadItem.itemCode == itemRefCode::transistorD && loadProp->chargeFlux[dir16::down] >= 1.0) baseInput = true;
+				if (loadProp->leadItem.itemCode == itemRefCode::transistorR && loadProp->getChargeFlux(dir16::right) >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::transistorU && loadProp->getChargeFlux(dir16::up) >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::transistorL && loadProp->getChargeFlux(dir16::left) >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::transistorD && loadProp->getChargeFlux(dir16::down) >= 1.0) baseInput = true;
 
 				if (baseInput)
 				{
@@ -731,10 +747,10 @@ __int64 propTurn()
 			{
 				bool baseInput = false;
 
-				if (loadProp->leadItem.itemCode == itemRefCode::relayR && loadProp->chargeFlux[dir16::right] >= 1.0) baseInput = true;
-				else if (loadProp->leadItem.itemCode == itemRefCode::relayU && loadProp->chargeFlux[dir16::up] >= 1.0) baseInput = true;
-				else if (loadProp->leadItem.itemCode == itemRefCode::relayL && loadProp->chargeFlux[dir16::left] >= 1.0) baseInput = true;
-				else if (loadProp->leadItem.itemCode == itemRefCode::relayD && loadProp->chargeFlux[dir16::down] >= 1.0) baseInput = true;
+				if (loadProp->leadItem.itemCode == itemRefCode::relayR && loadProp->getChargeFlux(dir16::right) >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::relayU && loadProp->getChargeFlux(dir16::up) >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::relayL && loadProp->getChargeFlux(dir16::left) >= 1.0) baseInput = true;
+				else if (loadProp->leadItem.itemCode == itemRefCode::relayD && loadProp->getChargeFlux(dir16::down) >= 1.0) baseInput = true;
 
 				if (baseInput)
 				{
@@ -757,13 +773,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::andGateR)
 				{
-					firstInput = loadProp->chargeFlux[dir16::left] >= 1.0;
-					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					firstInput = loadProp->getChargeFlux(dir16::left) >= 1.0;
+					secondInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->chargeFlux[dir16::right] >= 1.0;
-					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					firstInput = loadProp->getChargeFlux(dir16::right) >= 1.0;
+					secondInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 
 				if (firstInput && secondInput)
@@ -787,13 +803,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::orGateR)
 				{
-					firstInput = loadProp->chargeFlux[dir16::left] >= 1.0;
-					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					firstInput = loadProp->getChargeFlux(dir16::left) >= 1.0;
+					secondInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->chargeFlux[dir16::right] >= 1.0;
-					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					firstInput = loadProp->getChargeFlux(dir16::right) >= 1.0;
+					secondInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 
 				if (firstInput || secondInput)
@@ -817,13 +833,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::xorGateR)
 				{
-					firstInput = loadProp->chargeFlux[dir16::left] >= 1.0;
-					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					firstInput = loadProp->getChargeFlux(dir16::left) >= 1.0;
+					secondInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 				else
 				{
-					firstInput = loadProp->chargeFlux[dir16::right] >= 1.0;
-					secondInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					firstInput = loadProp->getChargeFlux(dir16::right) >= 1.0;
+					secondInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 
 				if (firstInput != secondInput)
@@ -844,8 +860,8 @@ __int64 propTurn()
 			else if (loadProp->leadItem.itemCode == itemRefCode::notGateR || loadProp->leadItem.itemCode == itemRefCode::notGateL)
 			{
 				bool inputActive;
-				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->chargeFlux[dir16::left] >= 1.0;
-				else inputActive = loadProp->chargeFlux[dir16::right] >= 1.0;
+				if (loadProp->leadItem.itemCode == itemRefCode::notGateR) inputActive = loadProp->getChargeFlux(dir16::left) >= 1.0;
+				else inputActive = loadProp->getChargeFlux(dir16::right) >= 1.0;
 
 				if (inputActive == false)
 				{
@@ -868,13 +884,13 @@ __int64 propTurn()
 
 				if (loadProp->leadItem.itemCode == itemRefCode::srLatchR)
 				{
-					setInput = loadProp->chargeFlux[dir16::left] >= 1.0;
-					resetInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					setInput = loadProp->getChargeFlux(dir16::left) >= 1.0;
+					resetInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 				else
 				{
-					setInput = loadProp->chargeFlux[dir16::right] >= 1.0;
-					resetInput = loadProp->chargeFlux[dir16::down] >= 1.0;
+					setInput = loadProp->getChargeFlux(dir16::right) >= 1.0;
+					resetInput = loadProp->getChargeFlux(dir16::down) >= 1.0;
 				}
 
 				if (setInput && resetInput) // 금지상태는 랜덤
@@ -906,8 +922,8 @@ __int64 propTurn()
 				reserveDelayInit.erase(loadProp);
 
 				bool inputActive;
-				if (loadProp->leadItem.itemCode == itemRefCode::delayR) inputActive = loadProp->chargeFlux[dir16::left] >= 1.0;
-				else inputActive = loadProp->chargeFlux[dir16::right] >= 1.0;
+				if (loadProp->leadItem.itemCode == itemRefCode::delayR) inputActive = loadProp->getChargeFlux(dir16::left) >= 1.0;
+				else inputActive = loadProp->getChargeFlux(dir16::right) >= 1.0;
 
 				if (inputActive == true)
 				{

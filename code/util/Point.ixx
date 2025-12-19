@@ -2,6 +2,13 @@
 
 import std;
 
+export enum class CircuitAxis
+{
+    omni,
+    horizontal,
+    vertical,
+};
+
 export struct Point2
 {
     int x = 0;
@@ -76,6 +83,27 @@ export struct Point3
             seed ^= std::hash<int>()(p.x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             seed ^= std::hash<int>()(p.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             seed ^= std::hash<int>()(p.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            return seed;
+        }
+    };
+};
+
+export struct CircuitKey
+{
+    Point3 coord;
+    CircuitAxis axis = CircuitAxis::omni;
+
+    bool operator==(const CircuitKey& rhs) const
+    {
+        return coord == rhs.coord && axis == rhs.axis;
+    }
+
+    struct Hash
+    {
+        std::size_t operator()(const CircuitKey& key) const
+        {
+            std::size_t seed = Point3::Hash{}(key.coord);
+            seed ^= std::hash<int>()(static_cast<int>(key.axis)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             return seed;
         }
     };

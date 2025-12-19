@@ -31,17 +31,17 @@ void Prop::drawSelf()
     setZoom(zoomScale);
     if (leadItem.checkFlag(itemFlag::TREE) && getGridX() == PlayerX() && getGridY() - 1 == PlayerY() && getGridZ() == PlayerZ() && !leadItem.checkFlag(itemFlag::STUMP))
     {
-        SDL_SetTextureAlphaMod(spr::propset->getTexture(), 100); //ÅØ½ºÃÄ Åõ¸íµµ ¼³Á¤
+        SDL_SetTextureAlphaMod(spr::propset->getTexture(), 100); //í…ìŠ¤ì³ íˆ¬ëª…ë„ ì„¤ì •
     }
     else
     {
-        SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255); //ÅØ½ºÃÄ Åõ¸íµµ ¼³Á¤
+        SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255); //í…ìŠ¤ì³ íˆ¬ëª…ë„ ì„¤ì •
     }
 
-    SDL_SetTextureBlendMode(spr::propset->getTexture(), SDL_BLENDMODE_BLEND); //ºí·»µå¸ğµå ¼³Á¤
+    SDL_SetTextureBlendMode(spr::propset->getTexture(), SDL_BLENDMODE_BLEND); //ë¸”ë Œë“œëª¨ë“œ ì„¤ì •
     int sprIndex = leadItem.propSprIndex + leadItem.extraSprIndexSingle + 16 * leadItem.extraSprIndex16;
 
-    if (leadItem.checkFlag(itemFlag::TREE))//³ª¹«ÀÏ °æ¿ì ±×¸²ÀÚ
+    if (leadItem.checkFlag(itemFlag::TREE))//ë‚˜ë¬´ì¼ ê²½ìš° ê·¸ë¦¼ì
     {
         drawSpriteCenter
         (
@@ -102,10 +102,10 @@ void Prop::drawSelf()
 
             if (isChargeFlowing())
             {
-                if (chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);;
-                if (chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;
-                if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);;
-                if (chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);;
+                if (getChargeFlux(dir16::right) > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);;
+                if (getChargeFlux(dir16::up) > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;
+                if (getChargeFlux(dir16::left) > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);;
+                if (getChargeFlux(dir16::down) > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);;
             }
         }
     }
@@ -239,6 +239,19 @@ void Prop::drawSelf()
 
 
 
+    if (leadItem.checkFlag(itemFlag::CABLE) && leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+    {
+        bool flowH = (getChargeFlux(dir16::right) != 0) || (getChargeFlux(dir16::left) != 0);
+        bool flowV = (getChargeFlux(dir16::up) != 0) || (getChargeFlux(dir16::down) != 0);
+
+        int baseIndex = (leadItem.itemCode == itemRefCode::silverCable) ? 3128 : 3124;
+        int offset = 0;
+        if (flowH && flowV) offset = 3;
+        else if (flowH) offset = 1;
+        else if (flowV) offset = 2;
+        sprIndex = baseIndex + offset;
+    }
+
     drawSpriteCenter
     (
         spr::propset,
@@ -260,11 +273,11 @@ void Prop::drawSelf()
             else if (leadItem.itemCode == itemRefCode::gasolineGeneratorL)   portSprIndex = 3202;
             else if (leadItem.itemCode == itemRefCode::gasolineGeneratorB)   portSprIndex = 3203;
 
-            float pulseSpeed = 0.003f; // ÆŞ½º ¼Óµµ (ÀÛÀ»¼ö·Ï ´À¸²)
-            float minBrightness = 0.6f; // ÃÖ¼Ò ¹à±â (0.0~1.0)
-            float maxBrightness = 1.0f; // ÃÖ´ë ¹à±â
+            float pulseSpeed = 0.003f; // í„ìŠ¤ ì†ë„ (ì‘ì„ìˆ˜ë¡ ëŠë¦¼)
+            float minBrightness = 0.6f; // ìµœì†Œ ë°ê¸° (0.0~1.0)
+            float maxBrightness = 1.0f; // ìµœëŒ€ ë°ê¸°
 
-            float pulse = (sin(SDL_GetTicks() * pulseSpeed) + 1.0f) * 0.5f; // 0.0~1.0 »çÀÌ°ª
+            float pulse = (sin(SDL_GetTicks() * pulseSpeed) + 1.0f) * 0.5f; // 0.0~1.0 ì‚¬ì´ê°’
             float colorAlpha = minBrightness + (maxBrightness - minBrightness) * pulse;
 
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -307,7 +320,7 @@ void Prop::drawSelf()
         );
     }
 
-    if (leadItem.checkFlag(itemFlag::CABLE))
+    if (leadItem.checkFlag(itemFlag::CABLE) && !leadItem.checkFlag(itemFlag::CROSSED_CABLE))
     {
         Prop* rProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
         Prop* uProp = TileProp(getGridX(), getGridY() - 1, getGridZ());
@@ -326,11 +339,11 @@ void Prop::drawSelf()
 
         if (isChargeFlowing())
         {
-            if (rConnected && lConnected && !uConnected && !dConnected) //¦¡
+            if (rConnected && lConnected && !uConnected && !dConnected) //â”€
             {
                 drawSpriteCenter(spr::propset, 2949, drawX, drawY);
             }
-            else if (!rConnected && !lConnected && uConnected && dConnected) //¦¢
+            else if (!rConnected && !lConnected && uConnected && dConnected) //â”‚
             {
                 drawSpriteCenter(spr::propset, 2950, drawX, drawY);
             }
@@ -383,11 +396,11 @@ void Prop::drawSelf()
         {
             if (leadItem.itemCode == itemRefCode::copperCable)
             {
-                drawSpriteCenter(spr::propset, 2995, drawX, drawY);//»ó´ÜÀ¸·Î ÀÌ¾îÁø ±¸¸® ÄÉÀÌºí
+                drawSpriteCenter(spr::propset, 2995, drawX, drawY);//ìƒë‹¨ìœ¼ë¡œ ì´ì–´ì§„ êµ¬ë¦¬ ì¼€ì´ë¸”
             }
             else if (leadItem.itemCode == itemRefCode::silverCable)
             {
-                drawSpriteCenter(spr::propset, 2995 + 16, drawX, drawY);//»ó´ÜÀ¸·Î ÀÌ¾îÁø Àº ÄÉÀÌºí
+                drawSpriteCenter(spr::propset, 2995 + 16, drawX, drawY);//ìƒë‹¨ìœ¼ë¡œ ì´ì–´ì§„ ì€ ì¼€ì´ë¸”
             }
 
             if (isChargeFlowing()) drawSpriteCenter(spr::propset, 2951, drawX, drawY);
@@ -397,11 +410,11 @@ void Prop::drawSelf()
         {
             if (leadItem.itemCode == itemRefCode::copperCable)
             {
-                drawSpriteCenter(spr::propset, 2997, drawX, drawY);//ÇÏ´ÜÀ¸·Î ÀÌ¾îÁø ±¸¸® ÄÉÀÌºí
+                drawSpriteCenter(spr::propset, 2997, drawX, drawY);//í•˜ë‹¨ìœ¼ë¡œ ì´ì–´ì§„ êµ¬ë¦¬ ì¼€ì´ë¸”
             }
             else if (leadItem.itemCode == itemRefCode::silverCable)
             {
-                drawSpriteCenter(spr::propset, 2997 + 16, drawX, drawY);//ÇÏ´ÜÀ¸·Î ÀÌ¾îÁø Àº ÄÉÀÌºí
+                drawSpriteCenter(spr::propset, 2997 + 16, drawX, drawY);//í•˜ë‹¨ìœ¼ë¡œ ì´ì–´ì§„ ì€ ì¼€ì´ë¸”
             }
 
             if (isChargeFlowing()) drawSpriteCenter(spr::propset, 2952, drawX, drawY);
@@ -420,7 +433,7 @@ void Prop::drawSelf()
     //        col::white);
     //}
 
-    if (displayHPBarCount > 0)//°³Ã¼ HP Ç¥±â
+    if (displayHPBarCount > 0)//ê°œì²´ HP í‘œê¸°
     {
         int pivotX = dst.x + dst.w / 2 - (int)(8 * zoomScale);
         int pivotY = dst.y + dst.h / 2 + (int)(16 * zoomScale);
@@ -458,6 +471,6 @@ void Prop::drawSelf()
         );
     }
 
-    SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255); //ÅØ½ºÃÄ Åõ¸íµµ ¼³Á¤
+    SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255); //í…ìŠ¤ì³ íˆ¬ëª…ë„ ì„¤ì •
     setZoom(1.0);
 };

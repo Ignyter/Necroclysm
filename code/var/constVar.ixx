@@ -258,6 +258,7 @@ export enum class act
 
     connectPlusZ, //위층의 타일과 연결
     connectMinusZ, //아래층의 타일과 연결
+    toggleCrossCable, //교차 전선 토글
 };
 
 export namespace humanCustom
@@ -561,6 +562,7 @@ export enum class itemFlag
     CIRCUIT, //전자회로 관련 부품
 
 	CABLE_BEHIND, //케이블이 프롭 뒤에 그려짐
+    CROSSED_CABLE, //교차 전선
 
     VOLTAGE_SOURCE, //전력 공급원(발전기 등)
     VOLTAGE_OUTPUT_RIGHT,
@@ -1567,5 +1569,3 @@ namespace std
         }
     };
 }
-
-

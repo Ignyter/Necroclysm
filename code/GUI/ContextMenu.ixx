@@ -190,6 +190,14 @@ public:
 					optionText = sysStr[341];//하층과 연결
 					iconIndex = 101;
 				}
+				else if (actOptions[i] == act::toggleCrossCable)
+				{
+					Prop* targetProp = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+					bool isCrossed = targetProp != nullptr && targetProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE);
+					if (isCrossed) optionText = L"교차 전선 해제";
+					else optionText = L"교차 전선으로 전환";
+					iconIndex = 101;
+				}
 				else optionText = L"???";
 
 				if (checkCursor(&optionRect[i]))
@@ -585,21 +593,65 @@ public:
 				}
 			}
 		}
-		else if (inputAct == act::connectPlusZ)
+        else if (inputAct == act::connectPlusZ)
+        {
+            Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+			if (pPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE)) return;
+            pPtr->leadItem.addFlag(itemFlag::CABLE_Z_ASCEND);
+
+            Prop* abovePropPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() + 1);
+            abovePropPtr->leadItem.addFlag(itemFlag::CABLE_Z_DESCEND);
+        }
+        else if (inputAct == act::connectMinusZ)
+        {
+            Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+			if (pPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE)) return;
+            pPtr->leadItem.addFlag(itemFlag::CABLE_Z_DESCEND);
+
+            Prop* belowPropPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() - 1);
+            belowPropPtr->leadItem.addFlag(itemFlag::CABLE_Z_ASCEND);
+        }
+		else if (inputAct == act::toggleCrossCable)
 		{
 			Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
-			pPtr->leadItem.addFlag(itemFlag::CABLE_Z_ASCEND);
+			if (pPtr != nullptr && pPtr->leadItem.checkFlag(itemFlag::CABLE))
+			{
+				auto clearZ = [](Prop* propPtr)
+					{
+						if (propPtr->leadItem.checkFlag(itemFlag::CABLE_Z_ASCEND))
+						{
+							propPtr->leadItem.eraseFlag(itemFlag::CABLE_Z_ASCEND);
+							Prop* above = TileProp(propPtr->getGridX(), propPtr->getGridY(), propPtr->getGridZ() + 1);
+							if (above != nullptr) above->leadItem.eraseFlag(itemFlag::CABLE_Z_DESCEND);
+						}
+						if (propPtr->leadItem.checkFlag(itemFlag::CABLE_Z_DESCEND))
+						{
+							propPtr->leadItem.eraseFlag(itemFlag::CABLE_Z_DESCEND);
+							Prop* below = TileProp(propPtr->getGridX(), propPtr->getGridY(), propPtr->getGridZ() - 1);
+							if (below != nullptr) below->leadItem.eraseFlag(itemFlag::CABLE_Z_ASCEND);
+						}
+					};
 
-			Prop* abovePropPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() + 1);
-			abovePropPtr->leadItem.addFlag(itemFlag::CABLE_Z_DESCEND);
-		}
-		else if (inputAct == act::connectMinusZ)
-		{
-			Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
-			pPtr->leadItem.addFlag(itemFlag::CABLE_Z_DESCEND);
+				clearZ(pPtr);
+				if (pPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE)) pPtr->leadItem.eraseFlag(itemFlag::CROSSED_CABLE);
+				else pPtr->leadItem.addFlag(itemFlag::CROSSED_CABLE);
+				clearZ(pPtr);
 
-			Prop* belowPropPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() - 1);
-			belowPropPtr->leadItem.addFlag(itemFlag::CABLE_Z_ASCEND);
+				const std::array<Point3, 4> neighbors = { Point3{pPtr->getGridX() + 1, pPtr->getGridY(), pPtr->getGridZ()},
+					Point3{pPtr->getGridX() - 1, pPtr->getGridY(), pPtr->getGridZ()},
+					Point3{pPtr->getGridX(), pPtr->getGridY() + 1, pPtr->getGridZ()},
+					Point3{pPtr->getGridX(), pPtr->getGridY() - 1, pPtr->getGridZ()} };
+				for (const auto& nb : neighbors)
+				{
+					Prop* nbProp = TileProp(nb.x, nb.y, nb.z);
+					if (nbProp != nullptr && nbProp->leadItem.checkFlag(itemFlag::CABLE)) nbProp->updateSprIndex();
+				}
+				pPtr->updateSprIndex();
+				pPtr->initChargeFlux();
+
+				nextCircuitStartQueue.push({ {pPtr->getGridX(), pPtr->getGridY(), pPtr->getGridZ()}, CircuitAxis::horizontal });
+				nextCircuitStartQueue.push({ {pPtr->getGridX(), pPtr->getGridY(), pPtr->getGridZ()}, CircuitAxis::vertical });
+			}
 		}
 	}
 };
