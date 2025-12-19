@@ -717,6 +717,7 @@ export enum class aniFlag
     dropInventory,
 
     propTurnOnOff, //프롭 켜기/끄기
+    changePropDelay, //딜레이 조정
 };
 
 export enum class input

@@ -229,7 +229,14 @@ void Prop::drawSelf()
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON)) sprIndex += 1;
     }
- 
+    else if (leadItem.itemCode == itemRefCode::delayR || leadItem.itemCode == itemRefCode::delayL)
+    {
+        if (delayMaxStack == 0) sprIndex = 3089;
+        else sprIndex = 3089 + delayMaxStack;
+
+        if (leadItem.itemCode == itemRefCode::delayL) sprIndex += 16;
+    }
+
 
 
     drawSpriteCenter

@@ -915,7 +915,7 @@ __int64 propTurn()
 
 					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
 					{
-						if (getElapsedTurn() - loadProp->delayStartTurn >= loadProp->delayMaxStack - EPSILON) loadProp->propTurnOn();
+						if (getElapsedTurn() - loadProp->delayStartTurn >= static_cast<double>(loadProp->delayMaxStack) - EPSILON) loadProp->propTurnOn();
 					}
 				}
 				else

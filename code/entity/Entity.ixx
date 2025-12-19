@@ -104,4 +104,6 @@ public:
     void pullEquipLights();
 
     virtual void drawSelf() override;
+
+    bool hitAnimation(bool shutdown, const std::function<void()>);
 };
