@@ -1036,8 +1036,12 @@ public:
 				{
 					inputOptions.push_back(act::connectMinusZ);
 				}
+
+				inputOptions.push_back(act::toggleCrossCable);
 			}
 		}
+
+
 
 
 		new ContextMenu(windowCoord.x, windowCoord.y, targetGrid.x, targetGrid.y, inputOptions);

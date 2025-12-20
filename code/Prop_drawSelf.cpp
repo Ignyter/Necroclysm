@@ -238,6 +238,18 @@ void Prop::drawSelf()
     }
 
 
+    if (leadItem.checkFlag(itemFlag::CABLE) && leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+    {
+        bool flowH = (chargeFlux[dir16::right] != 0) || (chargeFlux[dir16::left] != 0);
+        bool flowV = (chargeFlux[dir16::up] != 0) || (chargeFlux[dir16::down] != 0);
+
+        int baseIndex = (leadItem.itemCode == itemRefCode::silverCable) ? 3128 : 3124;
+        int offset = 0;
+        if (flowH && flowV) offset = 3;
+        else if (flowH) offset = 1;
+        else if (flowV) offset = 2;
+        sprIndex = baseIndex + offset;
+    }
 
     drawSpriteCenter
     (
@@ -307,7 +319,7 @@ void Prop::drawSelf()
         );
     }
 
-    if (leadItem.checkFlag(itemFlag::CABLE))
+    if (leadItem.checkFlag(itemFlag::CABLE) && leadItem.checkFlag(itemFlag::CROSSED_CABLE) == false)
     {
         Prop* rProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
         Prop* uProp = TileProp(getGridX(), getGridY() - 1, getGridZ());

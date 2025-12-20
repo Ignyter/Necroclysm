@@ -1676,7 +1676,7 @@ void HUD::drawCircuitInfo()
 	if (hoverTime > 30)
 	{
 		Prop* tgtProp = TileProp(prevHoverGrid.x, prevHoverGrid.y, PlayerPtr->getGridZ());
-		if (tgtProp != nullptr && tgtProp->leadItem.checkFlag(itemFlag::CIRCUIT) && tgtProp->isChargeFlowing())
+		if (tgtProp != nullptr && (tgtProp->leadItem.checkFlag(itemFlag::CIRCUIT) || tgtProp->leadItem.checkFlag(itemFlag::CABLE)) && tgtProp->isChargeFlowing())
 		{
 			std::wstring firstString = L"Power:";
 			std::wstring firstNumber = L"534.6";

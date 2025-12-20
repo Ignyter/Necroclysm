@@ -89,11 +89,13 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
     }
     else frontierQueue.push({ cursorX, cursorY, cursorZ });
     
+    //BFS는 전선에서 시작하지 않음(CROSS 케이블때문에), 부하나 전압원에서 항상 시작할 것
     while (!frontierQueue.empty())
     {
-
+        
         Point3 current = frontierQueue.front();
         frontierQueue.pop();
+        crossStates.clear();
 
         Prop* currentProp = TileProp(current.x, current.y, current.z);
 
@@ -204,13 +206,28 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
             {
                 for (int i = 0; i < 6; ++i)
                 {
+                    int dx, dy, dz;
+                    dirToXYZ(directions[i], dx, dy, dz);
+                    Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
+                    Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
+
+                    
+                    if (nextProp && nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+                    {
+                        if (crossStates[current] == crossFlag::horizontal && (directions[i] == dir16::up || directions[i] == dir16::down))
+                        {
+                            crossStates.erase(current);
+                            continue;
+                        }
+                        if (crossStates[current] == crossFlag::vertical && (directions[i] == dir16::right || directions[i] == dir16::left))
+                        {
+                            crossStates.erase(current);
+                            continue;
+                        }
+                    }
+
                     if (isConnected(current, directions[i]))
                     {
-                        int dx, dy, dz;
-                        dirToXYZ(directions[i], dx, dy, dz);
-                        Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
-                        Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
-
                         if (nextProp != nullptr && nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND))
                         {
                             //베이스에서 메인라인으로 BFS를 추가하는 것을 막음
@@ -282,7 +299,14 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                             }
                         }
 
+                        
+                        if (nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+                        {
+                            if (directions[i] == dir16::down || directions[i] == dir16::up) crossStates[nextCoord] = crossFlag::vertical;
+                            else if (directions[i] == dir16::down || directions[i] == dir16::up) crossStates[nextCoord] = crossFlag::horizontal;
+                        }
                         frontierQueue.push(nextCoord);
+                        
                     }
                 }
             }
@@ -303,6 +327,14 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
 
             //(전자회로용) 항상 전자 가득 찬 상태
             propPtr->nodeCharge = circuitMaxEnergy;
+
+            if (propPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+            {
+                propPtr->nodeChargeH = circuitMaxEnergy;
+                propPtr->nodeChargeV = circuitMaxEnergy;
+                //이 부분 원래는 섞이면 안되지만... 어차피 항상 풀충전이므로 별 신경쓰지말자. 전하의 절대량을 쓰는 연산은 없으니...
+            }
+
         }
     }
 
@@ -551,18 +583,27 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
 
     if (dir == dir16::above || dir == dir16::below)
     {
-        if (currentProp->leadItem.checkFlag(itemFlag::CABLE) && currentProp->leadItem.checkFlag(hostFlag) &&
-            targetProp->leadItem.checkFlag(itemFlag::CABLE) && targetProp->leadItem.checkFlag(guestFlag))
-        {
-            return true;
-        }
+        bool currentCondition = currentProp->leadItem.checkFlag(itemFlag::CABLE) && currentProp->leadItem.checkFlag(hostFlag);
+        bool targetCondition = targetProp->leadItem.checkFlag(itemFlag::CABLE) && targetProp->leadItem.checkFlag(guestFlag);
+
+        if (currentCondition && targetCondition) return true;
         else return false;
     }
     else if (dir == dir16::right || dir == dir16::up || dir == dir16::left || dir == dir16::down)
     {
-        if ((currentProp->leadItem.checkFlag(itemFlag::CABLE) || currentProp->leadItem.checkFlag(hostFlag)) &&
-            (targetProp->leadItem.checkFlag(itemFlag::CABLE) || targetProp->leadItem.checkFlag(guestFlag)))
-            return true;
+        bool currentCondition = (currentProp->leadItem.checkFlag(itemFlag::CABLE) || currentProp->leadItem.checkFlag(hostFlag));
+        if (crtItem.checkFlag(itemFlag::CROSSED_CABLE))
+        {
+            if (crossStates.find(currentCoord) != crossStates.end())
+            {
+                if (crossStates[currentCoord] == crossFlag::horizontal && (dir == dir16::up || dir == dir16::down)) currentCondition = false;
+                else if (crossStates[currentCoord] == crossFlag::vertical && (dir == dir16::right || dir == dir16::left)) currentCondition = false;
+            }
+        }
+
+        bool targetCondition = (targetProp->leadItem.checkFlag(itemFlag::CABLE) || targetProp->leadItem.checkFlag(guestFlag));
+
+        if (currentCondition && targetCondition) return true;
         else return false;
     }
     else errorBox(L"[Error] isConnected lambda function received invalid direction argument.\n");
@@ -616,7 +657,8 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
     errorBox(donorProp == nullptr, L"[Error] pushCharge: null donor\n");
     int dx, dy, dz;
     dirToXYZ(txDir, dx, dy, dz);
-    Prop* nextProp = TileProp(donorProp->getGridX() + dx, donorProp->getGridY() + dy, donorProp->getGridZ() + dz);
+    Point3 nextCoord = { donorProp->getGridX() + dx, donorProp->getGridY() + dy, donorProp->getGridZ() + dz };
+    Prop* nextProp = TileProp(nextCoord);
     errorBox(nextProp == nullptr, L"[Error] pushCharge: no acceptor found\n");
 
     txChargeAmount = std::min(donorProp->nodeCharge, txChargeAmount);
@@ -669,6 +711,13 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
     if (pushedCharge > EPSILON)
     {
         std::vector<dir16> possibleDirs;
+
+        if (nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
+        {
+            if (txDir == dir16::right || txDir == dir16::left) crossStates[nextCoord] = crossFlag::horizontal;
+            else if (txDir == dir16::up || txDir == dir16::down) crossStates[nextCoord] = crossFlag::vertical;
+        }
+
         for (auto dir : { dir16::right, dir16::up, dir16::left, dir16::down, dir16::above, dir16::below })
         {
             if (dir == reverse(txDir)) continue;

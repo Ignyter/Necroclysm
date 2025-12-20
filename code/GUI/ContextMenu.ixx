@@ -190,6 +190,14 @@ public:
 					optionText = sysStr[341];//하층과 연결
 					iconIndex = 101;
 				}
+				else if (actOptions[i] == act::toggleCrossCable)
+				{
+					Prop* targetProp = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+					bool isCrossed = targetProp != nullptr && targetProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE);
+					if (isCrossed) optionText = L"Uncross";
+					else optionText = L"Cross";
+					iconIndex = 101;
+				}
 				else optionText = L"???";
 
 				if (checkCursor(&optionRect[i]))
@@ -600,6 +608,44 @@ public:
 
 			Prop* belowPropPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() - 1);
 			belowPropPtr->leadItem.addFlag(itemFlag::CABLE_Z_ASCEND);
+		}
+		else if (inputAct == act::toggleCrossCable)
+		{
+			Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+			if (pPtr != nullptr && pPtr->leadItem.checkFlag(itemFlag::CABLE))
+			{
+				auto clearZ = [](Prop* propPtr)
+					{
+						if (propPtr->leadItem.checkFlag(itemFlag::CABLE_Z_ASCEND))
+						{
+							propPtr->leadItem.eraseFlag(itemFlag::CABLE_Z_ASCEND);
+							Prop* above = TileProp(propPtr->getGridX(), propPtr->getGridY(), propPtr->getGridZ() + 1);
+							if (above != nullptr) above->leadItem.eraseFlag(itemFlag::CABLE_Z_DESCEND);
+						}
+						if (propPtr->leadItem.checkFlag(itemFlag::CABLE_Z_DESCEND))
+						{
+							propPtr->leadItem.eraseFlag(itemFlag::CABLE_Z_DESCEND);
+							Prop* below = TileProp(propPtr->getGridX(), propPtr->getGridY(), propPtr->getGridZ() - 1);
+							if (below != nullptr) below->leadItem.eraseFlag(itemFlag::CABLE_Z_ASCEND);
+						}
+					};
+
+				clearZ(pPtr);
+				if (pPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE)) pPtr->leadItem.eraseFlag(itemFlag::CROSSED_CABLE);
+				else pPtr->leadItem.addFlag(itemFlag::CROSSED_CABLE);
+
+				const std::array<Point3, 4> neighbors = { Point3{pPtr->getGridX() + 1, pPtr->getGridY(), pPtr->getGridZ()},
+					Point3{pPtr->getGridX() - 1, pPtr->getGridY(), pPtr->getGridZ()},
+					Point3{pPtr->getGridX(), pPtr->getGridY() + 1, pPtr->getGridZ()},
+					Point3{pPtr->getGridX(), pPtr->getGridY() - 1, pPtr->getGridZ()} };
+				for (const auto& nb : neighbors)
+				{
+					Prop* nbProp = TileProp(nb.x, nb.y, nb.z);
+					if (nbProp != nullptr && nbProp->leadItem.checkFlag(itemFlag::CABLE)) nbProp->updateSprIndex();
+				}
+				pPtr->updateSprIndex();
+			}
+			turnWait(1.0);
 		}
 	}
 };

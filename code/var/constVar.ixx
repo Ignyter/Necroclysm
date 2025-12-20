@@ -258,6 +258,8 @@ export enum class act
 
     connectPlusZ, //위층의 타일과 연결
     connectMinusZ, //아래층의 타일과 연결
+
+    toggleCrossCable,
 };
 
 export namespace humanCustom
@@ -577,6 +579,8 @@ export enum class itemFlag
 
     TRANSISTOR, //아직 미사용
     LOGIC_GATE, //BFS에 포함되기만 해도 loadSet에 포함되는 플래그(2개 이상의 경로 가짐)
+
+    CROSSED_CABLE,
 };
 
 export enum class walkFlag
