@@ -34,27 +34,14 @@ public:
     int nodeMaxCharge = 0;
     double nodeCharge = 0;
 
-    //교차전선으로 2개의 전선을 동시에 시뮬레이션할 필요가 있을 때(2개의 전선은 서로 전기적 분리)
-    int nodeChargeH = 0;
-    int nodeMaxChargeH = 0;
-    int nodeChargeV = 0;
-    int nodeMaxChargeV = 0;
-
     double totalLossCharge = 0; //이번 턴에 저항으로 손실된 모든 에너지값
 
     std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
     double prevPushedCharge = 0;
-    double prevVoltOutputRatio = 1.0; //전압원에서의 이전 출력
-
-    int gndVisitCount = -1;
 
     int delayMaxStack = 3;
-
     double delayStartTurn = 0;
-
-    bool reserveDelayStackAdd = false;
-    bool reserveDelayStackInit = false;
 
     std::unordered_map<Point3, crossFlag, Point3::Hash> crossStates;
 

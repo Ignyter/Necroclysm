@@ -1357,6 +1357,11 @@ export namespace itemRefCode
     constexpr int delayR = 498;
     constexpr int delayL = 499;
 
+    constexpr int diodeR = 501;
+    constexpr int diodeU = 502;
+    constexpr int diodeL = 503;
+    constexpr int diodeD = 504;
+
 
 };
 

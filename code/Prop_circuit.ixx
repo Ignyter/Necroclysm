@@ -328,13 +328,6 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
             //(전자회로용) 항상 전자 가득 찬 상태
             propPtr->nodeCharge = circuitMaxEnergy;
 
-            if (propPtr->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
-            {
-                propPtr->nodeChargeH = circuitMaxEnergy;
-                propPtr->nodeChargeV = circuitMaxEnergy;
-                //이 부분 원래는 섞이면 안되지만... 어차피 항상 풀충전이므로 별 신경쓰지말자. 전하의 절대량을 쓰는 연산은 없으니...
-            }
-
         }
     }
 
@@ -539,6 +532,11 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     }
     if (dir == dir16::left && tgtItem.itemCode == itemRefCode::delayR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::delayL) return false;
+
+    if (dir == dir16::right && tgtItem.itemCode == itemRefCode::diodeL) return false;
+    else if (dir == dir16::up && tgtItem.itemCode == itemRefCode::diodeD)return false;
+    else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::diodeR)return false;
+    else if (dir == dir16::down && tgtItem.itemCode == itemRefCode::diodeU)return false;
 
 
     ItemData& crtItem = currentProp->leadItem;
