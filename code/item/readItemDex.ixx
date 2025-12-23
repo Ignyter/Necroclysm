@@ -172,6 +172,8 @@ namespace csvItem
     constexpr int gndUsePowerUp = 140;
     constexpr int gndUsePowerLeft = 141;
     constexpr int gndUsePowerDown = 142;
+
+    constexpr int powerStorageMax = 143;
 };
 
 export int readItemDex(const wchar_t* file)
@@ -1089,6 +1091,9 @@ export int readItemDex(const wchar_t* file)
                         break;
                     case csvItem::gndUsePowerDown:
                         itemDex[tgtIndex].gndUsePowerDown = wtoi(strFragment.c_str());
+                        break;
+                    case csvItem::powerStorageMax:
+                        itemDex[tgtIndex].powerStorageMax = wtoi(strFragment.c_str());
                         break;
                     default:
                         errorBox(L"readItemDex.ixx에서 오류 발생. csv의 잘못된 장소를 읽었다.");

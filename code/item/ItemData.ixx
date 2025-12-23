@@ -37,6 +37,8 @@ export struct ItemData : public ItemDataBase
     __int16 propHP = 100;
     float propFakeHP = 100.0f;
 
+    double powerStorage = 0; //현재 저장된 전하 용량(파워뱅크용)
+    
     bool checkFlag(itemFlag inputFlag) const;
 
     void addFlag(itemFlag inputFlag);

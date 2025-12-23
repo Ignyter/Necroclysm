@@ -929,18 +929,27 @@ __int64 propTurn()
 			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
-				if (loadProp->getTotalChargeFlux() >= static_cast<double>(loadProp->leadItem.gndUsePower))
+				ItemData& loadItem = loadProp->leadItem;
+				if (loadItem.itemCode == itemRefCode::powerBankR || loadItem.itemCode == itemRefCode::powerBankL)
 				{
-					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
-					{
-						loadProp->propTurnOn();
-					}
+					loadItem.powerStorage += loadProp->getInletCharge();
+					if (loadItem.powerStorage > loadItem.powerStorageMax) loadItem.powerStorage = loadItem.powerStorageMax;
 				}
 				else
 				{
-					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+					if (loadProp->getTotalChargeFlux() >= static_cast<double>(loadProp->leadItem.gndUsePower))
 					{
-						loadProp->propTurnOff();
+						if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+						{
+							loadProp->propTurnOn();
+						}
+					}
+					else
+					{
+						if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+						{
+							loadProp->propTurnOff();
+						}
 					}
 				}
 			}

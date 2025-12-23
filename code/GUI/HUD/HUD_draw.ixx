@@ -1693,11 +1693,15 @@ void HUD::drawCircuitInfo()
 				firstString = L"Output:";
 				firstNumber = decimalCutter(tgtProp->getOutletCharge(), 1);
 
-				secondString = L"Max:";
-				secondNumber = std::to_wstring(tgtProp->leadItem.electricMaxPower);
+				secondString = L"Stored:";
+				if (tgtProp->leadItem.itemCode == itemRefCode::powerBankR || tgtProp->leadItem.itemCode == itemRefCode::powerBankL) 
+					secondNumber = decimalCutter(tgtProp->leadItem.powerStorage,1);
+				else secondNumber = L"-";
 
-				if (tgtProp->getOutletCharge() <= tgtProp->leadItem.electricMaxPower) firstColStr = col2Str(lowCol::green);
-				else firstColStr = col2Str(lowCol::red);
+				if (tgtProp->getOutletCharge() < tgtProp->leadItem.electricMaxPower) firstColStr = col2Str(lowCol::green);
+				else firstColStr = col2Str(col::red);
+
+				secondUnit = L"kJ";
 			}
 			else if (tgtProp->leadItem.gndUsePower > 0)
 			{

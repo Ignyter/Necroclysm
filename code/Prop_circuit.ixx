@@ -114,16 +114,9 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
             continue;
         }
 
-        if (current.x == 2 && current.y == -13)
+        if (current.x == -3 && current.y == -13)
             int a = 3;
 
-        if (current.x == 2 && current.y == -14)
-            int a = 3;
-
-        if (current.x == 2 && current.y == -15)
-        {
-            int a = 3;
-        }
 
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
@@ -264,6 +257,12 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                             if (nextProp->leadItem.itemCode == itemRefCode::srLatchR && (directions[i] == dir16::right || directions[i] == dir16::up))
                                 skipBFSSet.insert(nextCoord);
                             else if (nextProp->leadItem.itemCode == itemRefCode::srLatchL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                skipBFSSet.insert(nextCoord);
+
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::powerBankR && (directions[i] == dir16::right))
+                                skipBFSSet.insert(nextCoord);
+                            else if (nextProp->leadItem.itemCode == itemRefCode::powerBankL && (directions[i] == dir16::left))
                                 skipBFSSet.insert(nextCoord);
 
 
@@ -515,6 +514,7 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     if (dir == dir16::left && tgtItem.itemCode == itemRefCode::notGateR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::notGateL) return false;
 
+
     if (dir == dir16::down && (tgtItem.itemCode == itemRefCode::srLatchR || tgtItem.itemCode == itemRefCode::srLatchL))
     {
         if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
@@ -522,14 +522,6 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::srLatchR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::srLatchL) return false;
 
-    if (dir == dir16::right && tgtItem.itemCode == itemRefCode::notGateR)
-    {
-        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
-    if (dir == dir16::left && tgtItem.itemCode == itemRefCode::notGateL)
-    {
-        if (tgtItem.checkFlag(itemFlag::PROP_POWER_OFF)) return false;
-    }
     if (dir == dir16::left && tgtItem.itemCode == itemRefCode::delayR) return false;
     else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::delayL) return false;
 
@@ -537,6 +529,9 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
     else if (dir == dir16::up && tgtItem.itemCode == itemRefCode::diodeD)return false;
     else if (dir == dir16::left && tgtItem.itemCode == itemRefCode::diodeR)return false;
     else if (dir == dir16::down && tgtItem.itemCode == itemRefCode::diodeU)return false;
+
+    if (dir == dir16::left && tgtItem.itemCode == itemRefCode::powerBankR) return false;
+    else if (dir == dir16::right && tgtItem.itemCode == itemRefCode::powerBankL) return false;
 
 
     ItemData& crtItem = currentProp->leadItem;
@@ -578,6 +573,9 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
         return false;
     }
 
+    //(파워뱅크) 메인라인(현재)에서 입력부 차단
+    if (crtItem.itemCode == itemRefCode::powerBankR && dir == dir16::left) return false;
+    else if (crtItem.itemCode == itemRefCode::powerBankL && dir == dir16::right) return false;
 
     if (dir == dir16::above || dir == dir16::below)
     {

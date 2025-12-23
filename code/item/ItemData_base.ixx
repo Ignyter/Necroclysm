@@ -161,11 +161,13 @@ export struct ItemDataBase
 
     double electricResistance = 0; //전자기기 저항 (Ω)
 
-    __int16 electricMaxPower = 0; //전력원 순간 출력 (kJ/turn)
-    __int16 gndUsePower = 0; //전자기기 소비 전력 (kJ/turn)
+    int electricMaxPower = 0; //전력원 순간 출력 (kJ/turn)
+    int gndUsePower = 0; //전자기기 소비 전력 (kJ/turn)
 
-    __int16 gndUsePowerRight = 0;
-    __int16 gndUsePowerUp = 0;
-    __int16 gndUsePowerLeft = 0;
-    __int16 gndUsePowerDown = 0;
+    int gndUsePowerRight = 0;
+    int gndUsePowerUp = 0;
+    int gndUsePowerLeft = 0;
+    int gndUsePowerDown = 0;
+
+    int powerStorageMax = 0; //저장 가능한 최대 전하량(파워뱅크용)
 };

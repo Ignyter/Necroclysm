@@ -1312,8 +1312,8 @@ export namespace itemRefCode
 
     constexpr int steamGenerator = 471;
 
-    constexpr int powerBankR = 472;
-    constexpr int powerBankL = 473;
+    constexpr int powerBankR = 473;
+    constexpr int powerBankL = 474;
 
     constexpr int copperCable = 480;
     constexpr int silverCable = 482;
