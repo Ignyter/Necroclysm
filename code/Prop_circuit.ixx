@@ -98,6 +98,7 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
         crossStates.clear();
 
         Prop* currentProp = TileProp(current.x, current.y, current.z);
+        ItemData& currentItem = currentProp->leadItem;
 
         //visitedSet이 문제다. 하단에서 이미 방문해서 위에서 방문할 때 멈춰버리는거야
         if (visitedSet.find(current) != visitedSet.end())
@@ -203,6 +204,7 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                     dirToXYZ(directions[i], dx, dy, dz);
                     Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
                     Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
+                    ItemData& nextItem = nextProp->leadItem;
 
                     
                     if (nextProp && nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
@@ -272,6 +274,22 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                             Point3 upCoord = { current.x, current.y - 1, current.z };
                             Point3 leftCoord = { current.x - 1, current.y, current.z };
                             Point3 downCoord = { current.x, current.y + 1, current.z };
+
+                            //파워뱅크 충전속도 제한
+                            if (nextItem.itemCode == itemRefCode::powerBankR || nextItem.itemCode == itemRefCode::powerBankR)
+                            {
+                                double ratio = (nextItem.powerStorage) / static_cast<double>(nextItem.powerStorageMax);
+
+                                if (nextItem.itemCode == itemRefCode::powerBankR)
+                                {
+                                    nextItem.gndUsePowerLeft = static_cast<double>(itemDex[nextItem.itemCode].gndUsePowerLeft) * std::pow(1 - ratio, 2);
+                                }
+                                else if (nextItem.itemCode == itemRefCode::powerBankL)
+                                {
+                                    nextItem.gndUsePowerRight = static_cast<double>(itemDex[nextItem.itemCode].gndUsePowerRight) * std::pow(1 - ratio, 2);
+                                }
+                            }
+
                             if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
                             {
                                 loadSet.insert(nextProp);

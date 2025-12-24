@@ -24,7 +24,7 @@ export void textureLoader()
 	texture::hpGaugeWhiteShadow = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 95, 13);
 	SDL_SetTextureScaleMode(texture::hpGaugeWhiteShadow, SDL_SCALEMODE_NEAREST);
 
-	texture::circuitInfo = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 300, 69);
+	texture::circuitInfo = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 450, 69);
 
 	spr::charsetHero = new Sprite(renderer, "image/charset/baseCharset.png", 48, 48);//new Sprite(renderer, "image/charset/baseCharset.png");
 	spr::defaultMonster = new Sprite(renderer, "image/charset/zombie1.png", 48, 48);

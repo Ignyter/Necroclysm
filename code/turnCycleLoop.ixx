@@ -927,29 +927,26 @@ __int64 propTurn()
 					}
 				}
 			}
-            else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
+			else if (loadProp->leadItem.itemCode == itemRefCode::powerBankR || loadProp->leadItem.itemCode == itemRefCode::powerBankL) //파워뱅크 충전의 경우 부하에 미달해도 작동
 			{
 				ItemData& loadItem = loadProp->leadItem;
-				if (loadItem.itemCode == itemRefCode::powerBankR || loadItem.itemCode == itemRefCode::powerBankL)
+				loadItem.powerStorage += loadProp->getInletCharge();
+				if (loadItem.powerStorage > loadItem.powerStorageMax) loadItem.powerStorage = loadItem.powerStorageMax;
+			}
+            else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
+			{
+				if (loadProp->getTotalChargeFlux() >= static_cast<double>(loadProp->leadItem.gndUsePower))
 				{
-					loadItem.powerStorage += loadProp->getInletCharge();
-					if (loadItem.powerStorage > loadItem.powerStorageMax) loadItem.powerStorage = loadItem.powerStorageMax;
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+					{
+						loadProp->propTurnOn();
+					}
 				}
 				else
 				{
-					if (loadProp->getTotalChargeFlux() >= static_cast<double>(loadProp->leadItem.gndUsePower))
+					if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
 					{
-						if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
-						{
-							loadProp->propTurnOn();
-						}
-					}
-					else
-					{
-						if (loadProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON))
-						{
-							loadProp->propTurnOff();
-						}
+						loadProp->propTurnOff();
 					}
 				}
 			}

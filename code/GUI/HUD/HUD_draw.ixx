@@ -1662,7 +1662,7 @@ void HUD::drawBodyParts()
 
 void HUD::drawCircuitInfo()
 {
-	static Point2 prevHoverGrid = { std::numeric_limits<int>::min(),std::numeric_limits<int>::min() };
+	static Point2 prevHoverGrid = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
 	static int hoverTime = 0;
 	Point2 currentHoverGrid = getAbsMouseGrid();
 
@@ -1676,29 +1676,42 @@ void HUD::drawCircuitInfo()
 	if (hoverTime > 30)
 	{
 		Prop* tgtProp = TileProp(prevHoverGrid.x, prevHoverGrid.y, PlayerPtr->getGridZ());
-		if (tgtProp != nullptr && (tgtProp->leadItem.checkFlag(itemFlag::CIRCUIT) || tgtProp->leadItem.checkFlag(itemFlag::CABLE)) && tgtProp->isChargeFlowing())
+		if (tgtProp != nullptr &&
+			(tgtProp->leadItem.checkFlag(itemFlag::CIRCUIT) || tgtProp->leadItem.checkFlag(itemFlag::CABLE)) &&
+			tgtProp->isChargeFlowing())
 		{
 			std::wstring firstString = L"Power:";
 			std::wstring firstNumber = L"534.6";
 			std::wstring firstColStr = L"";
-			std::wstring firstUnit = L"J/turn";
+			std::wstring firstUnit = L"kJ/turn";
 
 			std::wstring secondString = L"Loss:";
 			std::wstring secondNumber = L"0.2";
 			std::wstring secondColStr = L"";
-			std::wstring secondUnit = L"J/turn";
+			std::wstring secondUnit = L"kJ/turn";
 
 			if (tgtProp->leadItem.electricMaxPower > 0)
 			{
 				firstString = L"Output:";
-				firstNumber = decimalCutter(tgtProp->getOutletCharge(), 1);
+				firstNumber = decimalCutter(tgtProp->getOutletCharge() / 1000.0, 3);
+				firstUnit = L"kJ/turn";
 
 				secondString = L"Stored:";
-				if (tgtProp->leadItem.itemCode == itemRefCode::powerBankR || tgtProp->leadItem.itemCode == itemRefCode::powerBankL) 
-					secondNumber = decimalCutter(tgtProp->leadItem.powerStorage,1);
-				else secondNumber = L"-";
+				if (tgtProp->leadItem.itemCode == itemRefCode::powerBankR || tgtProp->leadItem.itemCode == itemRefCode::powerBankL)
+				{
+					secondNumber.clear();
+					double ratio = tgtProp->leadItem.powerStorage / static_cast<double>(tgtProp->leadItem.powerStorageMax);
+					if (ratio < 0.3333) secondNumber += col2Str(lowCol::red);
+					else if(ratio <0.6666) secondNumber += col2Str(lowCol::yellow);
+					else secondNumber += col2Str(lowCol::green);
+					secondNumber += decimalCutter((tgtProp->leadItem.powerStorage) / 1000.0, 1);
+					secondNumber += col2Str(col::gray)+L" / " + decimalCutter((tgtProp->leadItem.powerStorageMax) / 1000.0, 1);
+				}
+				else
+					secondNumber = L"-";
 
-				if (tgtProp->getOutletCharge() < tgtProp->leadItem.electricMaxPower) firstColStr = col2Str(lowCol::green);
+				if (tgtProp->getOutletCharge() == 0.0) firstColStr = col2Str(lowCol::white);
+				else if (tgtProp->getOutletCharge() < tgtProp->leadItem.electricMaxPower) firstColStr = col2Str(lowCol::green);
 				else firstColStr = col2Str(col::red);
 
 				secondUnit = L"kJ";
@@ -1706,7 +1719,7 @@ void HUD::drawCircuitInfo()
 			else if (tgtProp->leadItem.gndUsePower > 0)
 			{
 				firstString = L"Input:";
-				firstNumber = decimalCutter(tgtProp->getInletCharge(),1);
+				firstNumber = decimalCutter(tgtProp->getInletCharge() / 1000.0, 3);
 
 				secondString = L"Need:";
 				secondNumber = std::to_wstring(tgtProp->leadItem.gndUsePower);
@@ -1717,35 +1730,38 @@ void HUD::drawCircuitInfo()
 			else
 			{
 				firstString = L"Flow:";
-				firstNumber = decimalCutter(tgtProp->getInletCharge(), 1);
+				firstNumber = decimalCutter(tgtProp->getInletCharge() / 1000.0, 3);
 
 				secondString = L"Loss:";
-				secondNumber = decimalCutter(tgtProp->totalLossCharge, 2);
+				secondNumber = decimalCutter(tgtProp->totalLossCharge/1000, 4);
+				secondUnit = L"kJ/turn";
 			}
-			
-
 
 			Uint8 windowAlpha = 255;
-			//SDL_Rect infoBox = { 100,100,200,200 };
-			//drawFillRect(infoBox, col::black);
 
 			SDL_SetRenderTarget(renderer, texture::circuitInfo);
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 			SDL_RenderClear(renderer);
 
-
-
 			SDL_Rect window = { 0,0,236,69 };
+
+			setFont(fontType::mainFont);
+			setFontSize(18);
+
 			int strMaxFirst = myMax(queryTextWidth(firstString), queryTextWidth(secondString));
-			int strMaxSecond = myMax(queryTextWidth(firstNumber), queryTextWidth(secondNumber));
-			if (strMaxFirst + strMaxSecond > 80)
-			{
-				window.w += strMaxFirst + strMaxSecond - 80;
-			}
+			int strMaxSecond = myMax(queryTextWidth(firstNumber, true), queryTextWidth(secondNumber, true));
+			int unitMax = myMax(queryTextWidth(firstUnit), queryTextWidth(secondUnit));
+
+			int xLabel = 49;
+			int xNumber = xLabel + strMaxFirst + 26;
+
+			int gap = 12;
+			int rightPad = 6;
+
+			int wNeeded = xNumber + strMaxSecond + gap + rightPad + unitMax;
+			window.w = myMax(window.w, wNeeded);
+
 			drawWindow(window.x, window.y, window.w, window.h);
-
-			
-
 
 			drawSpriteCenter(spr::fluxArrow, 0, 23, 46);
 
@@ -1769,25 +1785,69 @@ void HUD::drawCircuitInfo()
 
 			setFont(fontType::mainFontMedium);
 			setFontSize(22);
-			drawTextCenter(tgtProp->leadItem.name, window.w/2, 14);
-			setFont(fontType::mainFont);
+			std::wstring title = tgtProp->leadItem.name;
 
+			if (tgtProp->leadItem.itemCode == itemRefCode::powerBankR || tgtProp->leadItem.itemCode == itemRefCode::powerBankL)
+			{
+				int xOffset = -17;
+				drawTextCenter(title, window.w / 2 + xOffset, 14);
+				int gaugePivotX = window.w / 2 + queryTextWidth(title) / 2 + 10 + xOffset;
+				int gaugePivotY = 4;
+				drawRect(SDL_Rect{ gaugePivotX,gaugePivotY,45,20 }, col::lightGray);
+				drawRect(SDL_Rect{ gaugePivotX + 1,gaugePivotY + 1,43,18 }, col::lightGray);
+				drawFillRect(SDL_Rect{ gaugePivotX + 45,gaugePivotY + 6,4,8 }, col::lightGray);
+
+				double ratio = tgtProp->leadItem.powerStorage / static_cast<double>(tgtProp->leadItem.powerStorageMax);
+				ratio = std::clamp(ratio, 0.0, 1.0);
+
+				SDL_Color gaugeCol = lowCol::green;
+				if (ratio < 0.3333) gaugeCol = lowCol::red;
+				else if (ratio < 0.6666) gaugeCol = lowCol::yellow;
+
+				constexpr int CELL_COUNT = 3;
+				constexpr int CELL_W = 11;
+				constexpr int CELL_H = 12;
+				constexpr int CELL_GAP = 2;
+				constexpr int CELL_X0 = 4;
+				constexpr int CELL_Y0 = 4;
+
+				double totalFill = ratio * (CELL_COUNT * CELL_W);
+
+				for (int i = 0; i < CELL_COUNT; ++i)
+				{
+					double remain = totalFill - (i * CELL_W);
+					int fillW = static_cast<int>(std::round(std::clamp(remain, 0.0, static_cast<double>(CELL_W))));
+
+					if (fillW > 0)
+					{
+						int x = gaugePivotX + CELL_X0 + i * (CELL_W + CELL_GAP);
+						int y = gaugePivotY + CELL_Y0;
+						drawFillRect(SDL_Rect{ x, y, fillW, CELL_H }, gaugeCol);
+					}
+				}
+
+				if ((tgtProp->leadItem.itemCode == itemRefCode::powerBankR && tgtProp->chargeFlux[dir16::left]>0)
+					|| tgtProp->leadItem.itemCode == itemRefCode::powerBankL && tgtProp->chargeFlux[dir16::right] > 0)
+				{
+					drawSpriteCenter(spr::icon16, 103, gaugePivotX + 22, gaugePivotY + 10);
+				}
+			}
+			else drawTextCenter(tgtProp->leadItem.name, window.w / 2, 14);
+
+			
+
+			setFont(fontType::mainFont);
 			setFontSize(18);
+
 			drawText(firstString, 49, 25);
 
-			drawText(firstColStr+firstNumber, 49 + strMaxFirst + 26, 25);
+			drawText(firstColStr + firstNumber, 49 + strMaxFirst + 26, 25);
 			drawText(firstUnit, window.w - 6 - queryTextWidth(firstUnit), 25);
 
-
-			setFontSize(18);
 			drawText(secondString, 49, 29 + 16);
 
 			drawText(secondNumber, 49 + strMaxFirst + 26, 29 + 16);
 			drawText(secondUnit, window.w - 6 - queryTextWidth(secondUnit), 29 + 16);
-
-
-
-
 
 			SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
 			SDL_SetRenderTarget(renderer, nullptr);
@@ -1798,10 +1858,11 @@ void HUD::drawCircuitInfo()
 			dst.y = cameraH / 2 + zoomScale * ((16 * mouseCoord.y + 8) - cameraY) - ((16 * zoomScale) / 2) + 16 * zoomScale;
 			Point2 windowCoord = { dst.x, dst.y };
 
+			if (windowCoord.y + window.w >= cameraH) windowCoord.y = cameraH - window.w;
+
 			SDL_SetTextureAlphaMod(texture::circuitInfo, windowAlpha);
 			drawTexture(texture::circuitInfo, windowCoord.x, windowCoord.y);
 			SDL_SetTextureAlphaMod(texture::circuitInfo, 255);
 		}
 	}
-
 }
