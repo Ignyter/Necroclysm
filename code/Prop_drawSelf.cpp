@@ -238,6 +238,7 @@ void Prop::drawSelf()
     }
 
 
+
     if (leadItem.checkFlag(itemFlag::CABLE) && leadItem.checkFlag(itemFlag::CROSSED_CABLE))
     {
         bool flowH = (chargeFlux[dir16::right] != 0) || (chargeFlux[dir16::left] != 0);
@@ -258,6 +259,20 @@ void Prop::drawSelf()
         drawX,
         drawY
     );
+
+
+    if (leadItem.itemCode == itemRefCode::powerBankR)
+    {
+        if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset,3159,drawX,drawY);
+
+        if (chargeFlux[dir16::right] < 0) drawSpriteCenter(spr::propset, 3160, drawX, drawY);
+    }
+    else if (leadItem.itemCode == itemRefCode::powerBankL)
+    {
+        if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3159 + 16, drawX, drawY);
+
+        if (chargeFlux[dir16::right] < 0) drawSpriteCenter(spr::propset, 3160 + 16, drawX, drawY);
+    }
 
     if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
     {

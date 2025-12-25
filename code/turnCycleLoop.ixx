@@ -644,7 +644,7 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
-	debug::printCircuitLog = false;
+	debug::printCircuitLog = true;
 
 	nextCircuitStartQueue = std::queue<Point3>();
     auto actviePropSet = (World::ins())->getActivePropSet();

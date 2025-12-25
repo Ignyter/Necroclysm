@@ -66,6 +66,11 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
     int cursorY = getGridY();
     int cursorZ = getGridZ();
 
+    if (cursorX == 1 && cursorY == -14)
+    {
+        int a = 3;
+    }
+
     std::queue<Point3> frontierQueue;
     std::unordered_set<Point3, Point3::Hash> visitedSet;
     std::vector<Prop*> voltagePropVec;
@@ -121,7 +126,10 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
 
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
+            
             currentProp->runUsed = true;
+            if (currentProp->leadItem.itemCode == itemRefCode::powerBankR || currentProp->leadItem.itemCode == itemRefCode::powerBankL) currentProp->runUsed = false;
+
             currentProp->totalLossCharge = 0;
 
             if (currentProp->leadItem.checkFlag(itemFlag::VOLTAGE_SOURCE))
@@ -132,6 +140,13 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                     circuitMaxEnergy += currentProp->leadItem.electricMaxPower;
                     voltagePropVec.push_back(currentProp);
                 }
+                else if (currentProp->leadItem.itemCode == itemRefCode::powerBankR || currentProp->leadItem.itemCode == itemRefCode::powerBankL)
+                {
+                    circuitMaxEnergy += std::min(static_cast<double>(currentProp->leadItem.electricMaxPower), currentProp->leadItem.powerStorage);
+                    voltagePropVec.push_back(currentProp);
+
+                }
+
             }
 
             //현재 프롭이 소비전력이 있을 경우 loadSet에 추가
@@ -382,14 +397,19 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
         if (debug::printCircuitLog) std::wprintf(L"========================▼전압원 %p : 밀어내기 시작▼========================\n", voltProp);
         if (voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON) || voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF) == false)
         {
+            double finalVoltOutput = voltOutputPower;
+            if (voltProp->leadItem.itemCode == itemRefCode::powerBankR || voltProp->leadItem.itemCode == itemRefCode::powerBankL)
+                finalVoltOutput = std::min(voltOutputPower, voltProp->leadItem.powerStorage);
+
+
             if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_RIGHT) && isConnected({ x,y,z }, dir16::right))
-                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::right, voltOutputPower, {}, 0);
+                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::right, finalVoltOutput, {}, 0);
             else if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_UP) && isConnected({ x,y,z }, dir16::up))
-                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::up, voltOutputPower, {}, 0);
+                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::up, finalVoltOutput, {}, 0);
             else if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_LEFT) && isConnected({ x,y,z }, dir16::left))
-                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::left, voltOutputPower, {}, 0);
+                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::left, finalVoltOutput, {}, 0);
             else if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_DOWN) && isConnected({ x,y,z }, dir16::down))
-                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::down, voltOutputPower, {}, 0);
+                voltProp->prevPushedCharge += pushCharge(voltProp, dir16::down, finalVoltOutput, {}, 0);
 
             totalPushedCharge += voltProp->prevPushedCharge;
             voltProp->nodeCharge = voltProp->nodeMaxCharge;
@@ -863,6 +883,8 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
 
     thisProp->nodeCharge -= requiredFromDonor;
     thisProp->chargeFlux[txDir] -= txChargeAmount;
+    if (thisProp->leadItem.itemCode == itemRefCode::powerBankR || thisProp->leadItem.itemCode == itemRefCode::powerBankL)
+        thisProp->leadItem.powerStorage -= requiredFromDonor;
 
     if(isGroundTransfer == false) nextProp->nodeCharge += txChargeAmount;
     nextProp->chargeFlux[reverse(txDir)] += txChargeAmount;
