@@ -153,7 +153,6 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
             //뒤의 isConnect 6방향 체크에 지향성 부하 loadSet 추가 메커니즘이 있음(주의할 것)
             if (currentProp->leadItem.gndUsePower > 0)
             {
-                loadSet.insert(currentProp);
                 circuitTotalLoad += currentProp->leadItem.gndUsePower;
                 hasGround = true;
             }
@@ -291,17 +290,25 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                             Point3 downCoord = { current.x, current.y + 1, current.z };
 
                             //파워뱅크 충전속도 제한
-                            if (nextItem.itemCode == itemRefCode::powerBankR || nextItem.itemCode == itemRefCode::powerBankR)
+                            if (nextItem.itemCode == itemRefCode::powerBankR || nextItem.itemCode == itemRefCode::powerBankL)
                             {
                                 double ratio = (nextItem.powerStorage) / static_cast<double>(nextItem.powerStorageMax);
+                                errorBox(ratio > 1 || ratio < 0, L"Ratio is out of range");
 
                                 if (nextItem.itemCode == itemRefCode::powerBankR)
                                 {
-                                    nextItem.gndUsePowerLeft = static_cast<double>(itemDex[nextItem.itemCode].gndUsePowerLeft) * std::pow(1 - ratio, 2);
+                                    nextItem.gndUsePowerLeft = itemDex[nextItem.itemCode].gndUsePowerLeft;
+                                    nextItem.gndUsePowerLeft *= std::log(1 + 20 * (1.02 - ratio)) / std::log(1 + 20 * 1.02);
+                                    nextItem.gndUsePowerLeft = myMin(nextItem.gndUsePowerLeft, nextItem.powerStorageMax - nextItem.powerStorage);
+                                    if (nextItem.gndUsePowerLeft < 0) nextItem.gndUsePowerLeft = 0;
                                 }
                                 else if (nextItem.itemCode == itemRefCode::powerBankL)
                                 {
-                                    nextItem.gndUsePowerRight = static_cast<double>(itemDex[nextItem.itemCode].gndUsePowerRight) * std::pow(1 - ratio, 2);
+                                    nextItem.gndUsePowerRight = itemDex[nextItem.itemCode].gndUsePowerRight;
+                                    nextItem.gndUsePowerRight *= std::log(1 + 20 * (1.02 - ratio)) / std::log(1 + 20 * 1.02);
+                                    nextItem.gndUsePowerRight = myMin(nextItem.gndUsePowerRight, nextItem.powerStorageMax - nextItem.powerStorage);
+                                    if (nextItem.gndUsePowerRight < 0) nextItem.gndUsePowerRight = 0;
+
                                 }
                             }
 
