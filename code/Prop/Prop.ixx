@@ -99,7 +99,7 @@ public:
         return totalOutlet;
     }
 
-    std::unordered_set<Prop*> updateCircuitNetwork();
+    void updateCircuitNetwork();
 
     bool isConnected(Point3 currentCoord, dir16 dir);
 

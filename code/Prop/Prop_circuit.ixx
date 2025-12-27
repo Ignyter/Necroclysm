@@ -42,6 +42,10 @@ constexpr double EPSILON = 0.000001;
 * 트랜지스터와 논리게이트는 게이트 <-> 메인 라인간 전파가 안 되게 잘 수정할 것
 * 게이트->메인라인으로 누설이 안되게 하려면 BFS 탐색 과정에서 skipBFSSet에 추가해주면 됨
 * 메인라인->게이트로 누설이 안되게 하려면 isConnected 함수에서 체크해주면 됨
+* 
+* [그라운드]
+* gndUsePower는 전방향(상하좌우, z축 제외) 입력임. gndUsePower>0이면 반드시 지향성 접지가 존재하지 않음에 유의
+* 반대로 지향성 접지가 존재하면 당연히 gndUsePower는 0과 같음
 */
 
 double Prop::getTotalChargeFlux()
@@ -59,7 +63,7 @@ bool Prop::isChargeFlowing()
         || chargeFlux[dir16::below] != 0;
 }
 
-std::unordered_set<Prop*> Prop::updateCircuitNetwork()
+void Prop::updateCircuitNetwork()
 {
     if(debug::printCircuitLog) std::wprintf(L"------------------------- 회로망 업데이트 시작 ------------------------\n");
     int cursorX = getGridX();
@@ -76,7 +80,6 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
     std::vector<Prop*> voltagePropVec;
 
     std::unordered_set<Point3, Point3::Hash> skipBFSSet;
-    std::unordered_set<Prop*> loadSet; //부하가 가해지는 전자기기들
 
     int circuitMaxEnergy = 0;
     int circuitTotalLoad = 0;
@@ -106,12 +109,12 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
         ItemData& currentItem = currentProp->leadItem;
 
         //visitedSet이 문제다. 하단에서 이미 방문해서 위에서 방문할 때 멈춰버리는거야
-        if (visitedSet.find(current) != visitedSet.end())
+        if (visitedSet.find(current) != visitedSet.end()) //방문한 적이 있을 경우
         {
             //이 부분 무한루프 발생할 가능성 있으니까 나중에 카운트 제한 넣을 것(아마 GND끼리 순환으로 연결하면 게임 터질 듯)
             if(currentProp->leadItem.checkFlag(itemFlag::HAS_GROUND)==false) continue;
         }
-        else visitedSet.insert(current);
+        else visitedSet.insert(current); //방문한 적이 없을 경우
 
         if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
         if (currentProp == nullptr)
@@ -156,7 +159,6 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                 circuitTotalLoad += currentProp->leadItem.gndUsePower;
                 hasGround = true;
             }
-            else if (currentProp->leadItem.checkFlag(itemFlag::LOGIC_GATE)) loadSet.insert(currentProp); //논리게이트는 무조건 부하에 포함
 
             //택트 스위치일 경우 다음 턴 시작 시에 종료
             if (currentProp->leadItem.itemCode == itemRefCode::tactSwitchRL || currentProp->leadItem.itemCode == itemRefCode::tactSwitchUD)
@@ -282,7 +284,6 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
                                 skipBFSSet.insert(nextCoord);
 
 
-                            loadSet.insert(nextProp);//아래랑 관계없이 그냥 추가해도 되지않나?
 
                             Point3 rightCoord = { current.x + 1, current.y, current.z };
                             Point3 upCoord = { current.x, current.y - 1, current.z };
@@ -314,25 +315,21 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
 
                             if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
                             {
-                                loadSet.insert(nextProp);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerLeft;
                                 hasGround = true;
                             }
                             else if (directions[i] == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
                             {
-                                loadSet.insert(nextProp);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerDown;
                                 hasGround = true;
                             }
                             else if (directions[i] == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
                             {
-                                loadSet.insert(nextProp);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerRight;
                                 hasGround = true;
                             }
                             else if (directions[i] == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
                             {
-                                loadSet.insert(nextProp);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerUp;
                                 hasGround = true;
                             }
@@ -422,8 +419,6 @@ std::unordered_set<Prop*> Prop::updateCircuitNetwork()
             voltProp->nodeCharge = voltProp->nodeMaxCharge;
         }
     }
-
-    return loadSet;
 }
 
 bool Prop::isConnected(Point3 currentCoord, dir16 dir)
@@ -668,11 +663,12 @@ bool Prop::isGround(Point3 current, dir16 dir)
     else if (dir == dir16::up) nextProp = TileProp(upCoord);
     else if (dir == dir16::left) nextProp = TileProp(leftCoord);
     else if (dir == dir16::down) nextProp = TileProp(downCoord);
-    if (nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND) == false) return false;
 
     if (nextProp == nullptr) return false;
     else
     {
+        if (nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND) == false) return false;
+
         if (isConnected(current, dir))
         {
             if (nextProp->leadItem.gndUsePower > 0) return true;
@@ -682,7 +678,6 @@ bool Prop::isGround(Point3 current, dir16 dir)
             else if (dir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) return true;
         }
     }
-
     return false;
 }
 

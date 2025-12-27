@@ -644,27 +644,26 @@ __int64 entityAITurn()
 
 __int64 propTurn()
 {
-	debug::printCircuitLog = true;
+	debug::printCircuitLog = false;
 
 	nextCircuitStartQueue = std::queue<Point3>();
     auto actviePropSet = (World::ins())->getActivePropSet();
-
-	for (auto pPtr : actviePropSet) pPtr->runUsed = false;
+	std::unordered_set<Prop*> activeLoadSet;
 
 	for (auto pPtr : actviePropSet)
 	{
+		pPtr->runUsed = false;
 		pPtr->totalLossCharge = 0;
 		pPtr->initChargeFlux();
+		if (pPtr->leadItem.checkFlag(itemFlag::HAS_GROUND)) activeLoadSet.insert(pPtr);
 	}
 
 	int loopCount = 0;
-	std::unordered_set<Prop*> loadSet;
 	static std::unordered_set<Prop*> reserveDelayInit;
 	reserveDelayInit.clear();
 	do
 	{
 
-		loadSet.clear();
 		loopCount++;
 		if (loopCount >= MAX_CIRCUIT_LOOP_COUNT) break;
 		if (debug::printCircuitLog) std::wprintf(L"▼루프 카운트: %d\n", loopCount);
@@ -674,15 +673,14 @@ __int64 propTurn()
 			Point3 tgtCoord = nextCircuitStartQueue.front();
             nextCircuitStartQueue.pop();
             Prop* tgtProp = TileProp(tgtCoord);
-			if (tgtProp) loadSet = tgtProp->updateCircuitNetwork();
+			if (tgtProp) tgtProp->updateCircuitNetwork();
 		}
 		else for (auto pPtr : actviePropSet)
 		{
 			if (pPtr->runUsed) continue;
-			if (pPtr->leadItem.checkFlag(itemFlag::CIRCUIT))
+			if (pPtr->leadItem.checkFlag(itemFlag::VOLTAGE_SOURCE))
 			{
-				auto newLoads = pPtr->updateCircuitNetwork();
-				loadSet.insert(newLoads.begin(), newLoads.end());
+				pPtr->updateCircuitNetwork();
 			}
 		}
 
@@ -690,7 +688,7 @@ __int64 propTurn()
 		// 전자회로 연산 끝난 후의 부하 부품들 전력 소모
 		//==============================================================================
 
-		for (auto pPtr : loadSet)
+		for (auto pPtr : activeLoadSet)
 		{
 			Prop* loadProp = pPtr;
 

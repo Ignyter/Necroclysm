@@ -249,10 +249,10 @@
     <ClCompile Include="code\Light.cpp" />
     <ClCompile Include="code\mouseInput.ixx" />
     <ClCompile Include="code\Particle.ixx" />
-    <ClCompile Include="code\Prop.cpp" />
-    <ClCompile Include="code\Prop.ixx" />
-    <ClCompile Include="code\Prop_circuit.ixx" />
-    <ClCompile Include="code\Prop_drawSelf.cpp" />
+    <ClCompile Include="code\Prop\Prop.cpp" />
+    <ClCompile Include="code\Prop\Prop.ixx" />
+    <ClCompile Include="code\Prop\Prop_circuit.ixx" />
+    <ClCompile Include="code\Prop\Prop_drawSelf.cpp" />
     <ClCompile Include="code\readSkillDex.ixx" />
     <ClCompile Include="code\renderFPS.ixx" />
     <ClCompile Include="code\renderSticker.ixx" />

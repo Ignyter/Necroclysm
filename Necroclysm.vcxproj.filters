@@ -88,7 +88,10 @@
     <Filter Include="소스 파일\01_system\04_GUI\CRAFT">
       <UniqueIdentifier>{9d79e804-c248-4c63-a091-579272003866}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\05_Class\07_Vehicle&amp;Prop">
+    <Filter Include="소스 파일\05_Class\08_Prop">
+      <UniqueIdentifier>{a95226d9-aec6-49d0-a3ea-ecebccca4b7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\05_Class\07_Vehicle">
       <UniqueIdentifier>{6f6cbb85-1d23-42d6-9843-603bea97363e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -229,10 +232,10 @@
       <Filter>소스 파일\05_Class\05_Etc</Filter>
     </ClCompile>
     <ClCompile Include="code\Vehicle.ixx">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
+      <Filter>소스 파일\05_Class\07_Vehicle</Filter>
     </ClCompile>
     <ClCompile Include="code\Vehicle.cpp">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
+      <Filter>소스 파일\05_Class\07_Vehicle</Filter>
     </ClCompile>
     <ClCompile Include="code\Flame.ixx">
       <Filter>소스 파일\05_Class\05_Etc</Filter>
@@ -241,7 +244,7 @@
       <Filter>소스 파일\05_Class\05_Etc</Filter>
     </ClCompile>
     <ClCompile Include="code\Vehicle_runAI.cpp">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
+      <Filter>소스 파일\05_Class\07_Vehicle</Filter>
     </ClCompile>
     <ClCompile Include="code\actFuncSet.ixx">
       <Filter>소스 파일\01_system\01_main</Filter>
@@ -492,12 +495,6 @@
     <ClCompile Include="code\entity\Entity_drawSelf.ixx">
       <Filter>소스 파일\05_Class\01_Entity</Filter>
     </ClCompile>
-    <ClCompile Include="code\Prop.ixx">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
-    </ClCompile>
-    <ClCompile Include="code\Prop.cpp">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
-    </ClCompile>
     <ClCompile Include="code\world\TileData.ixx">
       <Filter>소스 파일\05_Class\03_World</Filter>
     </ClCompile>
@@ -555,12 +552,6 @@
     <ClCompile Include="code\util\ThreadPool.ixx">
       <Filter>소스 파일\04_util</Filter>
     </ClCompile>
-    <ClCompile Include="code\Prop_drawSelf.cpp">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
-    </ClCompile>
-    <ClCompile Include="code\Prop_circuit.ixx">
-      <Filter>소스 파일\05_Class\07_Vehicle&amp;Prop</Filter>
-    </ClCompile>
     <ClCompile Include="code\var\textureVar.ixx">
       <Filter>소스 파일\01_system</Filter>
     </ClCompile>
@@ -569,6 +560,18 @@
     </ClCompile>
     <ClCompile Include="code\GUI\CRAFT\Craft_input_mouse.ixx">
       <Filter>소스 파일\01_system\04_GUI\CRAFT</Filter>
+    </ClCompile>
+    <ClCompile Include="code\Prop\Prop.cpp">
+      <Filter>소스 파일\05_Class\08_Prop</Filter>
+    </ClCompile>
+    <ClCompile Include="code\Prop\Prop.ixx">
+      <Filter>소스 파일\05_Class\08_Prop</Filter>
+    </ClCompile>
+    <ClCompile Include="code\Prop\Prop_circuit.ixx">
+      <Filter>소스 파일\05_Class\08_Prop</Filter>
+    </ClCompile>
+    <ClCompile Include="code\Prop\Prop_drawSelf.cpp">
+      <Filter>소스 파일\05_Class\08_Prop</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
