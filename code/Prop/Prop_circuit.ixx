@@ -43,7 +43,12 @@ constexpr double EPSILON = 0.000001;
 * 게이트->메인라인으로 누설이 안되게 하려면 BFS 탐색 과정에서 skipBFSSet에 추가해주면 됨
 * 메인라인->게이트로 누설이 안되게 하려면 isConnected 함수에서 체크해주면 됨
 * 
-* [그라운드]
+* <파워뱅크>
+* 파워뱅크는 출력과 접지(충전부)가 한 타일에 동시에 있는 특이한 구조임.
+* powerBankR : 왼쪽이 출력, 오른쪽이 충전입력(접지)
+* powerBankL : 오른쪽이 출력, 왼쪽이 충전입력(접지)
+* 
+* <그라운드>
 * gndUsePower는 전방향(상하좌우, z축 제외) 입력임. gndUsePower>0이면 반드시 지향성 접지가 존재하지 않음에 유의
 * 반대로 지향성 접지가 존재하면 당연히 gndUsePower는 0과 같음
 */
@@ -108,13 +113,8 @@ void Prop::updateCircuitNetwork()
         Prop* currentProp = TileProp(current.x, current.y, current.z);
         ItemData& currentItem = currentProp->leadItem;
 
-        //visitedSet이 문제다. 하단에서 이미 방문해서 위에서 방문할 때 멈춰버리는거야
-        if (visitedSet.find(current) != visitedSet.end()) //방문한 적이 있을 경우
-        {
-            //이 부분 무한루프 발생할 가능성 있으니까 나중에 카운트 제한 넣을 것(아마 GND끼리 순환으로 연결하면 게임 터질 듯)
-            if(currentProp->leadItem.checkFlag(itemFlag::HAS_GROUND)==false) continue;
-        }
-        else visitedSet.insert(current); //방문한 적이 없을 경우
+        if (visitedSet.find(current) != visitedSet.end()) continue;
+        visitedSet.insert(current);
 
         if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
         if (currentProp == nullptr)
@@ -309,8 +309,9 @@ void Prop::updateCircuitNetwork()
                                     nextItem.gndUsePowerRight *= std::log(1 + 20 * (1.02 - ratio)) / std::log(1 + 20 * 1.02);
                                     nextItem.gndUsePowerRight = myMin(nextItem.gndUsePowerRight, nextItem.powerStorageMax - nextItem.powerStorage);
                                     if (nextItem.gndUsePowerRight < 0) nextItem.gndUsePowerRight = 0;
-
                                 }
+
+
                             }
 
                             if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)

@@ -252,6 +252,65 @@ void Prop::drawSelf()
         sprIndex = baseIndex + offset;
     }
 
+    if (leadItem.itemCode == itemRefCode::powerBankR || leadItem.itemCode == itemRefCode::powerBankL)
+    {
+        bool nowCharging = false;
+        if (leadItem.itemCode == itemRefCode::powerBankR && chargeFlux[dir16::left] > 0) nowCharging = true;
+        else if (leadItem.itemCode == itemRefCode::powerBankL && chargeFlux[dir16::right] > 0) nowCharging = true;
+
+        double ratio = leadItem.powerStorage / static_cast<double>(leadItem.powerStorageMax);
+
+        // 500ms 주기 점멸
+        bool blinkOn = (SDL_GetTicks() / 500) % 2 == 0;
+
+        if (nowCharging)
+        {
+            if (ratio < 0.01)
+            {
+                if (blinkOn) sprIndex += 1;
+            }
+            else if (ratio < 0.3333)
+            {
+                if (blinkOn) sprIndex += 1;
+            }
+            else if (ratio < 0.6666)
+            {
+                if (blinkOn) sprIndex += 2;
+                else sprIndex += 1;
+            }
+            else if (ratio < 1.0 - 0.001)
+            {
+                if (blinkOn) sprIndex += 3;
+                else sprIndex += 2;
+            }
+            else
+            {
+                sprIndex += 3;
+            }
+        }
+        else
+        {
+            if (ratio < 0.01)
+            {
+            }
+            else if (ratio < 0.3333)
+            {
+                sprIndex += 1; // 1칸 점등
+            }
+            else if (ratio < 0.6666)
+            {
+                sprIndex += 2; // 2칸 점등
+            }
+            else
+            {
+                sprIndex += 3; // 3칸 점등
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /////////////////////////////메인 그리기 함수//////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     drawSpriteCenter
     (
         spr::propset,
@@ -259,7 +318,9 @@ void Prop::drawSelf()
         drawX,
         drawY
     );
-
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
     if (leadItem.itemCode == itemRefCode::powerBankR)
     {
@@ -287,19 +348,6 @@ void Prop::drawSelf()
             else if (leadItem.itemCode == itemRefCode::gasolineGeneratorL)   portSprIndex = 3202;
             else if (leadItem.itemCode == itemRefCode::gasolineGeneratorB)   portSprIndex = 3203;
 
-            float pulseSpeed = 0.003f; // 펄스 속도 (작을수록 느림)
-            float minBrightness = 0.6f; // 최소 밝기 (0.0~1.0)
-            float maxBrightness = 1.0f; // 최대 밝기
-
-            float pulse = (sin(SDL_GetTicks() * pulseSpeed) + 1.0f) * 0.5f; // 0.0~1.0 사이값
-            float colorAlpha = minBrightness + (maxBrightness - minBrightness) * pulse;
-
-            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-            SDL_SetTextureColorMod(spr::propset->getTexture(),
-                (Uint8)(255.0f * colorAlpha),
-                (Uint8)(255.0f * colorAlpha),
-                (Uint8)(255.0f * colorAlpha));
-
             drawSpriteCenter
             (
                 spr::propset,
@@ -307,8 +355,6 @@ void Prop::drawSelf()
                 drawX,
                 drawY
             );
-
-            SDL_SetTextureColorMod(spr::propset->getTexture(), 255, 255, 255);
         }
     }
 

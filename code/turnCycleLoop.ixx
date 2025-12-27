@@ -929,7 +929,12 @@ __int64 propTurn()
 			{
 				ItemData& loadItem = loadProp->leadItem;
 				loadItem.powerStorage += loadProp->getInletCharge();
-				if (loadItem.powerStorage > loadItem.powerStorageMax) loadItem.powerStorage = loadItem.powerStorageMax;
+				
+				constexpr double CHARGE_EPSILON = 0.5;
+				if (loadItem.powerStorage >= loadItem.powerStorageMax - CHARGE_EPSILON)
+				{
+					loadItem.powerStorage = loadItem.powerStorageMax;
+				}
 			}
             else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
 			{
