@@ -252,6 +252,14 @@ void Prop::drawSelf()
         sprIndex = baseIndex + offset;
     }
 
+    if (leadItem.itemCode == itemRefCode::diodeR
+        || leadItem.itemCode == itemRefCode::diodeU
+        || leadItem.itemCode == itemRefCode::diodeL
+        || leadItem.itemCode == itemRefCode::diodeD)
+    {
+        if(isChargeFlowing())  sprIndex += 1;
+    }
+
     if (leadItem.itemCode == itemRefCode::powerBankR || leadItem.itemCode == itemRefCode::powerBankL)
     {
         bool nowCharging = false;

@@ -53,6 +53,19 @@ constexpr double EPSILON = 0.000001;
 * 반대로 지향성 접지가 존재하면 당연히 gndUsePower는 0과 같음
 */
 
+bool Prop::hasGround()
+{
+    //일반 접지
+    if (leadItem.gndUsePower > 0) return true;
+    //지향성 접지
+    if (leadItem.gndUsePowerRight > 0) return true;
+    if (leadItem.gndUsePowerUp > 0) return true;
+    if (leadItem.gndUsePowerLeft > 0) return true;
+    if (leadItem.gndUsePowerDown > 0) return true;
+
+    return false;
+}
+
 double Prop::getTotalChargeFlux()
 {
     return (chargeFlux[dir16::right] + chargeFlux[dir16::up] + chargeFlux[dir16::left] + chargeFlux[dir16::down] + chargeFlux[dir16::above] + chargeFlux[dir16::below]);
@@ -239,7 +252,7 @@ void Prop::updateCircuitNetwork()
 
                     if (isConnected(current, directions[i]))
                     {
-                        if (nextProp != nullptr && nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND))
+                        if (nextProp != nullptr && nextProp->hasGround())
                         {
                             //베이스에서 메인라인으로 BFS를 추가하는 것을 막음
                             if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) skipBFSSet.insert(nextCoord);
@@ -668,7 +681,7 @@ bool Prop::isGround(Point3 current, dir16 dir)
     if (nextProp == nullptr) return false;
     else
     {
-        if (nextProp->leadItem.checkFlag(itemFlag::HAS_GROUND) == false) return false;
+        if (nextProp->hasGround() == false) return false;
 
         if (isConnected(current, dir))
         {

@@ -5,6 +5,7 @@ import constVar;
 import Sprite;
 import SkillData;
 import ItemPocket;
+import statusEffect;
 
 //__int8 : -128~127
 //__int16 : -32768 ~32767

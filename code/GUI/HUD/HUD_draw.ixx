@@ -20,6 +20,7 @@ import drawWindow;
 import drawEpsilonText;
 import ContextMenu;
 import Maint;
+import statusEffect;
 
 
 namespace tabSprFlag
@@ -1673,7 +1674,7 @@ void HUD::drawCircuitInfo()
 	}
 	else hoverTime += 1;
 
-	if (hoverTime > 30)
+	if (hoverTime > 100)
 	{
 		Prop* tgtProp = TileProp(prevHoverGrid.x, prevHoverGrid.y, PlayerPtr->getGridZ());
 		if (tgtProp == nullptr) return;

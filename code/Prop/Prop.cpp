@@ -372,7 +372,8 @@ void Prop::propTurnOn()
         //현재 위치 추가
         nextCircuitStartQueue.push(currentCoord);
         initChargeBFS(nextCircuitStartQueue);
-        leadItem.eraseFlag(itemFlag::HAS_GROUND);
+        if (iCode == itemRefCode::delayR) leadItem.gndUsePowerLeft = 0;
+        else if (iCode == itemRefCode::delayL) leadItem.gndUsePowerRight = 0;
     }
 }
 
@@ -447,6 +448,8 @@ void Prop::propTurnOff()
     else if (iCode == itemRefCode::delayR || iCode == itemRefCode::delayL)
     {
         //꺼질 때는 재계산 로직 필요없음 (신호선=전력입력)
-        leadItem.addFlag(itemFlag::HAS_GROUND);
+        if (iCode == itemRefCode::delayR) leadItem.gndUsePowerLeft = 1;
+        else if (iCode == itemRefCode::delayL) leadItem.gndUsePowerRight = 1;
+        
     }
 }

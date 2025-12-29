@@ -15,6 +15,7 @@ import World;
 import Vehicle;
 import Prop;
 import Monster;
+import statusEffect;
 
 export void startArea()
 {

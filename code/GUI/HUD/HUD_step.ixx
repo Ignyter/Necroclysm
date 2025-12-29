@@ -3,6 +3,7 @@ import globalVar;
 import wrapVar;
 import Profic;
 import Sleep;
+import statusEffect;
 
 void HUD::step()
 {

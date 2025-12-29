@@ -183,6 +183,7 @@
     <ClCompile Include="code\Flame.ixx" />
     <ClCompile Include="code\Footprint.ixx" />
     <ClCompile Include="code\gamepadInput.ixx" />
+    <ClCompile Include="code\gasData.ixx" />
     <ClCompile Include="code\GUI\Aim.ixx" />
     <ClCompile Include="code\GUI\ContextMenu.ixx" />
     <ClCompile Include="code\GUI\CoroutineGUI\CoordSelect.ixx" />
@@ -259,6 +260,7 @@
     <ClCompile Include="code\renderWeather.ixx" />
     <ClCompile Include="code\scriptLoader.ixx" />
     <ClCompile Include="code\SkillData.ixx" />
+    <ClCompile Include="code\statusEffect.ixx" />
     <ClCompile Include="code\Sticker.ixx" />
     <ClCompile Include="code\SystemMenu.ixx" />
     <ClCompile Include="code\useSkill.ixx" />

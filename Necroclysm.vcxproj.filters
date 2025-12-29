@@ -573,5 +573,11 @@
     <ClCompile Include="code\Prop\Prop_drawSelf.cpp">
       <Filter>소스 파일\05_Class\08_Prop</Filter>
     </ClCompile>
+    <ClCompile Include="code\statusEffect.ixx">
+      <Filter>소스 파일\05_Class\05_Etc</Filter>
+    </ClCompile>
+    <ClCompile Include="code\gasData.ixx">
+      <Filter>소스 파일\05_Class\05_Etc</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

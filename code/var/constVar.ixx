@@ -541,10 +541,8 @@ export enum class itemFlag
     CAN_DRINK,
 
     CONTAINER_FLEX, //내부에 들어있는 아이템에 따라 부피가 더해짐
-
-    BURIED, //땅에 매립된 부품
     
-    WIELD_NORMAL_DISPLAY,//이게 있으면 손에 들면 보임(무기같은 이미 이미지가 장비 제외)
+    WIELD_NORMAL_DISPLAY,//이게 있으면 손에 들면 보임(무기같은 이미 이미지가 있는 장비 제외)
 
     LIQ_COL_RED,
     LIQ_COL_BLUE,
@@ -553,8 +551,8 @@ export enum class itemFlag
     LIQ_COL_GRAY,
     LIQ_COL_BLACK,
 
-    CONTAINER_TRANSPARENT,
-    CONTAINER_TRANSLUCENT,
+    CONTAINER_TRANSPARENT,//투명 용기
+    CONTAINER_TRANSLUCENT,//반투명 용기
 
     PROP_POWER_OFF,//가솔린 발전기나 무선 장치 등등
     PROP_POWER_ON,
@@ -573,11 +571,6 @@ export enum class itemFlag
     CABLE_Z_ASCEND, //위층의 현재 타일과 연결된 케이블
     CABLE_Z_DESCEND, //아래층의 현재 타일과 연결된 케이블
 
-    HAS_GROUND,
-
-    MULTI_GND, //GND를 여러 방향에 독립적으로 가지고 있는 경우
-
-    TRANSISTOR, //아직 미사용
     LOGIC_GATE, //BFS에 포함되기만 해도 loadSet에 포함되는 플래그(2개 이상의 경로 가짐)
 
     CROSSED_CABLE,
@@ -1444,21 +1437,7 @@ export enum class gasFlag
     BIG,
 };
 
-export enum statusEffectFlag
-{
-    none = -1,
-    confused = 0,
-    bleeding = 1,
-    hungry = 2,
-    dehydrated = 3,
-    blind = 4,
-    tired = 5,
-    exhausted = 6,
 
-    run = 7,
-    crouch = 8,
-    crawl = 9,
-};
 
 export enum charSprIndex
 {
@@ -1545,36 +1524,6 @@ export class World;
 export class Chunk;
 export class Loot;
 export class Equip;
-export class LIght;
-
-export class statusEffect
-{
-public:
-    statusEffectFlag effectType;
-    float duration;
-};
-
-export class gasData
-{
-public:
-    int gasCode;
-    int gasVol;
-    bool operator==(const gasData& other) const
-    {
-        return gasCode == other.gasCode && gasVol == other.gasVol;
-    }
-};
-
-namespace std
-{
-    template<>
-    struct hash<gasData>
-    {
-        std::size_t operator()(const gasData& g) const
-        {
-            return std::hash<int>()(g.gasCode);
-        }
-    };
-}
+export class Light;
 
 

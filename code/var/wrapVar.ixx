@@ -18,6 +18,7 @@ import Entity;
 import Monster;
 import Player;
 import log;
+import statusEffect;
 
 export inline int PlayerX() { return PlayerPtr->getGridX(); }
 export inline int PlayerY() { return PlayerPtr->getGridY(); }

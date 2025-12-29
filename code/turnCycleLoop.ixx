@@ -26,6 +26,7 @@ import GUI;
 import Sleep;
 import Prop;
 import globalVar;
+import statusEffect;
 
 constexpr double EPSILON = 0.000001;
 
@@ -655,7 +656,8 @@ __int64 propTurn()
 		pPtr->runUsed = false;
 		pPtr->totalLossCharge = 0;
 		pPtr->initChargeFlux();
-		if (pPtr->leadItem.checkFlag(itemFlag::HAS_GROUND)) activeLoadSet.insert(pPtr);
+		if (pPtr->hasGround()) activeLoadSet.insert(pPtr);
+		else if(pPtr->leadItem.checkFlag(itemFlag::LOGIC_GATE)) activeLoadSet.insert(pPtr);
 	}
 
 	int loopCount = 0;

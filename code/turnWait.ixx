@@ -17,7 +17,7 @@ import TileData;
 import Prop;
 import GameOver;
 import globalTime;
-
+import gasData;
 
 
 //globalVar에 전방선언됨
