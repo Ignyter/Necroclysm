@@ -120,4 +120,6 @@ public:
     void initChargeBFS(std::queue<Point3> startPointSet);
 
     bool hasGround();
+
+    void loadAct();
 };

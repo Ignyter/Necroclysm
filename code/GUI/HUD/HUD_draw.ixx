@@ -1674,7 +1674,7 @@ void HUD::drawCircuitInfo()
 	}
 	else hoverTime += 1;
 
-	if (hoverTime > 100)
+	if (hoverTime > 30)
 	{
 		Prop* tgtProp = TileProp(prevHoverGrid.x, prevHoverGrid.y, PlayerPtr->getGridZ());
 		if (tgtProp == nullptr) return;

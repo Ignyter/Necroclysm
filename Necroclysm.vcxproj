@@ -164,7 +164,6 @@
     <ClCompile Include="code\actFuncSet.ixx" />
     <ClCompile Include="code\Ani.ixx" />
     <ClCompile Include="code\Bullet.ixx" />
-    <ClCompile Include="code\camera.ixx" />
     <ClCompile Include="code\debugConsole.ixx" />
     <ClCompile Include="code\Drawable.ixx" />
     <ClCompile Include="code\drawEpsilonText.ixx" />

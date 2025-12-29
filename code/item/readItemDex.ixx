@@ -528,7 +528,7 @@ export int readItemDex(const wchar_t* file)
                             { L"CABLE_Z_ASCEND", itemFlag::CABLE_Z_ASCEND },
                             { L"CABLE_Z_DESCEND", itemFlag::CABLE_Z_DESCEND },
                             
-                            { L"LOGIC_GATE", itemFlag::LOGIC_GATE },
+                            { L"FORCE_LOAD", itemFlag::FORCE_LOAD },
                         };
 
                         size_t pos = 0;

@@ -220,6 +220,9 @@ export std::unordered_set<Point2, Point2::Hash> rangeSet; //선택 범위를 나
 export SDL_Color rangeColor = { 0xff, 0xff, 0xff }; //선택 범위를 나타내는 색상
 export bool rangeRay = false;
 
+export std::unordered_set<Prop*> reserveDelayInit;
+
+
 export class Snowflake
 {
 public:

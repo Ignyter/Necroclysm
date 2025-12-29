@@ -5,6 +5,7 @@ import util;
 import globalVar;
 import constVar;
 import wrapVar;
+import globalTime;
 
 
 constexpr double SYSTEM_VOLTAGE = 24.0;
@@ -967,6 +968,278 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
                     nextProp->chargeFlux[reverse(directions[i])] = 0;
                 }
                 frontierQueue.push(nextCoord);
+            }
+        }
+    }
+}
+
+
+void Prop::loadAct()
+{
+
+    int iCode = leadItem.itemCode;
+
+    //모든 계산이 종료된 후 부하에 공급된 전하량이 usePower 이상인지 이하인지 판단하여 부하 프롭이 켜지거나 꺼짐
+    //단 논리게이트들은 공급된 전하량이 아니라 별도의 로직으로 처리
+    if (iCode == itemRefCode::transistorR
+        || iCode == itemRefCode::transistorU
+        || iCode == itemRefCode::transistorL
+        || iCode == itemRefCode::transistorD)
+    {
+        bool baseInput = false;
+
+        if (iCode == itemRefCode::transistorR && chargeFlux[dir16::right] >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::transistorU && chargeFlux[dir16::up] >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::transistorL && chargeFlux[dir16::left] >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::transistorD && chargeFlux[dir16::down] >= 1.0) baseInput = true;
+
+        if (baseInput)
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::relayR
+        || iCode == itemRefCode::relayU
+        || iCode == itemRefCode::relayL
+        || iCode == itemRefCode::relayD)
+    {
+        bool baseInput = false;
+
+        if (iCode == itemRefCode::relayR && chargeFlux[dir16::right] >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::relayU && chargeFlux[dir16::up] >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::relayL && chargeFlux[dir16::left] >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::relayD && chargeFlux[dir16::down] >= 1.0) baseInput = true;
+
+        if (baseInput)
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::andGateR || iCode == itemRefCode::andGateL)
+    {
+        bool firstInput, secondInput;
+
+        if (iCode == itemRefCode::andGateR)
+        {
+            firstInput = chargeFlux[dir16::left] >= 1.0;
+            secondInput = chargeFlux[dir16::down] >= 1.0;
+        }
+        else
+        {
+            firstInput = chargeFlux[dir16::right] >= 1.0;
+            secondInput = chargeFlux[dir16::down] >= 1.0;
+        }
+
+        if (firstInput && secondInput)
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::orGateR || iCode == itemRefCode::orGateL)
+    {
+        bool firstInput, secondInput;
+
+        if (iCode == itemRefCode::orGateR)
+        {
+            firstInput = chargeFlux[dir16::left] >= 1.0;
+            secondInput = chargeFlux[dir16::down] >= 1.0;
+        }
+        else
+        {
+            firstInput = chargeFlux[dir16::right] >= 1.0;
+            secondInput = chargeFlux[dir16::down] >= 1.0;
+        }
+
+        if (firstInput || secondInput)
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::xorGateR || iCode == itemRefCode::xorGateL)
+    {
+        bool firstInput, secondInput;
+
+        if (iCode == itemRefCode::xorGateR)
+        {
+            firstInput = chargeFlux[dir16::left] >= 1.0;
+            secondInput = chargeFlux[dir16::down] >= 1.0;
+        }
+        else
+        {
+            firstInput = chargeFlux[dir16::right] >= 1.0;
+            secondInput = chargeFlux[dir16::down] >= 1.0;
+        }
+
+        if (firstInput != secondInput)
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::notGateR || iCode == itemRefCode::notGateL)
+    {
+        bool inputActive;
+        if (iCode == itemRefCode::notGateR) inputActive = chargeFlux[dir16::left] >= 1.0;
+        else inputActive = chargeFlux[dir16::right] >= 1.0;
+
+        if (inputActive == false)
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::srLatchR || iCode == itemRefCode::srLatchL)
+    {
+        bool setInput, resetInput;
+
+        if (iCode == itemRefCode::srLatchR)
+        {
+            setInput = chargeFlux[dir16::left] >= 1.0;
+            resetInput = chargeFlux[dir16::down] >= 1.0;
+        }
+        else
+        {
+            setInput = chargeFlux[dir16::right] >= 1.0;
+            resetInput = chargeFlux[dir16::down] >= 1.0;
+        }
+
+        if (setInput && resetInput) // 금지상태는 랜덤
+        {
+            if (randomRange(0, 1) == 0)
+            {
+                if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+                    propTurnOn();
+            }
+            else
+            {
+                if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+                    propTurnOff();
+            }
+        }
+        else if (setInput) // Set
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+                propTurnOn();
+        }
+        else if (resetInput) // Reset
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+                propTurnOff();
+        }
+    }
+    else if (iCode == itemRefCode::delayR || iCode == itemRefCode::delayL)
+    {
+        reserveDelayInit.erase(this);
+
+        bool inputActive;
+        if (iCode == itemRefCode::delayR) inputActive = chargeFlux[dir16::left] >= 1.0;
+        else inputActive = chargeFlux[dir16::right] >= 1.0;
+
+        if (inputActive == true)
+        {
+            if (delayStartTurn == 0.0) delayStartTurn = getElapsedTurn();
+
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                if (getElapsedTurn() - delayStartTurn >= static_cast<double>(delayMaxStack) - EPSILON) propTurnOn();
+            }
+        }
+        else
+        {
+            reserveDelayInit.insert(this);
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
+            }
+        }
+    }
+    else if (iCode == itemRefCode::powerBankR || iCode == itemRefCode::powerBankL) //파워뱅크 충전의 경우 부하에 미달해도 작동
+    {
+        ItemData& loadItem = leadItem;
+        loadItem.powerStorage += getInletCharge();
+
+        constexpr double CHARGE_EPSILON = 0.5;
+        if (loadItem.powerStorage >= loadItem.powerStorageMax - CHARGE_EPSILON)
+        {
+            loadItem.powerStorage = loadItem.powerStorageMax;
+        }
+    }
+    else if (iCode == itemRefCode::chargingPort)
+    {
+        //여기에 충전 관련 로직 넣을 것
+    }
+    else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
+    {
+        if (getTotalChargeFlux() >= static_cast<double>(leadItem.gndUsePower))
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
+            {
+                propTurnOn();
+            }
+        }
+        else
+        {
+            if (leadItem.checkFlag(itemFlag::PROP_POWER_ON))
+            {
+                propTurnOff();
             }
         }
     }

@@ -571,7 +571,7 @@ export enum class itemFlag
     CABLE_Z_ASCEND, //위층의 현재 타일과 연결된 케이블
     CABLE_Z_DESCEND, //아래층의 현재 타일과 연결된 케이블
 
-    LOGIC_GATE, //BFS에 포함되기만 해도 loadSet에 포함되는 플래그(2개 이상의 경로 가짐)
+    FORCE_LOAD, //BFS에 포함되기만 해도 loadSet에 포함되는 플래그(2개 이상의 경로 가짐)
 
     CROSSED_CABLE,
 };
@@ -1355,6 +1355,7 @@ export namespace itemRefCode
     constexpr int diodeL = 503;
     constexpr int diodeD = 504;
 
+    constexpr int chargingPort = 159;
 
 };
 

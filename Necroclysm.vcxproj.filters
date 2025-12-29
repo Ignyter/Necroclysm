@@ -156,9 +156,6 @@
     <ClCompile Include="code\log.ixx">
       <Filter>소스 파일\05_Class\06_Static</Filter>
     </ClCompile>
-    <ClCompile Include="code\camera.ixx">
-      <Filter>소스 파일\05_Class\06_Static</Filter>
-    </ClCompile>
     <ClCompile Include="code\Sticker.ixx">
       <Filter>소스 파일\05_Class\05_Etc</Filter>
     </ClCompile>
