@@ -1357,6 +1357,9 @@ export namespace itemRefCode
 
     constexpr int chargingPort = 159;
 
+    constexpr int battery = 42;
+    constexpr int batteryPack = 43;
+
 };
 
 export namespace entityRefCode

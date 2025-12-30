@@ -102,6 +102,12 @@ export void drawItemRect(cursorFlag inputCursor, int x, int y, ItemData& inputIt
 		}
 	}
 
+	if (inputItem.itemCode == itemRefCode::battery || inputItem.itemCode == itemRefCode::batteryPack)
+	{
+		mainName += L" (" + decimalCutter(100.0*(inputItem.powerStorage / static_cast<double>(inputItem.powerStorageMax)), 0) + L"%)";
+	}
+
+
 	const int widthLimit = 188;
 	ItemPocket* pocketPtr = inputItem.pocketPtr.get();
 

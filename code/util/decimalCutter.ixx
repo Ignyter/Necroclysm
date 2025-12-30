@@ -6,38 +6,26 @@ import std;
 //@return std::wstring
 export std::wstring decimalCutter(float val, int place)
 {
-    std::wstring targetStr = std::to_wstring(val);
-    bool countStart = false;
-    int endPoint = 0;
-    for (int i = 0; i < targetStr.size(); i++)
+    if (place <= 0)
     {
-        if (countStart == true)
-        {
-            place--;
-            if (place == 0)
-            {
-                endPoint = i;
-                break;
-            }
-        }
-        if (targetStr[i] == 46)
-        {
-            countStart = true;
-        }
+        return std::to_wstring(static_cast<int>(std::round(val)));
     }
 
-    std::wstring result = targetStr.substr(0, endPoint + 1);
+    float multiplier = std::pow(10.0f, place);
+    float rounded = std::round(val * multiplier) / multiplier;
 
-    if (result.find(L'.') != std::wstring::npos)
+    std::wostringstream oss;
+    oss << std::fixed << std::setprecision(place) << rounded;
+    std::wstring result = oss.str();
+
+    // 뒤의 불필요한 0 제거
+    while (!result.empty() && result.back() == L'0')
     {
-        while (!result.empty() && result.back() == L'0')
-        {
-            result.pop_back();
-        }
-        if (!result.empty() && result.back() == L'.')
-        {
-            result.pop_back();
-        }
+        result.pop_back();
+    }
+    if (!result.empty() && result.back() == L'.')
+    {
+        result.pop_back();
     }
 
     return result;

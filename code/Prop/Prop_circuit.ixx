@@ -165,6 +165,25 @@ void Prop::updateCircuitNetwork()
                 }
 
             }
+            if (currentProp->leadItem.itemCode == itemRefCode::chargingPort)//차징포트일 경우...
+            {
+                currentProp->leadItem.gndUsePower = 0;
+                ItemStack* hereStack = TileItemStack(current.x, current.y, current.z);  // ← 수정
+                if (hereStack != nullptr)
+                {
+                    std::vector<ItemData>& hereItems = hereStack->getPocket()->itemInfo;  // ← 수정 (중복 호출 제거)
+                    for (ItemData& item : hereItems)
+                    {
+                        if (item.itemCode == itemRefCode::battery || item.itemCode == itemRefCode::batteryPack)
+                        {
+                            if (item.powerStorage < item.powerStorageMax)
+                            {
+                                currentProp->leadItem.gndUsePower += item.powerStorageMax - std::floor(item.powerStorage);
+                            }
+                        }
+                    }
+                }
+            }
 
             //현재 프롭이 소비전력이 있을 경우 loadSet에 추가
             //뒤의 isConnect 6방향 체크에 지향성 부하 loadSet 추가 메커니즘이 있음(주의할 것)
@@ -1224,8 +1243,49 @@ void Prop::loadAct()
     }
     else if (iCode == itemRefCode::chargingPort)
     {
-        //여기에 충전 관련 로직 넣을 것
-    }
+        ItemStack* hereStack = TileItemStack(getGridX(), getGridY(), getGridZ());
+        if (hereStack != nullptr)
+        {
+            std::vector<ItemData>& items = hereStack->getPocket()->itemInfo;
+            double inletCharge = getInletCharge();
+            if (inletCharge > 0)
+            {
+                // 충전 가능한 아이템 인덱스 수집
+                std::vector<int> chargeableIndices;
+                for (int i = 0; i < items.size(); i++)
+                {
+                    if (items[i].itemCode == itemRefCode::battery || items[i].itemCode == itemRefCode::batteryPack)
+                    {
+                        if (items[i].powerStorage < items[i].powerStorageMax)
+                        {
+                            chargeableIndices.push_back(i);
+                        }
+                    }
+                }
+
+                // 균등 분배
+                if (chargeableIndices.size() > 0)
+                {
+                    double chargePerItem = inletCharge / chargeableIndices.size();
+
+                    for (int idx : chargeableIndices)
+                    {
+                        ItemData& item = items[idx];
+                        double remaining = item.powerStorageMax - item.powerStorage;
+                        double actualCharge = std::min(chargePerItem, remaining);
+
+                        item.powerStorage += actualCharge;
+
+                        constexpr double CHARGE_EPSILON = 0.5;
+                        if (item.powerStorage >= item.powerStorageMax - CHARGE_EPSILON)
+                        {
+                            item.powerStorage = item.powerStorageMax;
+                        }
+                    }
+                }
+            }
+        }
+        }
     else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
     {
         if (getTotalChargeFlux() >= static_cast<double>(leadItem.gndUsePower))
