@@ -128,7 +128,15 @@ void Equip::clickUpGUI()
 				case act::propInstall:
 				{
 					CORO(executePropInstall());
+					break;
 				}
+				case act::insertBattery:
+					CORO(actFunc::insertBattery(actEnv::Equip, equipPtr, equipCursor));
+					break;
+				case act::removeBattery:
+					actFunc::removeBattery(equipPtr, equipCursor);
+					updateBarAct();
+					return;
 				}
 
 

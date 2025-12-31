@@ -624,9 +624,85 @@ export namespace actFunc
 
 
 	//배터리 장착 : 전자기기에 사용, 자신에게 배터리를 추가함
-	export Corouter insertBattery(actEnv envType, ItemPocket* reloadItemPocket, int reloadItemCursor)
+	export Corouter insertBattery(actEnv envType, ItemPocket* targetItemPocket, int targetItemCursor)
 	{
 		prt(L"insertBattery가 실행되었다.\n");
+
+		std::vector<std::wstring> batteryList;
+		ItemPocket* equipPtr = PlayerPtr->getEquipPtr();
+		std::vector<ItemPocket*> targetSearchPtr;
+
+		//탐사할 타일 추가 (장비, 주변타일 9칸)
+		{
+			//장비타일
+			targetSearchPtr.push_back(equipPtr);
+			//바닥타일(주변9타일)
+			for (int dir = -1; dir < 8; dir++)
+			{
+				int dx = 0, dy = 0;
+				dir2Coord(dir, dx, dy);
+
+				ItemStack* stack = TileItemStack(PlayerX() + dx, PlayerY() + dy, PlayerZ());
+				if (stack != nullptr)
+				{
+					ItemPocket* lootPtr = stack->getPocket();
+					targetSearchPtr.push_back(lootPtr);
+				}
+			}
+		}
+
+		//주변에서 battery 또는 batteryPack 찾기
+		for (int j = 0; j < targetSearchPtr.size(); j++)
+		{
+			for (int i = 0; i < targetSearchPtr[j]->itemInfo.size(); i++)
+			{
+				int itemCode = targetSearchPtr[j]->itemInfo[i].itemCode;
+				if (itemCode == itemRefCode::battery || itemCode == itemRefCode::batteryPack)
+				{
+					batteryList.push_back(targetSearchPtr[j]->itemInfo[i].name);
+				}
+			}
+		}
+
+		if (batteryList.size() == 0)
+		{
+			updateLog(sysStr[344]);//주변에 배터리가 없다.
+			co_return;
+		}
+
+		////////////////////////////////////////////////////////////////////
+
+		new Lst(sysStr[342], sysStr[345], batteryList);//배터리 장착, 장착할 배터리를 선택해주세요.
+		co_await std::suspend_always();
+
+		////////////////////////////////////////////////////////////////////
+		if (coAnswer.empty() == false)
+		{
+			int counter = 0;
+			for (int j = 0; j < targetSearchPtr.size(); j++)
+			{
+				for (int i = 0; i < targetSearchPtr[j]->itemInfo.size(); i++)
+				{
+					int itemCode = targetSearchPtr[j]->itemInfo[i].itemCode;
+					if (itemCode == itemRefCode::battery || itemCode == itemRefCode::batteryPack)
+					{
+						if (counter == wtoi(coAnswer.c_str()))
+						{
+							//배터리를 전자기기에 장착
+							targetSearchPtr[j]->transferItem
+							(
+								targetItemPocket->itemInfo[targetItemCursor].pocketPtr.get(),
+								i,
+								1
+							);
+							updateLog(sysStr[346]);//배터리를 장착했다.
+							co_return;
+						}
+						counter++;
+					}
+				}
+			}
+		}
 	}
 
 	//배터리 분리 : 전자기기 내부에 들어있는 배터리를 분리한다
@@ -634,8 +710,14 @@ export namespace actFunc
 	{
 		int targetLootCursor = unloadItemCursor;
 		ItemPocket* targetPocket = unloadItemPocket->itemInfo[targetLootCursor].pocketPtr.get();
+		if (targetPocket->itemInfo.size() == 0)
+		{
+			updateLog(sysStr[348]);//분리할 배터리가 없다.
+			return;
+		}
 		std::unique_ptr<ItemPocket> drop = std::make_unique<ItemPocket>(storageType::null);
 		for (int i = 0; i < targetPocket->itemInfo.size(); i++) { targetPocket->transferItem(drop.get(), i, targetPocket->itemInfo[i].number); }
 		PlayerPtr->drop(drop.get());
+		updateLog(sysStr[347]);//배터리를 분리했다.
 	}
 };

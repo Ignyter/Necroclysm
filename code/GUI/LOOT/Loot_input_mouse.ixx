@@ -179,6 +179,13 @@ void Loot::clickUpGUI()
 					actFunc::spillPocket(lootPocket->itemInfo[lootCursor]);
 					updateBarAct();
 					return;
+				case act::insertBattery:
+					CORO(actFunc::insertBattery(actEnv::Loot, lootPocket, lootCursor));
+					break;
+				case act::removeBattery:
+					actFunc::removeBattery(lootPocket, lootCursor);
+					updateBarAct();
+					return;
 				}
 			}
 		}
