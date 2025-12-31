@@ -827,6 +827,7 @@ void drawItems()
         int tgtY = elem.y;
 
         ItemStack* address = TileItemStack(tgtX, tgtY, pZ);
+        if (address == nullptr) continue; //삭제된 ItemStack은 건너뜀
         std::vector<ItemData>& pocketInfo = address->getPocket()->itemInfo;
         if (pocketInfo.size() == 0) continue; //빈 포켓은 그리지 않음
         setZoom(zoomScale);
