@@ -630,12 +630,12 @@ export namespace actFunc
 
 		std::vector<std::wstring> batteryList;
 		ItemPocket* equipPtr = PlayerPtr->getEquipPtr();
-		std::vector<ItemPocket*> targetSearchPtr;
+		std::vector<std::pair<ItemPocket*, ItemStack*>> targetSearchPtr; //ItemPocket과 소유 ItemStack(없으면 nullptr)
 
 		//탐사할 타일 추가 (장비, 주변타일 9칸)
 		{
-			//장비타일
-			targetSearchPtr.push_back(equipPtr);
+			//장비타일 (ItemStack 없음)
+			targetSearchPtr.push_back({ equipPtr, nullptr });
 			//바닥타일(주변9타일)
 			for (int dir = -1; dir < 8; dir++)
 			{
@@ -646,7 +646,7 @@ export namespace actFunc
 				if (stack != nullptr)
 				{
 					ItemPocket* lootPtr = stack->getPocket();
-					targetSearchPtr.push_back(lootPtr);
+					targetSearchPtr.push_back({ lootPtr, stack });
 				}
 			}
 		}
@@ -654,12 +654,12 @@ export namespace actFunc
 		//주변에서 battery 또는 batteryPack 찾기
 		for (int j = 0; j < targetSearchPtr.size(); j++)
 		{
-			for (int i = 0; i < targetSearchPtr[j]->itemInfo.size(); i++)
+			for (int i = 0; i < targetSearchPtr[j].first->itemInfo.size(); i++)
 			{
-				int itemCode = targetSearchPtr[j]->itemInfo[i].itemCode;
+				int itemCode = targetSearchPtr[j].first->itemInfo[i].itemCode;
 				if (itemCode == itemRefCode::battery || itemCode == itemRefCode::batteryPack)
 				{
-					batteryList.push_back(targetSearchPtr[j]->itemInfo[i].name);
+					batteryList.push_back(targetSearchPtr[j].first->itemInfo[i].name);
 				}
 			}
 		}
@@ -681,20 +681,25 @@ export namespace actFunc
 			int counter = 0;
 			for (int j = 0; j < targetSearchPtr.size(); j++)
 			{
-				for (int i = 0; i < targetSearchPtr[j]->itemInfo.size(); i++)
+				for (int i = 0; i < targetSearchPtr[j].first->itemInfo.size(); i++)
 				{
-					int itemCode = targetSearchPtr[j]->itemInfo[i].itemCode;
+					int itemCode = targetSearchPtr[j].first->itemInfo[i].itemCode;
 					if (itemCode == itemRefCode::battery || itemCode == itemRefCode::batteryPack)
 					{
 						if (counter == wtoi(coAnswer.c_str()))
 						{
 							//배터리를 전자기기에 장착
-							targetSearchPtr[j]->transferItem
+							targetSearchPtr[j].first->transferItem
 							(
 								targetItemPocket->itemInfo[targetItemCursor].pocketPtr.get(),
 								i,
 								1
 							);
+							//바닥 타일의 ItemStack이면 빈 스택 체크
+							if (targetSearchPtr[j].second != nullptr)
+							{
+								targetSearchPtr[j].second->checkEmpty();
+							}
 							updateLog(sysStr[346]);//배터리를 장착했다.
 							co_return;
 						}
