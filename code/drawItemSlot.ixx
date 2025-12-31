@@ -106,6 +106,18 @@ export void drawItemRect(cursorFlag inputCursor, int x, int y, ItemData& inputIt
 	{
 		mainName += L" (" + decimalCutter(100.0*(inputItem.powerStorage / static_cast<double>(inputItem.powerStorageMax)), 0) + L"%)";
 	}
+	else if (inputItem.pocketPtr != nullptr)
+	{
+		if (inputItem.pocketPtr->itemInfo.size() == 1)
+		{
+			ItemData& batteryData = inputItem.pocketPtr->itemInfo[0];
+			if (batteryData.itemCode == itemRefCode::battery
+				|| batteryData.itemCode == itemRefCode::batteryPack)
+			{
+				mainName += L" (" + decimalCutter(100.0 * (batteryData.powerStorage / static_cast<double>(batteryData.powerStorageMax)), 0) + L"%)";
+			}
+		}
+	}
 
 
 	const int widthLimit = 188;

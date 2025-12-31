@@ -695,11 +695,6 @@ export namespace actFunc
 								i,
 								1
 							);
-							//바닥 타일의 ItemStack이면 빈 스택 체크
-							if (targetSearchPtr[j].second != nullptr)
-							{
-								targetSearchPtr[j].second->checkEmpty();
-							}
 							updateLog(sysStr[346]);//배터리를 장착했다.
 							co_return;
 						}
