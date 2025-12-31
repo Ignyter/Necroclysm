@@ -57,7 +57,7 @@ void ItemStack::checkEmpty()
 {
 	if (storage->itemInfo.size() == 0)
 	{
-		delete this;
+		World::ins()->getTile(getGridX(), getGridY(), getGridZ()).ItemStackPtr.reset();
 	}
 }
 void ItemStack::pullStackLights()
