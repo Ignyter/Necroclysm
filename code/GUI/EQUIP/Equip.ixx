@@ -295,10 +295,16 @@ public:
 			if (targetItem.checkFlag(itemFlag::TOGGLE_ON)) barAct.push_back(act::toggleOff);
 			else if (targetItem.checkFlag(itemFlag::TOGGLE_OFF)) barAct.push_back(act::toggleOn);
 
-			//쏟기 추가
+			//설치 추가
 			if (targetItem.propInstallCode != 0)
 			{
 				barAct.push_back(act::propInstall);
+			}
+
+			if (targetItem.checkFlag(itemFlag::POWERED_BY_BATTERY))
+			{
+				if (targetItem.pocketPtr->itemInfo.size() >= 1) barAct.push_back(act::removeBattery);
+				else barAct.push_back(act::insertBattery);
 			}
 
 			

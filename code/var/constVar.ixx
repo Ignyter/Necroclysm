@@ -260,6 +260,9 @@ export enum class act
     connectMinusZ, //아래층의 타일과 연결
 
     toggleCrossCable,
+    
+    insertBattery, //전자기기 배터리 장착
+    removeBattery, //전자기기 배터리 탈착
 };
 
 export namespace humanCustom
@@ -574,6 +577,8 @@ export enum class itemFlag
     FORCE_LOAD, //BFS에 포함되기만 해도 loadSet에 포함되는 플래그(2개 이상의 경로 가짐)
 
     CROSSED_CABLE,
+
+    POWERED_BY_BATTERY, //광부헬멧같이 내부에 장착된 배터리로 동작하는 전자기기들
 };
 
 export enum class walkFlag

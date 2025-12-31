@@ -529,6 +529,7 @@ export int readItemDex(const wchar_t* file)
                             { L"CABLE_Z_DESCEND", itemFlag::CABLE_Z_DESCEND },
                             
                             { L"FORCE_LOAD", itemFlag::FORCE_LOAD },
+                            { L"POWERED_BY_BATTERY", itemFlag::POWERED_BY_BATTERY },
                         };
 
                         size_t pos = 0;

@@ -973,26 +973,26 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::menu) setBtnLayout(sysStr[9], 13);
 		else if (barAct[i] == act::loot) setBtnLayout(sysStr[10], 0);
 		else if (barAct[i] == act::pick) setBtnLayout(sysStr[11], 17);
-		else if (barAct[i] == act::wield) setBtnLayout(sysStr[12], 15);
-		else if (barAct[i] == act::equip) setBtnLayout(sysStr[13], 16);
-		else if (barAct[i] == act::eat) setBtnLayout(sysStr[30], 25);
+		else if (barAct[i] == act::wield) setBtnLayout80(sysStr[12], 12);
+		else if (barAct[i] == act::equip) setBtnLayout80(sysStr[13], 19);
+		else if (barAct[i] == act::eat) setBtnLayout80(sysStr[30], 23);
 		else if (barAct[i] == act::pickSelect) setBtnLayout(sysStr[25], 26);
 		else if (barAct[i] == act::selectAll) setBtnLayout(sysStr[26], 27);
 		else if (barAct[i] == act::searching) setBtnLayout(sysStr[27], 28);
 		else if (barAct[i] == act::select) setBtnLayout(sysStr[29], 30);
 		else if (barAct[i] == act::droping) setBtnLayout(sysStr[52], 18);
-		else if (barAct[i] == act::throwing) setBtnLayout(sysStr[53], 19);
+		else if (barAct[i] == act::throwing) setBtnLayout80(sysStr[53], 27);
 		else if (barAct[i] == act::construct) setBtnLayout(sysStr[73], 20);
 		else if (barAct[i] == act::open) setBtnLayout(sysStr[88], 38);
 		else if (barAct[i] == act::test) setBtnLayout(sysStr[92], 60);
 		else if (barAct[i] == act::insert) setBtnLayout(sysStr[11], 17);
-		else if (barAct[i] == act::reload) setBtnLayout(sysStr[100], 40);
-		else if (barAct[i] == act::reloadBulletToMagazine) setBtnLayout(sysStr[113], 41);
-		else if (barAct[i] == act::unloadBulletFromMagazine) setBtnLayout(sysStr[114], 44);
-		else if (barAct[i] == act::reloadMagazine) setBtnLayout(sysStr[115], 40);
-		else if (barAct[i] == act::unloadMagazine) setBtnLayout(sysStr[116], 43);
-		else if (barAct[i] == act::reloadBulletToGun) setBtnLayout(sysStr[113], 45);
-		else if (barAct[i] == act::unloadBulletFromGun) setBtnLayout(sysStr[114], 46);
+		else if (barAct[i] == act::reload) setBtnLayout80(sysStr[100], 30);
+		else if (barAct[i] == act::reloadBulletToMagazine) setBtnLayout80(sysStr[113], 32);
+		else if (barAct[i] == act::unloadBulletFromMagazine) setBtnLayout80(sysStr[114], 33);
+		else if (barAct[i] == act::reloadMagazine) setBtnLayout80(sysStr[115], 30);
+		else if (barAct[i] == act::unloadMagazine) setBtnLayout80(sysStr[116], 31);
+		else if (barAct[i] == act::reloadBulletToGun) setBtnLayout80(sysStr[113], 28);
+		else if (barAct[i] == act::unloadBulletFromGun) setBtnLayout80(sysStr[114], 29);
 		else if (barAct[i] == act::turnLeft) setBtnLayout(sysStr[141], 0);
 		else if (barAct[i] == act::turnRight) setBtnLayout(sysStr[143], 0);
 		else if (barAct[i] == act::startEngine) setBtnLayout(sysStr[144], 0);
@@ -1000,7 +1000,7 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::shiftGear) setBtnLayout(sysStr[146], 0);
 		else if (barAct[i] == act::accel) setBtnLayout(sysStr[147], 0);
 		else if (barAct[i] == act::brake) setBtnLayout(sysStr[148], 0);
-		else if (barAct[i] == act::god) setBtnLayout(sysStr[149], 61);
+		else if (barAct[i] == act::god) setBtnLayout80(sysStr[149], 25);
 		else if (barAct[i] == act::map) setBtnLayout(sysStr[150], 73);
 		else if (barAct[i] == act::collectiveLever) setBtnLayout(sysStr[151], 0);
 		else if (barAct[i] == act::cyclicLever) setBtnLayout(sysStr[152], 0);
@@ -1015,7 +1015,7 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::settings) setBtnLayout(sysStr[193], 155);
 		else if (barAct[i] == act::sleep) setBtnLayout(sysStr[211], 172);
 		else if (barAct[i] == act::saveAndQuit) setBtnLayout(sysStr[194], 156);
-		else if (barAct[i] == act::propInstall) setBtnLayout(sysStr[328], 177);
+		else if (barAct[i] == act::propInstall) setBtnLayout80(sysStr[328], 26);
 		else if (barAct[i] == act::skillActive)
 		{
 			errorBox(targetSkill == nullptr, L"HUD의 targetSkill이 nullptr이다.\n");
@@ -1046,15 +1046,17 @@ void HUD::drawBarAct()
 				setBtnLayout(sysStr[161], 147);
 			}
 		}
-		else if (barAct[i] == act::toggleOff) setBtnLayout(sysStr[196], 162);
-		else if (barAct[i] == act::toggleOn) setBtnLayout(sysStr[196], 163);
+		else if (barAct[i] == act::toggleOff) setBtnLayout80(sysStr[196], 37);
+		else if (barAct[i] == act::toggleOn) setBtnLayout80(sysStr[196], 38);
 		else if (barAct[i] == act::headlight)
 		{
 			if (ctrlVeh->headlightOn == false) setBtnLayout(sysStr[205], 165);
 			else setBtnLayout(sysStr[205], 164);
 		}
 		else if (barAct[i] == act::drink) setBtnLayout(sysStr[210], 37);
-		else if (barAct[i] == act::dump ) setBtnLayout(sysStr[296], 174);
+		else if (barAct[i] == act::dump) setBtnLayout(sysStr[296], 174);
+		else if (barAct[i] == act::insertBattery) setBtnLayout80(sysStr[342], 35);
+		else if (barAct[i] == act::removeBattery) setBtnLayout80(sysStr[343], 36);
 		else setBtnLayout(L" ", 0);
 
 		//48*48 심볼 아이콘 그리기
@@ -1075,7 +1077,21 @@ void HUD::drawBarAct()
 
 		setFont(fontType::mainFont);
 		setFontSize(16);
+		constexpr int MAX_TAB_TEXT_WIDTH = 100;
+		if (queryTextWidth(actName) > MAX_TAB_TEXT_WIDTH)
+		{
+			setFontSize(15);
+			if (queryTextWidth(actName) > MAX_TAB_TEXT_WIDTH)
+			{
+				setFontSize(14);
+				if (queryTextWidth(actName) > MAX_TAB_TEXT_WIDTH)
+				{
+					setFontSize(13);
+				}
+			}
+		}
 		drawTextCenter(actName, barButton[i].x + (barButton[i].w / 2), barButton[i].y + barButton[i].h - 14);
+
 
 		if (checkCursor(&barButton[i]) || barActCursor == i)
 		{

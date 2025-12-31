@@ -623,10 +623,16 @@ public:
 				}
 			}
 
-			//쏟기 추가
+			//설치 추가
 			if (targetItem.pocketMaxVolume > 0 && targetItem.pocketPtr.get()->itemInfo.size() > 0)
 			{
 				barAct.push_back(act::dump);
+			}
+
+			if (targetItem.checkFlag(itemFlag::POWERED_BY_BATTERY))
+			{
+				if (targetItem.pocketPtr->itemInfo.size() >= 1) barAct.push_back(act::removeBattery);
+				else barAct.push_back(act::insertBattery);
 			}
 		}
 	}
@@ -718,8 +724,6 @@ public:
 			lootPocket->itemInfo[index].lootSelect = inputSelectNumber;
 		}
 	}
-
-
 
 	Corouter executeInsert()//삽탄 : 총알에 사용, 이 탄환을 넣을 수 있는 탄창 리스트를 표시하고 거기에 넣음
 	{

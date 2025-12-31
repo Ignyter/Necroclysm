@@ -621,4 +621,21 @@ export namespace actFunc
 		PlayerPtr->pullEquipLights();
 		PlayerPtr->updateStatus();
 	}
+
+
+	//배터리 장착 : 전자기기에 사용, 자신에게 배터리를 추가함
+	export Corouter insertBattery(actEnv envType, ItemPocket* reloadItemPocket, int reloadItemCursor)
+	{
+		prt(L"insertBattery가 실행되었다.\n");
+	}
+
+	//배터리 분리 : 전자기기 내부에 들어있는 배터리를 분리한다
+	export void removeBattery(ItemPocket* unloadItemPocket, int unloadItemCursor)
+	{
+		int targetLootCursor = unloadItemCursor;
+		ItemPocket* targetPocket = unloadItemPocket->itemInfo[targetLootCursor].pocketPtr.get();
+		std::unique_ptr<ItemPocket> drop = std::make_unique<ItemPocket>(storageType::null);
+		for (int i = 0; i < targetPocket->itemInfo.size(); i++) { targetPocket->transferItem(drop.get(), i, targetPocket->itemInfo[i].number); }
+		PlayerPtr->drop(drop.get());
+	}
 };
