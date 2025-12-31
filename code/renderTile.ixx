@@ -828,6 +828,7 @@ void drawItems()
 
         ItemStack* address = TileItemStack(tgtX, tgtY, pZ);
         std::vector<ItemData>& pocketInfo = address->getPocket()->itemInfo;
+        if (pocketInfo.size() == 0) continue; //빈 포켓은 그리지 않음
         setZoom(zoomScale);
         drawSpriteCenter
         (
