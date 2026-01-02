@@ -1364,6 +1364,8 @@ export namespace itemRefCode
 
     constexpr int battery = 42;
     constexpr int batteryPack = 43;
+    
+    constexpr int minerHelmet = 393;
 
 };
 

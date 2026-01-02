@@ -88,6 +88,8 @@ public:
 
 	//상단 총알의 데이터를 삭제
 	void popTopBullet();
+
+	void updateItems();
 };
 
 inline std::unique_ptr<ItemPocket> ItemPocket::unlockRecipes = std::make_unique<ItemPocket>(storageType::recipe);

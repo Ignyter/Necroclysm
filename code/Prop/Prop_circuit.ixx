@@ -167,7 +167,7 @@ void Prop::updateCircuitNetwork()
             }
             if (currentProp->leadItem.itemCode == itemRefCode::chargingPort)//차징포트일 경우...
             {
-                currentProp->leadItem.gndUsePower = 0;
+                currentProp->leadItem.gndUsePower = 1;
                 ItemStack* hereStack = TileItemStack(current.x, current.y, current.z);  // ← 수정
                 if (hereStack != nullptr)
                 {

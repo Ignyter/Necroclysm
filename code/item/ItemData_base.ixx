@@ -162,8 +162,9 @@ export struct ItemDataBase
     double electricResistance = 0; //전자기기 저항 (Ω)
 
     int electricMaxPower = 0; //전력원 순간 출력 (kJ/turn)
-    int gndUsePower = 0; //전자기기 소비 전력 (kJ/turn)
+    int gndUsePower = 0; //전자기기 소비 전력 (kJ/turn), Prop에서도 작동하지만 개별 아이템(광부헬멧 등)에도 이 값이 참조됨
 
+    //지향성 전자기기 소비 전력 (kJ/turn)
     int gndUsePowerRight = 0;
     int gndUsePowerUp = 0;
     int gndUsePowerLeft = 0;

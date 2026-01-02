@@ -292,35 +292,38 @@ export namespace actFunc
 
 	export void toggle(ItemData& inputItem)
 	{
-		if (inputItem.checkFlag(itemFlag::TOGGLE_OFF))
+		if (inputItem.itemCode == itemRefCode::minerHelmet)
 		{
-			if (inputItem.pocketPtr != nullptr && inputItem.pocketPtr->itemInfo.size()==1)
+			if (inputItem.checkFlag(itemFlag::TOGGLE_OFF))
 			{
-				if (inputItem.pocketPtr->itemInfo[0].powerStorage != 0.0)
+				if (inputItem.pocketPtr != nullptr && inputItem.pocketPtr->itemInfo.size() == 1)
 				{
-					inputItem.eraseFlag(itemFlag::TOGGLE_OFF);
-					inputItem.addFlag(itemFlag::TOGGLE_ON);
+					if (inputItem.pocketPtr->itemInfo[0].powerStorage != 0.0)
+					{
+						inputItem.eraseFlag(itemFlag::TOGGLE_OFF);
+						inputItem.addFlag(itemFlag::TOGGLE_ON);
 
-					inputItem.lightPtr = std::make_unique<Light>(PlayerX(), PlayerY(), PlayerZ(), 8, 110, SDL_Color{ 150, 150, 250 });
-					inputItem.itemSprIndex += 1;
-					PlayerPtr->updateVision();
-					updateLog(L"You turn on the headlamp.");
+						inputItem.lightPtr = std::make_unique<Light>(PlayerX(), PlayerY(), PlayerZ(), 8, 110, SDL_Color{ 150, 150, 250 });
+						inputItem.itemSprIndex += 1;
+						PlayerPtr->updateVision();
+						updateLog(L"The headlamp comes on.");
+					}
+					else updateLog(L"The inserted battery is depleted.");
 				}
-				else updateLog(L"The inserted battery is depleted.");
+				else updateLog(L"No battery inserted in the headlamp.");
 			}
-			else updateLog(L"No battery inserted in the headlamp.");
-		}
-		else if (inputItem.checkFlag(itemFlag::TOGGLE_ON))
-		{
-			inputItem.eraseFlag(itemFlag::TOGGLE_ON);
-			inputItem.addFlag(itemFlag::TOGGLE_OFF);
+			else if (inputItem.checkFlag(itemFlag::TOGGLE_ON))
+			{
+				inputItem.eraseFlag(itemFlag::TOGGLE_ON);
+				inputItem.addFlag(itemFlag::TOGGLE_OFF);
 
-			inputItem.lightPtr.reset();
-			inputItem.itemSprIndex -= 1;
+				inputItem.lightPtr.reset();
+				inputItem.itemSprIndex -= 1;
 
-			PlayerPtr->updateVision();
-			updateLog(L"You turn off the headlamp.");
+				PlayerPtr->updateVision();
+				updateLog(L"The headlamp goes off.");
 
+			}
 		}
 	}
 

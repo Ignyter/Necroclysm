@@ -1739,7 +1739,7 @@ void HUD::drawCircuitInfo()
 				firstNumber = decimalCutter(tgtProp->getInletCharge() / 1000.0, 3);
 
 				secondString = L"Need:";
-				secondNumber = std::to_wstring(tgtProp->leadItem.gndUsePower);
+				secondNumber = decimalCutter(tgtProp->leadItem.gndUsePower / 1000.0, 3);
 
 				if (tgtProp->getInletCharge() <= tgtProp->leadItem.gndUsePower) firstColStr = col2Str(lowCol::green);
 				else firstColStr = col2Str(lowCol::red);

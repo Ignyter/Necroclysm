@@ -52,7 +52,7 @@ extern "C"
 static int minutesPassed = 0;
 static bool firstPlayerInput = true, firstPlayerAnime = true, firstMonsterAI = true, firstMonsterAnime = true;
 
-__int64 playerInputTurn(), animationTurn(), entityAITurn(), propTurn();
+__int64 playerInputTurn(), animationTurn(), entityAITurn(), propTurn(), itemTurn();
 
 export __int64 turnCycleLoop()
 {
@@ -600,6 +600,7 @@ __int64 entityAITurn()
 
 	for (int i = 0; i < minutesPassed; i++)
 	{
+		itemTurn();
 		propTurn();
 	}
 	minutesPassed = 0;
@@ -707,6 +708,30 @@ __int64 propTurn()
 	//에너지 소모 확정 페이즈
 	//윗 단계에서 계산된 에너지만큼 발전기에서 소모됨
 
+
+	return 0;
+}
+
+//턴의 시간 흐름에 따라 변하는 아이템들(ex : 광부헬멧의 배터리 잔량에 따른 턴온오프)
+//활성화 범위 내의 stack들 + 활성화 범위 내의 Prop pocket + 활성화 범위 내의 Vehicle pocket + Player Equip
+__int64 itemTurn()
+{
+	std::vector<ItemPocket*> targetPockets;
+
+	targetPockets.push_back(PlayerPtr->getEquipPtr());
+
+	std::vector<ItemStack*>& activeStackVec = (World::ins())->getActiveStackVec();
+	for (auto stack : activeStackVec)
+	{
+		if (stack->getPocket()->itemInfo.size() > 0) targetPockets.push_back(stack->getPocket());
+	}
+	
+	///////////////////////////////////////
+
+	for (auto pocket : targetPockets)
+	{
+		pocket->updateItems();
+	}
 
 	return 0;
 }

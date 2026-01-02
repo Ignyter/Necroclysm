@@ -111,6 +111,11 @@ public:
 		activeChunk.clear();
 	}
 
+	std::vector<Chunk*>& getActiveChunk()
+	{
+		return activeChunk;
+	}
+
 	std::unordered_set<Monster*> getActiveMonsterSet()
 	{
 		std::unordered_set<Monster*> totalMonsterSet;
@@ -154,6 +159,20 @@ public:
 			}
 		}
 		return totalPropSet;
+	}
+
+	std::vector<ItemStack*>& getActiveStackVec()
+	{
+		std::vector<ItemStack*> totalStackVec;
+		for (int i = 0; i < activeChunk.size(); i++)
+		{
+			const std::vector<ItemStack*>& chunkStackVec = activeChunk[i]->getChunkStackVec();
+			for (auto stack : chunkStackVec)
+			{
+				totalStackVec.push_back(stack);
+			}
+		}
+		return totalStackVec;
 	}
 
 	//섹터 관련

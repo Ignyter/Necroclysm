@@ -15,6 +15,7 @@ private:
 	std::unordered_set<Monster*> chunkMonsterSet;
     std::unordered_set<Vehicle*> chunkVehicleSet;
 	std::unordered_set<Prop*> chunkPropSet;
+	std::unordered_set<ItemStack*> chunkStackSet;
 public:
 	Chunk(chunkFlag input)
 	{
@@ -162,6 +163,21 @@ public:
 		return propList;
     }
 
+	std::vector<ItemStack*>& getChunkStackVec()
+	{
+		std::vector<ItemStack*> stackVec;
+		for (int x = 0; x < CHUNK_SIZE_X; x++)
+		{
+			for (int y = 0; y < CHUNK_SIZE_Y; y++)
+			{
+				if (getChunkTile(x, y).ItemStackPtr != nullptr)
+				{
+					stackVec.push_back(getChunkTile(x, y).ItemStackPtr.get());
+				}
+			}
+		}
+		return stackVec;
+	}
 
 	weatherFlag getWeather() {
 		return chunkWeather;
@@ -199,5 +215,4 @@ public:
 	}
 	const std::unordered_set<Prop*>& getPropSet() const { return chunkPropSet; }
 	bool eraseProp(Prop* prop) { return chunkPropSet.erase(prop) > 0; }
-
 };

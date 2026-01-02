@@ -10,6 +10,7 @@ import constVar;
 import Coord;
 import log;
 import ItemData;
+import actFuncSet;
 
 
 ItemPocket::ItemPocket(storageType inputType) { type = inputType; }
@@ -428,6 +429,28 @@ void ItemPocket::popTopBullet()
 	else { itemInfo[0].number--; }
 };
 
+//현재 포켓의 모든 아이템 상태를 업데이트(현재는 전원 ON/OFF만 처리함)
+void ItemPocket::updateItems()
+{
+	for (ItemData& item : itemInfo)
+	{
+		if (item.checkFlag(itemFlag::TOGGLE_ON))
+		{
+			if(item.pocketPtr != nullptr 
+				&& item.pocketPtr->itemInfo.size()>0
+				&& item.pocketPtr->itemInfo[0].powerStorage >= item.gndUsePower)
+			{
+				item.pocketPtr->itemInfo[0].powerStorage -= item.gndUsePower;
+			}
+			else
+			{
+				actFunc::toggle(item);
+			}
+		}
+	}
+
+}
+
 
 //@brief 현재 이 총에 장전된 모든 총알을 벡터 형태로 반환
 ItemPocket* getBulletPocket(ItemData& inputGun)
@@ -470,6 +493,7 @@ int getBulletNumber(ItemData& inputGun)
 	}
 	else { return 0; }
 };
+
 
 
 

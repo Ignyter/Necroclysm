@@ -186,7 +186,7 @@ public:
 			ItemData& targetItem = equipPtr->itemInfo[equipCursor];
 			barAct.clear();
 			if (targetItem.pocketMaxVolume > 0) { barAct.push_back(act::open); }//가방 종류일 경우 open 추가
-			if (targetItem.pocketOnlyItem.size() > 0) { barAct.push_back(act::reload); }//전용 아이템 있을 경우 reload 추가
+			//if (targetItem.pocketOnlyItem.size() > 0) { barAct.push_back(act::reload); }//전용 아이템 있을 경우 reload 추가
 			barAct.push_back(act::droping);//droping은 항상 추가
 			barAct.push_back(act::throwing);//throwing도 항상 추가
 
