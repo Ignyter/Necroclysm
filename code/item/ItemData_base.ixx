@@ -24,7 +24,7 @@ export struct ItemDataBase
 
     std::vector<unsigned __int8> toolQuality;
     unsigned __int8 craftMinUnit = 1;
-    unsigned __int16 craftTime = 50;
+    unsigned __int16 craftTime = 1;
     std::vector<std::pair<unsigned __int16, unsigned __int32>> recipe;
     std::vector<unsigned __int8> recipeQualityNeed;
     std::vector<std::pair<unsigned __int8, unsigned __int8>> recipeProficNeed;

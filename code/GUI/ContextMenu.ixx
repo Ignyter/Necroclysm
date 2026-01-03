@@ -198,6 +198,16 @@ public:
 					else optionText = L"Cross";
 					iconIndex = 101;
 				}
+				else if (actOptions[i] == act::hideWire)
+				{
+                    optionText = L"Hide Wire";
+                    iconIndex = 101;
+				}
+				else if (actOptions[i] == act::showWire)
+				{
+					optionText = L"Show Wire";
+					iconIndex = 101;
+                }
 				else optionText = L"???";
 
 				if (checkCursor(&optionRect[i]))
@@ -646,6 +656,22 @@ public:
 				pPtr->updateSprIndex();
 			}
 			turnWait(1.0);
+		}
+		else if (inputAct == act::hideWire)
+		{
+			Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+			if (pPtr != nullptr && pPtr->leadItem.checkFlag(itemFlag::CIRCUIT))
+			{
+                actFunc::hideWire({ contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() });
+			}
+		}
+		else if (inputAct == act::showWire)
+		{
+            Prop* pPtr = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+			if (pPtr != nullptr && pPtr->leadItem.checkFlag(itemFlag::CIRCUIT))
+			{
+				actFunc::showWire({ contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ() });
+            }
 		}
 	}
 };

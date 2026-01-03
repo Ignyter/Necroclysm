@@ -12,10 +12,14 @@ import World;
 import globalTime;
 
 import drawText;
+import ContextMenu;
 
 
 void Prop::drawSelf()
 {
+    constexpr Uint8 HIDE_WIRE_ALPHA = 120;
+    constexpr int SHOW_WIRE_HOVER_TIME = 120;
+
     int tileSize = 16 * zoomScale;
     int bigShift = 16 * (leadItem.checkFlag(itemFlag::PROP_BIG));
     SDL_Rect dst;
@@ -28,6 +32,50 @@ void Prop::drawSelf()
     int drawY = dst.y + dst.h / 2 + zoomScale * getIntegerFakeY();
 
 
+    static bool showAllHideWire = false;
+    static Point2 prevHoverGrid = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
+    static int hoverTime = 0;
+    static Uint32 lastFrameTime = 0;
+
+    Uint32 currentTime = SDL_GetTicks();
+    if (currentTime != lastFrameTime)
+    {
+        lastFrameTime = currentTime;
+        Point2 currentHoverGrid = getAbsMouseGrid();
+
+        Prop* hoverProp = TileProp(currentHoverGrid.x, currentHoverGrid.y, PlayerZ());
+        bool isHoveringHiddenWire = (hoverProp != nullptr
+            && hoverProp->leadItem.checkFlag(itemFlag::CIRCUIT)
+            && hoverProp->leadItem.checkFlag(itemFlag::HIDE_WIRE));
+
+        if (!isHoveringHiddenWire)
+        {
+            hoverTime = 0;
+            showAllHideWire = false;
+        }
+        else
+        {
+            hoverTime += 1;
+            if (hoverTime > SHOW_WIRE_HOVER_TIME) showAllHideWire = true;
+        }
+
+
+        prevHoverGrid = currentHoverGrid;
+
+        if (ContextMenu::ins() != nullptr)
+        {
+            Prop* contextProp = TileProp(contextMenuTargetGrid.x, contextMenuTargetGrid.y, PlayerZ());
+            if (contextProp != nullptr && contextProp->leadItem.checkFlag(itemFlag::CIRCUIT) && contextProp->leadItem.checkFlag(itemFlag::HIDE_WIRE))
+            {
+                showAllHideWire = true;
+            }
+        }
+    }
+
+
+
+
+
     setZoom(zoomScale);
     if (leadItem.checkFlag(itemFlag::TREE) && getGridX() == PlayerX() && getGridY() - 1 == PlayerY() && getGridZ() == PlayerZ() && !leadItem.checkFlag(itemFlag::STUMP))
     {
@@ -36,6 +84,15 @@ void Prop::drawSelf()
     else
     {
         SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255); //텍스쳐 투명도 설정
+    }
+
+
+
+    if (leadItem.checkFlag(itemFlag::CIRCUIT) && leadItem.checkFlag(itemFlag::HIDE_WIRE) && leadItem.checkFlag(itemFlag::CABLE))
+    {
+        if (showAllHideWire) SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+        else return;
+
     }
 
     SDL_SetTextureBlendMode(spr::propset->getTexture(), SDL_BLENDMODE_BLEND); //블렌드모드 설정
@@ -57,6 +114,8 @@ void Prop::drawSelf()
 
     if (leadItem.checkFlag(itemFlag::CABLE_BEHIND))
     {
+
+
         Prop* rightProp = TileProp(getGridX() + 1, getGridY(), getGridZ());
         Prop* topProp = TileProp(getGridX(), getGridY() - 1, getGridZ());
         Prop* lProp = TileProp(getGridX() - 1, getGridY(), getGridZ());
@@ -91,22 +150,33 @@ void Prop::drawSelf()
             else if (isRightCable && isUpCable && isLeftCable && isDownCable) cableSprIndex = 3024;
 
 
-            drawSpriteCenter
-            (
-                spr::propset,
-                cableSprIndex,
-                drawX,
-                drawY
-            );
-
-
-            if (isChargeFlowing())
+            if (leadItem.checkFlag(itemFlag::HIDE_WIRE) && showAllHideWire == false)
             {
-                if (chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);;
-                if (chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;
-                if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);;
-                if (chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);;
             }
+            else
+            {
+                if(leadItem.checkFlag(itemFlag::HIDE_WIRE) && showAllHideWire == true) SDL_SetTextureAlphaMod(spr::propset->getTexture(), 150);
+
+                drawSpriteCenter
+                (
+                    spr::propset,
+                    cableSprIndex,
+                    drawX,
+                    drawY
+                );
+
+
+                if (isChargeFlowing())
+                {
+                    if (chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);;
+                    if (chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;
+                    if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);;
+                    if (chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);;
+                }
+
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255);
+            }
+
         }
     }
 
@@ -153,6 +223,18 @@ void Prop::drawSelf()
         {
             if (isChargeFlowing()) sprIndex += 2;
             else sprIndex += 1;
+
+        }
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire)
+            {
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+                drawSpriteCenter(spr::propset, sprIndex, drawX, drawY);
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255);
+            }
+            sprIndex += 16;
         }
     }
     else if (leadItem.itemCode == itemRefCode::tactSwitchRL || leadItem.itemCode == itemRefCode::tactSwitchUD)
@@ -162,6 +244,17 @@ void Prop::drawSelf()
             if (isChargeFlowing()) sprIndex += 2;
             else sprIndex += 1;
         }
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire)
+            {
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+                drawSpriteCenter(spr::propset, sprIndex, drawX, drawY);
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255);
+            }
+            sprIndex += 16;
+        }
     }
     else if (leadItem.itemCode == itemRefCode::pressureSwitchRL || leadItem.itemCode == itemRefCode::pressureSwitchUD)
     {
@@ -169,6 +262,17 @@ void Prop::drawSelf()
         {
             if (isChargeFlowing()) sprIndex += 2;
             else sprIndex += 1;
+        }
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire)
+            {
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+                drawSpriteCenter(spr::propset, sprIndex, drawX, drawY);
+                SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255);
+            }
+            sprIndex += 16;
         }
     }
     else if (leadItem.itemCode == itemRefCode::transistorR || leadItem.itemCode == itemRefCode::transistorU || leadItem.itemCode == itemRefCode::transistorL || leadItem.itemCode == itemRefCode::transistorD)
@@ -192,6 +296,12 @@ void Prop::drawSelf()
                 else sprIndex += 1;
             }
         }
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire) SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+            else return;
+        }
     }
     else if (leadItem.itemCode== itemRefCode::relayR || leadItem.itemCode == itemRefCode::relayU || leadItem.itemCode == itemRefCode::relayL || leadItem.itemCode == itemRefCode::relayD)
     {
@@ -214,6 +324,12 @@ void Prop::drawSelf()
                 else sprIndex += 1;
             }
         }
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire) SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+            else return;
+        }
     }
     else if (leadItem.itemCode == itemRefCode::andGateR 
         || leadItem.itemCode == itemRefCode::andGateL
@@ -228,6 +344,12 @@ void Prop::drawSelf()
         )
     {
         if (leadItem.checkFlag(itemFlag::PROP_POWER_ON)) sprIndex += 1;
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire) SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+            else return;
+        }
     }
     else if (leadItem.itemCode == itemRefCode::delayR || leadItem.itemCode == itemRefCode::delayL)
     {
@@ -235,6 +357,12 @@ void Prop::drawSelf()
         else sprIndex = 3089 + delayMaxStack;
 
         if (leadItem.itemCode == itemRefCode::delayL) sprIndex += 16;
+
+        if (leadItem.checkFlag(itemFlag::HIDE_WIRE))
+        {
+            if (showAllHideWire) SDL_SetTextureAlphaMod(spr::propset->getTexture(), HIDE_WIRE_ALPHA);
+            else return;
+        }
     }
 
 
@@ -324,13 +452,7 @@ void Prop::drawSelf()
     ///////////////////////////////////////////////////////////////////////////
     /////////////////////////////메인 그리기 함수//////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    drawSpriteCenter
-    (
-        spr::propset,
-        sprIndex,
-        drawX,
-        drawY
-    );
+    drawSpriteCenter(spr::propset,sprIndex,drawX,drawY);
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////

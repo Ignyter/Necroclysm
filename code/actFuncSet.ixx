@@ -15,6 +15,7 @@ import Lst;
 import Player;
 import Prop;
 import CoordSelect;
+import turnWait;
 
 //액트가 실행되는 환경은 3가지 경우가 가능
 // 0:기본 HUD, 1:Loot, 2:Equip 
@@ -298,7 +299,7 @@ export namespace actFunc
 			{
 				if (inputItem.pocketPtr != nullptr && inputItem.pocketPtr->itemInfo.size() == 1)
 				{
-					if (inputItem.pocketPtr->itemInfo[0].powerStorage != 0.0)
+					if (inputItem.pocketPtr->itemInfo[0].powerStorage >= inputItem.gndUsePower)
 					{
 						inputItem.eraseFlag(itemFlag::TOGGLE_OFF);
 						inputItem.addFlag(itemFlag::TOGGLE_ON);
@@ -707,6 +708,7 @@ export namespace actFunc
 								1
 							);
 							updateLog(sysStr[346]);//배터리를 장착했다.
+                            turnWait(1.0);
 							co_return;
 						}
 						counter++;
@@ -730,5 +732,51 @@ export namespace actFunc
 		for (int i = 0; i < targetPocket->itemInfo.size(); i++) { targetPocket->transferItem(drop.get(), i, targetPocket->itemInfo[i].number); }
 		PlayerPtr->drop(drop.get());
 		updateLog(sysStr[347]);//배터리를 분리했다.
+		turnWait(1.0);
 	}
+
+
+	export void setWireVisibility(Point3 tgtPoint, bool hide)
+	{
+		errorBox(TileProp(tgtPoint) == nullptr, L"actFunc::setWireVisibility: Start point is nullptr.");
+		errorBox(TileProp(tgtPoint)->leadItem.checkFlag(itemFlag::CIRCUIT) == false, L"actFunc::setWireVisibility: Start point is missing the CIRCUIT flag.");
+
+		std::queue<Point3> frontierQueue;
+		std::unordered_set<Point3, Point3::Hash> visitedSet;
+		frontierQueue.push(tgtPoint);
+		while (!frontierQueue.empty())
+		{
+			Point3 current = frontierQueue.front();
+			frontierQueue.pop();
+			if (visitedSet.find(current) != visitedSet.end()) continue;
+			visitedSet.insert(current);
+			Prop* tgtProp = TileProp(current.x, current.y, current.z);
+
+			if (hide) tgtProp->leadItem.addFlag(itemFlag::HIDE_WIRE);
+			else tgtProp->leadItem.eraseFlag(itemFlag::HIDE_WIRE);
+
+			const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::above, dir16::below };
+			for (int i = 0; i < 6; ++i)
+			{
+				int dx, dy, dz;
+				dirToXYZ(directions[i], dx, dy, dz);
+				Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
+				Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
+				if (nextProp != nullptr)
+				{
+					ItemData& nextItem = nextProp->leadItem;
+					if (nextItem.checkFlag(itemFlag::CIRCUIT))
+					{
+						if (visitedSet.find(nextCoord) == visitedSet.end())
+						{
+							frontierQueue.push(nextCoord);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	export void hideWire(Point3 tgtPoint) { setWireVisibility(tgtPoint, true); }
+	export void showWire(Point3 tgtPoint) { setWireVisibility(tgtPoint, false); }
 };

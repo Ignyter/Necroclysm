@@ -263,6 +263,9 @@ export enum class act
     
     insertBattery, //전자기기 배터리 장착
     removeBattery, //전자기기 배터리 탈착
+
+    hideWire,
+    showWire,
 };
 
 export namespace humanCustom
@@ -579,6 +582,8 @@ export enum class itemFlag
     CROSSED_CABLE,
 
     POWERED_BY_BATTERY, //광부헬멧같이 내부에 장착된 배터리로 동작하는 전자기기들
+
+    HIDE_WIRE, //전자회로의 전선을 보이지 않게 하는 플래그
 };
 
 export enum class walkFlag

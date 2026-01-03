@@ -1041,6 +1041,16 @@ public:
 			}
 		}
 
+		if (TileProp(targetGrid.x, targetGrid.y, PlayerZ()) != nullptr)
+		{
+			Prop* propPtr = TileProp(targetGrid.x, targetGrid.y, PlayerZ());
+
+			if (propPtr->leadItem.checkFlag(itemFlag::CIRCUIT))
+			{
+				if (propPtr->leadItem.checkFlag(itemFlag::HIDE_WIRE)) inputOptions.push_back(act::showWire);
+                else inputOptions.push_back(act::hideWire);
+			}
+		}
 
 
 
