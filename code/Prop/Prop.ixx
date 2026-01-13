@@ -38,6 +38,9 @@ public:
 
     std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
+    // 방향별 GND 소비량 추적 (유사직렬 연결 지원용)
+    std::unordered_map<dir16, double> gndSink = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
+
     double prevPushedCharge = 0;
 
     int delayMaxStack = 3;
@@ -71,6 +74,14 @@ public:
         chargeFlux[dir16::down] = 0;
         chargeFlux[dir16::above] = 0;
         chargeFlux[dir16::below] = 0;
+
+        // GND 소비량도 초기화
+        gndSink[dir16::right] = 0;
+        gndSink[dir16::up] = 0;
+        gndSink[dir16::left] = 0;
+        gndSink[dir16::down] = 0;
+        gndSink[dir16::above] = 0;
+        gndSink[dir16::below] = 0;
     }
 
     double getInletCharge()
@@ -98,6 +109,19 @@ public:
 
         return totalOutlet;
     }
+
+    // 전체 GND 소비량 반환
+    double getTotalGndSink()
+    {
+        return gndSink[dir16::right] + gndSink[dir16::up] + gndSink[dir16::left] +
+               gndSink[dir16::down] + gndSink[dir16::above] + gndSink[dir16::below];
+    }
+
+    // 특정 방향의 남은 GND 용량 반환
+    double getRemainingGndCapacity(dir16 dir);
+
+    // 전체 남은 GND 용량 반환 (전방향 부하용)
+    double getTotalRemainingGndCapacity();
 
     void updateCircuitNetwork();
 
