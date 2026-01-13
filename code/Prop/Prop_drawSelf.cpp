@@ -172,10 +172,10 @@ void Prop::drawSelf()
 
                 if (isChargeFlowing())
                 {
-                    if (chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);;
-                    if (chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;
-                    if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);;
-                    if (chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);;
+                    if (chargeFlux[dir16::right] > 0) drawSpriteCenter(spr::propset, 3041, drawX, drawY);; // 오른쪽 방향에서 현재 GND로 전력이 들어옴을 적색선으로 표기(전력흐름 ←)
+                    if (chargeFlux[dir16::up] > 0) drawSpriteCenter(spr::propset, 3042, drawX, drawY);;  // 위쪽 방향에서 현재 GND로 전력이 들어옴을 적색선으로 표기(전력흐름 ↓)
+                    if (chargeFlux[dir16::left] > 0) drawSpriteCenter(spr::propset, 3043, drawX, drawY);; // 왼쪽 방향에서 현재 GND로 전력이 들어옴을 적색선으로 표기(전력흐름 →)
+                    if (chargeFlux[dir16::down] > 0) drawSpriteCenter(spr::propset, 3044, drawX, drawY);; // 아래쪽 방향에서 현재 GND로 전력이 들어옴을 적색선으로 표기(전력흐름 ↑)
                 }
 
                 SDL_SetTextureAlphaMod(spr::propset->getTexture(), 255);
