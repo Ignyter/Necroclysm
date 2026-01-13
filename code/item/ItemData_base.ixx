@@ -170,5 +170,12 @@ export struct ItemDataBase
     int gndUsePowerLeft = 0;
     int gndUsePowerDown = 0;
 
+    //통과형 전력 소모 (kJ/turn) - 전력을 소모하면서 나머지는 다른 방향으로 전파
+    double gndSink = 0;           //전방향에서 들어오는 전력 소모
+    double gndSinkRight = 0;      //오른쪽에서 들어오는 전력 소모
+    double gndSinkUp = 0;         //위쪽에서 들어오는 전력 소모
+    double gndSinkLeft = 0;       //왼쪽에서 들어오는 전력 소모
+    double gndSinkDown = 0;       //아래쪽에서 들어오는 전력 소모
+
     int powerStorageMax = 0; //저장 가능한 최대 전하량(파워뱅크용)
 };

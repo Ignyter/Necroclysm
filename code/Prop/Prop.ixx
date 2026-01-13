@@ -38,6 +38,9 @@ public:
 
     std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
 
+    //통과형 sink로 빠진 전하량 추적 (방향별)
+    std::unordered_map<dir16, double> chargeFluxSink = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
+
     double prevPushedCharge = 0;
 
     int delayMaxStack = 3;
@@ -71,6 +74,30 @@ public:
         chargeFlux[dir16::down] = 0;
         chargeFlux[dir16::above] = 0;
         chargeFlux[dir16::below] = 0;
+
+        chargeFluxSink[dir16::right] = 0;
+        chargeFluxSink[dir16::up] = 0;
+        chargeFluxSink[dir16::left] = 0;
+        chargeFluxSink[dir16::down] = 0;
+        chargeFluxSink[dir16::above] = 0;
+        chargeFluxSink[dir16::below] = 0;
+    }
+
+    double getTotalSinkFlux()
+    {
+        return (chargeFluxSink[dir16::right] + chargeFluxSink[dir16::up] + chargeFluxSink[dir16::left] + chargeFluxSink[dir16::down] + chargeFluxSink[dir16::above] + chargeFluxSink[dir16::below]);
+    }
+
+    double getInletSinkCharge()
+    {
+        double totalInlet = 0;
+        if (chargeFluxSink[dir16::right] > 0) totalInlet += chargeFluxSink[dir16::right];
+        if (chargeFluxSink[dir16::up] > 0) totalInlet += chargeFluxSink[dir16::up];
+        if (chargeFluxSink[dir16::left] > 0) totalInlet += chargeFluxSink[dir16::left];
+        if (chargeFluxSink[dir16::down] > 0) totalInlet += chargeFluxSink[dir16::down];
+        if (chargeFluxSink[dir16::above] > 0) totalInlet += chargeFluxSink[dir16::above];
+        if (chargeFluxSink[dir16::below] > 0) totalInlet += chargeFluxSink[dir16::below];
+        return totalInlet;
     }
 
     double getInletCharge()
@@ -120,6 +147,10 @@ public:
     void initChargeBFS(std::queue<Point3> startPointSet);
 
     bool hasGround();
+
+    bool hasSink();
+
+    bool isSink(Point3 currentCoord, dir16 dir);
 
     void loadAct();
 };
