@@ -57,12 +57,59 @@ constexpr double EPSILON = 0.000001;
 
 /*
 * <BFS 작동 로직>
-* 1. BFS 탐색으로 연결된 모든 회로망을 탐색
-* 2. 회로망 내의 모든 전압원의 가용 전력 계산
-* 3. 회로망 내의 모든 부하의 총 부하량 계산 (지향성 부하 포함)
-* 4. 각각의 전압원이 필요한만큼 전하를 밀어냄 (저항손실을 고려해 약간 더 많이)
-* 
+*
+* 1. BFS 탐색으로 연결된 모든 회로망 탐색
+*    - 시작점: 부하 또는 전압원 (CROSS 케이블 문제로 전선에서 시작 X)
+*    - 이전 탐색 결과가 있으면 재사용 (saveFrontierQueue, saveVisitedSet)
+*
+* 2. 각 노드 방문 시 처리:
+*    - 전압원(VOLTAGE_SOURCE): voltagePropVec에 추가, 가용 전력 누적
+*      → 파워뱅크: min(electricMaxPower, powerStorage) 사용
+*    - 일반 부하(gndUsePower > 0): 총 부하량에 누적
+*    - 충전포트: 내부 배터리 잔량에 따라 동적으로 gndUsePower 계산
+*    - 택트스위치: 다음 턴 자동 OFF 예약
+*    - 압력스위치: 무게(5000 이상) 감지하여 ON/OFF
+*
+* 3. 6방향 이웃 탐색 시 특수 처리:
+*    - CROSSED_CABLE: 진입 방향(수평/수직)에 따라 분리 처리
+*    - 지향성 컴포넌트(트랜지스터, 릴레이, 논리게이트 등):
+*      → 게이트/베이스 → 메인라인 방향 BFS 차단 (skipBFSSet)
+*      → 지향성 부하량(gndUsePowerLeft/Right/Up/Down) 별도 누적
+*    - 파워뱅크 충전: 충전량에 따라 로그 함수로 충전속도 감소
+*
+* 4. 탐색 완료 후 모든 노드에 nodeMaxCharge 설정 (= 총 가용 전력)
+*
+* 5. 전압원별 전하 밀어내기 시작:
+*    - 각 전압원은 (자신의 출력 / 총 출력) 비율로 부하 분담
+*    - 저항손실 보상을 위해 LOSS_COMPENSATION_FACTOR(1.2) 적용
+*    - pushCharge() 호출하여 출력 방향으로 전하 밀어냄
 */
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+* <전하 밀어내기 로직>
+* 
+* 1. 전압원에서 pushCharge() 호출하여 출력 방향으로 전하 밀어냄
+* 
+* 2. 다음 노드 판정 (pushCharge 내부):
+*    - GND(부하)인 경우:
+*        → transferCharge()로 전하 소비 후 즉시 종료 (return)
+*    - 2갈래 이상 분기점:
+*        → divideCharge()로 분배 (GND 방향 우선 처리)
+*        → 각 방향으로 pushCharge() 재귀 호출
+*    - 단일 경로:
+*        → pushCharge() 재귀 호출
+*    (※주의: pathVisited로 순환 방문 감지 시 해당 경로 종료)
+* 
+* 3. 재귀 호출 완료 후 복귀하면서 transferCharge()로 새로 생긴 빈 공간만큼 전하 전송 수행
+*    transferCharge() 내부:
+*    - 저항손실 계산: I²R (I = Q / (V × T))
+*    - 송신측 nodeCharge 차감, chargeFlux 기록
+*    - 수신측 nodeCharge 증가, chargeFlux 기록
+*/
+
+
 
 const wchar_t* dirToArrow(dir16 dir)
 {
@@ -116,6 +163,12 @@ void Prop::updateCircuitNetwork()
     std::unordered_set<Point3, Point3::Hash> visitedSet;
     std::vector<Prop*> voltagePropVec;
 
+    /*
+    * skipBFSSet: 게이트/베이스 핀에서 메인라인으로의 BFS 확장 차단용
+    *   - 트랜지스터/릴레이의 베이스 → 메인라인 누설 방지
+    *   - 논리게이트의 입력핀 → 출력핀 누설 방지
+    *   - 해당 노드는 BFS에 추가되지만, 그 노드에서의 확장은 1회만 허용
+    */
     std::unordered_set<Point3, Point3::Hash> skipBFSSet;
 
     int circuitMaxEnergy = 0;
@@ -177,13 +230,13 @@ void Prop::updateCircuitNetwork()
                 }
 
             }
-            if (currentProp->leadItem.itemCode == itemRefCode::chargingPort)//차징포트일 경우...
+            if (currentProp->leadItem.itemCode == itemRefCode::chargingPort)//충전포트일 경우...
             {
                 currentProp->leadItem.gndUsePower = 1;
-                ItemStack* hereStack = TileItemStack(current.x, current.y, current.z);  // ← 수정
+                ItemStack* hereStack = TileItemStack(current.x, current.y, current.z);
                 if (hereStack != nullptr)
                 {
-                    std::vector<ItemData>& hereItems = hereStack->getPocket()->itemInfo;  // ← 수정 (중복 호출 제거)
+                    std::vector<ItemData>& hereItems = hereStack->getPocket()->itemInfo;
                     for (ItemData& item : hereItems)
                     {
                         if (item.itemCode == itemRefCode::battery || item.itemCode == itemRefCode::batteryPack)
@@ -428,6 +481,8 @@ void Prop::updateCircuitNetwork()
     for (Prop* voltProp : voltagePropVec)
     {
         constexpr double LOSS_COMPENSATION_FACTOR = 1.2;
+        // ↑ 저항손실(I²R)로 인해 도중에 전하가 소모되므로, 
+        //   부하에 정확히 필요한 양이 도달하도록 20% 여유분 추가
 
         voltProp->nodeCharge = voltProp->nodeMaxCharge;
         int x = voltProp->getGridX();
@@ -1039,7 +1094,12 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
     }
 }
 
-
+/*
+* loadAct(): 전하 계산 완료 후 호출되어 부하의 ON/OFF 상태 결정
+* 호출 시점: updateCircuitNetwork() 완료 후, 턴 사이클에서 별도 호출
+* 판정 기준: chargeFlux(받은 전하량) >= gndUsePower(필요 전력)
+* ※ 충전포트같이 이하여도 작동하는 예외 존재하니 유의할 것
+*/
 void Prop::loadAct()
 {
 

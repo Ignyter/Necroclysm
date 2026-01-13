@@ -31,12 +31,19 @@ public:
 
     bool runUsed = false; //runProp
 
-    int nodeMaxCharge = 0;
+    int nodeMaxCharge = 0; //회로망 전체의 총 가용 전력. 예로 20W 발전기 2개가 연결된 회로망은 절대 40W 이상이 전송될 수 없다.
     double nodeCharge = 0;
 
     double totalLossCharge = 0; //이번 턴에 저항으로 손실된 모든 에너지값
 
+
     std::unordered_map<dir16, double> chargeFlux = { {dir16::right,0},{dir16::up,0},{dir16::left,0},{dir16::down,0},{dir16::above,0},{dir16::below,0} };
+    /*  ▲ chargeFlux 부호 규칙:
+    *       - 음수(-): 해당 방향으로 전하를 "보냄" (출력)
+    *       - 양수(+): 해당 방향에서 전하를 "받음" (입력)
+    *   예: chargeFlux[dir16::right] = -5 → 오른쪽으로 5만큼 보냄
+    *       chargeFlux[dir16::left] = +5  → 왼쪽에서 5만큼 받음
+    */
 
     double prevPushedCharge = 0;
 
