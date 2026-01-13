@@ -41,26 +41,30 @@ void Prop::drawSelf()
     if (currentTime != lastFrameTime)
     {
         lastFrameTime = currentTime;
-        Point2 currentHoverGrid = getAbsMouseGrid();
 
-        Prop* hoverProp = TileProp(currentHoverGrid.x, currentHoverGrid.y, PlayerZ());
-        bool isHoveringHiddenWire = (hoverProp != nullptr
-            && hoverProp->leadItem.checkFlag(itemFlag::CIRCUIT)
-            && hoverProp->leadItem.checkFlag(itemFlag::HIDE_WIRE));
+        //Point2 currentHoverGrid = getAbsMouseGrid();
 
-        if (!isHoveringHiddenWire)
-        {
-            hoverTime = 0;
-            showAllHideWire = false;
-        }
-        else
-        {
-            hoverTime += 1;
-            if (hoverTime > SHOW_WIRE_HOVER_TIME) showAllHideWire = true;
-        }
+        //Prop* hoverProp = TileProp(currentHoverGrid.x, currentHoverGrid.y, PlayerZ());
+        //bool isHoveringHiddenWire = (hoverProp != nullptr
+        //    && hoverProp->leadItem.checkFlag(itemFlag::CIRCUIT)
+        //    && hoverProp->leadItem.checkFlag(itemFlag::HIDE_WIRE));
+
+        //if (!isHoveringHiddenWire)
+        //{
+        //    hoverTime = 0;
+        //    showAllHideWire = false;
+        //}
+        //else
+        //{
+        //    hoverTime += 1;
+        //    if (hoverTime > SHOW_WIRE_HOVER_TIME) showAllHideWire = true;
+        //}
 
 
-        prevHoverGrid = currentHoverGrid;
+        //prevHoverGrid = currentHoverGrid;
+        
+        //▲현재는 이렇게 주석 처리 해놨는데 마우스 오래 올려두면 보이게 하려면 하단1줄(▼) 제거하고 위에 주석처리한 코드들 전부 해제(일단 좀 지켜보자)
+        showAllHideWire = false;
 
         if (ContextMenu::ins() != nullptr)
         {

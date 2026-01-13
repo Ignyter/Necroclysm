@@ -1679,6 +1679,8 @@ void HUD::drawBodyParts()
 
 void HUD::drawCircuitInfo()
 {
+	if (ContextMenu::ins() != nullptr) return;
+
 	static Point2 prevHoverGrid = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
 	static int hoverTime = 0;
 	Point2 currentHoverGrid = getAbsMouseGrid();
