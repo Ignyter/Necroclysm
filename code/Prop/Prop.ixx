@@ -45,6 +45,12 @@ public:
 
     std::unordered_map<Point3, crossFlag, Point3::Hash> crossStates;
 
+    double gndSink = 0.0;
+    double gndSinkRight = 0.0;
+    double gndSinkUp = 0.0;
+    double gndSinkLeft = 0.0;
+    double gndSinkDown = 0.0;
+
     Prop(Point3 inputCoor, int leadItemCode);
 
     ~Prop();
@@ -111,7 +117,7 @@ public:
 
     double pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std::unordered_set<Prop*> pathVisited, int depth);
 
-    double divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth);
+    void divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth);
 
     void propTurnOn();
 

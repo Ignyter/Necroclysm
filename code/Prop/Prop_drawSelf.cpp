@@ -140,10 +140,10 @@ void Prop::drawSelf()
             else if (!isRightCable && !isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3035; //¡è
 
             else if (isRightCable && isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3033; // ¦¦
-            else if (isRightCable && !isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3240; // ¦¡
+            else if (isRightCable && !isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3047; // ¦¡
             else if (isRightCable && !isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3029; // ¦£
             else if (!isRightCable && isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3033; // ¦¥
-            else if (!isRightCable && isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3243; // ¦¢ 
+            else if (!isRightCable && isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3048; // ¦¢ 
             else if (!isRightCable && !isUpCable && isLeftCable && isDownCable) cableSprIndex = 3027; // ¦¤
 
             else if (isRightCable && isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3032; // ¦ª

@@ -54,6 +54,29 @@ constexpr double EPSILON = 0.000001;
 * 반대로 지향성 접지가 존재하면 당연히 gndUsePower는 0과 같음
 */
 
+
+/*
+* <BFS 작동 로직>
+* 1. BFS 탐색으로 연결된 모든 회로망을 탐색
+* 2. 회로망 내의 모든 전압원의 가용 전력 계산
+* 3. 회로망 내의 모든 부하의 총 부하량 계산 (지향성 부하 포함)
+* 4. 각각의 전압원이 필요한만큼 전하를 밀어냄 (저항손실을 고려해 약간 더 많이)
+* 
+*/
+
+const wchar_t* dirToArrow(dir16 dir)
+{
+    switch (dir) {
+    case dir16::right: return L"→";
+    case dir16::up:    return L"↑";
+    case dir16::left:  return L"←";
+    case dir16::down:  return L"↓";
+    case dir16::above: return L"↗";
+    case dir16::below: return L"↘";
+    default: return L"?";
+    }
+}
+
 bool Prop::hasGround()
 {
     //일반 접지
@@ -89,11 +112,6 @@ void Prop::updateCircuitNetwork()
     int cursorY = getGridY();
     int cursorZ = getGridZ();
 
-    if (cursorX == 1 && cursorY == -14)
-    {
-        int a = 3;
-    }
-
     std::queue<Point3> frontierQueue;
     std::unordered_set<Point3, Point3::Hash> visitedSet;
     std::vector<Prop*> voltagePropVec;
@@ -102,7 +120,6 @@ void Prop::updateCircuitNetwork()
 
     int circuitMaxEnergy = 0;
     int circuitTotalLoad = 0;
-    bool hasGround = false;
 
     //==============================================================================
     // 1. 회로 최초 탐색(BFS)
@@ -125,7 +142,6 @@ void Prop::updateCircuitNetwork()
         crossStates.clear();
 
         Prop* currentProp = TileProp(current.x, current.y, current.z);
-        ItemData& currentItem = currentProp->leadItem;
 
         if (visitedSet.find(current) != visitedSet.end()) continue;
         visitedSet.insert(current);
@@ -136,10 +152,6 @@ void Prop::updateCircuitNetwork()
             std::wprintf(L"[경고] BFS가 nullptr 프롭에 도달함 (%d,%d,%d)\n", current.x, current.y, current.z);
             continue;
         }
-
-        if (current.x == -3 && current.y == -13)
-            int a = 3;
-
 
         if (currentProp && (currentProp->leadItem.checkFlag(itemFlag::CIRCUIT) || currentProp->leadItem.checkFlag(itemFlag::CABLE)))
         {
@@ -190,7 +202,6 @@ void Prop::updateCircuitNetwork()
             if (currentProp->leadItem.gndUsePower > 0)
             {
                 circuitTotalLoad += currentProp->leadItem.gndUsePower;
-                hasGround = true;
             }
 
             //택트 스위치일 경우 다음 턴 시작 시에 종료
@@ -350,22 +361,18 @@ void Prop::updateCircuitNetwork()
                             if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
                             {
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerLeft;
-                                hasGround = true;
                             }
                             else if (directions[i] == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
                             {
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerDown;
-                                hasGround = true;
                             }
                             else if (directions[i] == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
                             {
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerRight;
-                                hasGround = true;
                             }
                             else if (directions[i] == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
                             {
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerUp;
-                                hasGround = true;
                             }
                         }
 
@@ -373,7 +380,7 @@ void Prop::updateCircuitNetwork()
                         if (nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
                         {
                             if (directions[i] == dir16::down || directions[i] == dir16::up) crossStates[nextCoord] = crossFlag::vertical;
-                            else if (directions[i] == dir16::down || directions[i] == dir16::up) crossStates[nextCoord] = crossFlag::horizontal;
+                            else if (directions[i] == dir16::right || directions[i] == dir16::left) crossStates[nextCoord] = crossFlag::horizontal;
                         }
                         frontierQueue.push(nextCoord);
                         
@@ -404,7 +411,6 @@ void Prop::updateCircuitNetwork()
     //==============================================================================
     // 3. 전압원 전송 시작
     //==============================================================================
-    double totalPushedCharge = 0;
 
     randomVectorShuffle(voltagePropVec);
 
@@ -449,9 +455,15 @@ void Prop::updateCircuitNetwork()
             else if (voltProp->leadItem.checkFlag(itemFlag::VOLTAGE_OUTPUT_DOWN) && isConnected({ x,y,z }, dir16::down))
                 voltProp->prevPushedCharge += pushCharge(voltProp, dir16::down, finalVoltOutput, {}, 0);
 
-            totalPushedCharge += voltProp->prevPushedCharge;
             voltProp->nodeCharge = voltProp->nodeMaxCharge;
         }
+    }
+
+    if (debug::printCircuitLog)
+    {
+        std::wprintf(L"======================== 회로망 요약 ========================\n");
+        std::wprintf(L"노드: %zu개, 전압원: %zu개, 총부하: %d, 총전력: %d\n",
+            visitedSet.size(), voltagePropVec.size(), circuitTotalLoad, circuitMaxEnergy);
     }
 }
 
@@ -681,36 +693,22 @@ bool Prop::isConnected(Point3 currentCoord, dir16 dir)
 
 bool Prop::isGround(Point3 current, dir16 dir)
 {
-    Prop* currentProp = TileProp(current.x, current.y, current.z);
-    itemFlag groundFlag;
+    errorBox(dir == dir16::above || dir == dir16::below, L"[Error] isGround: invalid direction\n");
 
+    int dx, dy, dz;
+    dirToXYZ(dir, dx, dy, dz);
+    Prop* nextProp = TileProp(current.x + dx, current.y + dy, current.z + dz);
 
-    if (current.x == 0 && current.y == -14)
-        int a = 3;
+    if (nextProp == nullptr || nextProp->hasGround() == false)
+        return false;
 
-    Point3 rightCoord = { current.x + 1, current.y, current.z };
-    Point3 upCoord = { current.x, current.y - 1, current.z };
-    Point3 leftCoord = { current.x - 1, current.y, current.z };
-    Point3 downCoord = { current.x, current.y + 1, current.z };
-    Prop* nextProp = nullptr;
-    if (dir == dir16::right) nextProp = TileProp(rightCoord);
-    else if (dir == dir16::up) nextProp = TileProp(upCoord);
-    else if (dir == dir16::left) nextProp = TileProp(leftCoord);
-    else if (dir == dir16::down) nextProp = TileProp(downCoord);
-
-    if (nextProp == nullptr) return false;
-    else
+    if (isConnected(current, dir))
     {
-        if (nextProp->hasGround() == false) return false;
-
-        if (isConnected(current, dir))
-        {
-            if (nextProp->leadItem.gndUsePower > 0) return true;
-            else if (dir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0) return true;
-            else if (dir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0) return true;
-            else if (dir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0) return true;
-            else if (dir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) return true;
-        }
+        if (nextProp->leadItem.gndUsePower > 0) return true;
+        if (dir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0) return true;
+        if (dir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0) return true;
+        if (dir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0) return true;
+        if (dir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) return true;
     }
     return false;
 }
@@ -737,17 +735,24 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
     errorBox(!isConnected({ donorProp->getGridX(), donorProp->getGridY(), donorProp->getGridZ() }, txDir),
         L"[Error] pushCharge: not connected\n");
 
-    if (pathVisited.find(donorProp) != pathVisited.end()) return 0;
+    std::wstring indent(depth * 2, L' ');
+
+    if (pathVisited.find(donorProp) != pathVisited.end())
+    {
+        if (debug::printCircuitLog)
+            std::wprintf(L"%s[PUSH-SKIP] (%d,%d) 이미 방문됨\n", indent.c_str(), donorProp->getGridX(), donorProp->getGridY());
+        return 0;
+    }
     pathVisited.insert(donorProp);
     if (pathVisited.find(nextProp) != pathVisited.end()) return 0;
 
-    // 들여쓰기 생성
-    std::wstring indent(depth * 2, L' ');  // depth마다 2칸씩
 
-    if (debug::printCircuitLog) std::wprintf(L"%s[PUSH] (%d,%d) → (%d,%d) 시도: %.2f\n",
+
+    if (debug::printCircuitLog) std::wprintf(L"%s[PUSH] (%d,%d) → (%d,%d) [%ls] 시도: %.2f\n",
         indent.c_str(),
         donorProp->getGridX(), donorProp->getGridY(),
         nextProp->getGridX(), nextProp->getGridY(),
+        dirToArrow(txDir), 
         txChargeAmount);
 
     Point3 current = { donorProp->getGridX(), donorProp->getGridY(), donorProp->getGridZ() };
@@ -777,7 +782,6 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
 
     double pushedCharge = std::min(txChargeAmount, nextProp->nodeCharge);
 
-    double dividedCharge = 0;
     if (pushedCharge > EPSILON)
     {
         std::vector<dir16> possibleDirs;
@@ -799,7 +803,15 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
 
         if (possibleDirs.empty() == false)
         {
-            dividedCharge = divideCharge(nextProp, pushedCharge, possibleDirs, pathVisited, depth + 1);
+            if (possibleDirs.size() == 1)
+            {
+                auto newPathVisited = pathVisited;
+                pushCharge(nextProp, possibleDirs[0], pushedCharge, newPathVisited, depth + 1);
+            }
+            else if (possibleDirs.size() > 1)
+            {
+                divideCharge(nextProp, pushedCharge, possibleDirs, pathVisited, depth + 1);
+            }
         }
     }
 
@@ -809,9 +821,18 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
 }
 
 
-double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth)
+void Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> possibleDirs, std::unordered_set<Prop*> pathVisited, int depth)
 {
-    double totalPushedCharge = 0;
+    std::wstring indent(depth * 2, L' ');  // 인덴트 생성
+
+    if (debug::printCircuitLog)
+    {
+        std::wprintf(L"%s[DIVIDE] (%d,%d) 분배시작: %.2f → %zu방향\n",
+            indent.c_str(),
+            propPtr->getGridX(), propPtr->getGridY(),
+            inputCharge, possibleDirs.size());
+    }
+
     double remainingCharge = inputCharge;
     std::vector<dir16> dirsToRemove;
     std::vector<dir16> gndDirs;
@@ -820,8 +841,10 @@ double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> 
     gndDirs.reserve(6);
     nonGndDirs.reserve(6);
 
+    int loopCount = 0;
     while (remainingCharge > EPSILON && !possibleDirs.empty())
     {
+        loopCount++;
         dirsToRemove.clear();
         gndDirs.clear();
         nonGndDirs.clear();
@@ -841,12 +864,18 @@ double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> 
         if (gndDirs.size() > 0)
         {
             double gndSplitCharge = remainingCharge / gndDirs.size();
+
+            if (debug::printCircuitLog)
+            {
+                std::wprintf(L"%s  [DIV-GND] 접지 %zu방향, 각 %.2f씩\n",
+                    indent.c_str(), gndDirs.size(), gndSplitCharge);
+            }
+
             for (auto dir : gndDirs)
             {
                 auto newPathVisited = pathVisited;
                 double branchPushedCharge = pushCharge(propPtr, dir, gndSplitCharge, newPathVisited, depth);
                 gndPushedCharge += branchPushedCharge;
-                totalPushedCharge += branchPushedCharge;
                 if (branchPushedCharge < EPSILON) dirsToRemove.push_back(dir);
             }
 
@@ -854,11 +883,11 @@ double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> 
             (
                 std::remove_if
                 (
-                    possibleDirs.begin(), 
+                    possibleDirs.begin(),
                     possibleDirs.end(),
                     [&dirsToRemove](dir16 d) { return std::find(dirsToRemove.begin(), dirsToRemove.end(), d) != dirsToRemove.end(); }
                 ),
-                 possibleDirs.end()
+                possibleDirs.end()
             );
 
             remainingCharge -= gndPushedCharge;
@@ -870,12 +899,18 @@ double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> 
         if (nonGndDirs.size() > 0)
         {
             double splitCharge = remainingCharge / nonGndDirs.size();
+
+            if (debug::printCircuitLog)
+            {
+                std::wprintf(L"%s  [DIV-LOOP] 일반 %zu방향, 각 %.2f씩\n",
+                    indent.c_str(), nonGndDirs.size(), splitCharge);
+            }
+
             for (auto dir : nonGndDirs)
             {
                 auto newPathVisited = pathVisited;
                 double branchPushedCharge = pushCharge(propPtr, dir, splitCharge, newPathVisited, depth);
                 loopPushedCharge += branchPushedCharge;
-                totalPushedCharge += branchPushedCharge;
                 if (branchPushedCharge < EPSILON) dirsToRemove.push_back(dir);
             }
 
@@ -883,11 +918,24 @@ double Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> 
             remainingCharge -= loopPushedCharge;
         }
 
+        if (debug::printCircuitLog && (gndPushedCharge > EPSILON || loopPushedCharge > EPSILON))
+        {
+            std::wprintf(L"%s  [DIV-RESULT] 루프%d: GND=%.2f, 일반=%.2f, 잔여=%.2f\n",
+                indent.c_str(), loopCount, gndPushedCharge, loopPushedCharge, remainingCharge);
+        }
+
         if (loopPushedCharge < EPSILON && gndPushedCharge < EPSILON) break;
     }
 
-    return totalPushedCharge;
+    if (debug::printCircuitLog)
+    {
+        std::wprintf(L"%s[DIVIDE-END] (%d,%d) 총 %d회 반복, 미분배=%.2f\n",
+            indent.c_str(),
+            propPtr->getGridX(), propPtr->getGridY(),
+            loopCount, remainingCharge);
+    }
 }
+
 
 void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount, const std::wstring& indent, dir16 txDir, bool isGroundTransfer = false)
 {
@@ -929,7 +977,7 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
     {
         if (isGroundTransfer)
         {
-            std::wprintf(L"%s[전송 GND] (%d,%d)[%.2f→%.2f] → (%d,%d) 전송:%.2f 손실:%.2f 부하:%.2f/%d\n",
+            std::wprintf(L"\x1b[33m%s[전송 GND] (%d,%d)[%.2f→%.2f] → (%d,%d) 전송:%.2f 손실:%.2f 부하:%.2f/%d\x1b[0m\n",
                 indent.c_str(),
                 thisProp->getGridX(), thisProp->getGridY(),
                 thisProp->nodeCharge + requiredFromDonor, thisProp->nodeCharge,
@@ -964,7 +1012,6 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
         visitedSet.insert(current);
 
         Prop* thisProp = TileProp(current.x, current.y, current.z);
-        ItemData& currentItem = thisProp->leadItem;
         if (thisProp)
         {
             thisProp->nodeCharge = thisProp->nodeMaxCharge;
