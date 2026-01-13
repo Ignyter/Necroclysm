@@ -134,24 +134,24 @@ void Prop::drawSelf()
         {
             int cableSprIndex = 2720;
 
-            if (isRightCable && !isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3036;
-            else if (!isRightCable && isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3037;
-            else if (!isRightCable && !isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3034;
-            else if (!isRightCable && !isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3035;
+            if (isRightCable && !isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3036; //¡ç
+            else if (!isRightCable && isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3037; //¡é
+            else if (!isRightCable && !isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3034; //¡æ
+            else if (!isRightCable && !isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3035; //¡è
 
-            else if (isRightCable && isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3033;
-            else if (isRightCable && !isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3240;
-            else if (isRightCable && !isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3029;
-            else if (!isRightCable && isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3033;
-            else if (!isRightCable && isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3243;
-            else if (!isRightCable && !isUpCable && isLeftCable && isDownCable) cableSprIndex = 3027;
+            else if (isRightCable && isUpCable && !isLeftCable && !isDownCable) cableSprIndex = 3033; // ¦¦
+            else if (isRightCable && !isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3240; // ¦¡
+            else if (isRightCable && !isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3029; // ¦£
+            else if (!isRightCable && isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3033; // ¦¥
+            else if (!isRightCable && isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3243; // ¦¢ 
+            else if (!isRightCable && !isUpCable && isLeftCable && isDownCable) cableSprIndex = 3027; // ¦¤
 
-            else if (isRightCable && isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3032;
-            else if (isRightCable && isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3030;
-            else if (isRightCable && !isUpCable && isLeftCable && isDownCable) cableSprIndex = 3028;
-            else if (!isRightCable && isUpCable && isLeftCable && isDownCable) cableSprIndex = 3026;
+            else if (isRightCable && isUpCable && isLeftCable && !isDownCable) cableSprIndex = 3032; // ¦ª
+            else if (isRightCable && isUpCable && !isLeftCable && isDownCable) cableSprIndex = 3030; // ¦§
+            else if (isRightCable && !isUpCable && isLeftCable && isDownCable) cableSprIndex = 3028; // ¦¨
+            else if (!isRightCable && isUpCable && isLeftCable && isDownCable) cableSprIndex = 3026; // ¦©
 
-            else if (isRightCable && isUpCable && isLeftCable && isDownCable) cableSprIndex = 3024;
+            else if (isRightCable && isUpCable && isLeftCable && isDownCable) cableSprIndex = 3024; // ¦«
 
 
             if (leadItem.checkFlag(itemFlag::HIDE_WIRE) && showAllHideWire == false)
