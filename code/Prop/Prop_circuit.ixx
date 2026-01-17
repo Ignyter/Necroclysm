@@ -493,7 +493,7 @@ void Prop::updateCircuitNetwork()
         voltProp->prevPushedCharge = 0;
         voltOutputPower *= LOSS_COMPENSATION_FACTOR;  // 저항손실 보존 변수 (기본값 120%)
 
-        if (debug::printCircuitLog) std::wprintf(L"========================▼전압원 %p : 밀어내기 시작▼========================\n", voltProp);
+        if (debug::printCircuitLog) std::wprintf(L"========================▼전압원 (%d,%d)%ls : 밀어내기 시작▼========================\n", x, y, voltProp->leadItem.name.c_str());
         if (voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON) || voltProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF) == false)
         {
             double finalVoltOutput = voltOutputPower;
@@ -795,7 +795,7 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
     if (pathVisited.find(donorProp) != pathVisited.end())
     {
         if (debug::printCircuitLog)
-            std::wprintf(L"%s[PUSH-SKIP] (%d,%d) 이미 방문됨\n", indent.c_str(), donorProp->getGridX(), donorProp->getGridY());
+            std::wprintf(L"%s[PUSH-SKIP] (%d,%d)%ls 이미 방문됨\n", indent.c_str(), donorProp->getGridX(), donorProp->getGridY(), donorProp->leadItem.name.c_str());
         return 0;
     }
     pathVisited.insert(donorProp);
@@ -803,15 +803,15 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
 
 
 
-    if (debug::printCircuitLog) std::wprintf(L"%s[PUSH] (%d,%d) → (%d,%d) [%ls] 시도: %.2f\n",
+    if (debug::printCircuitLog) std::wprintf(L"%s[PUSH] (%d,%d)%ls → (%d,%d)%ls [%ls] 시도: %.2f\n",
         indent.c_str(),
-        donorProp->getGridX(), donorProp->getGridY(),
-        nextProp->getGridX(), nextProp->getGridY(),
-        dirToArrow(txDir), 
+        donorProp->getGridX(), donorProp->getGridY(), donorProp->leadItem.name.c_str(),
+        nextProp->getGridX(), nextProp->getGridY(), nextProp->leadItem.name.c_str(),
+        dirToArrow(txDir),
         txChargeAmount);
 
     Point3 current = { donorProp->getGridX(), donorProp->getGridY(), donorProp->getGridZ() };
-    if (isGround(current,txDir))
+    if (isGround(current,txDir)) //해당 방향이 GND일 경우 전하 소비 후에 즉시 종료 return
     {
         double remainEnergy;
 
@@ -870,6 +870,7 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
         }
     }
 
+    // 재귀 복귀: 하위 노드들이 전하를 소비해서 생긴 빈 공간만큼 전송
     double finalTxCharge = std::min(txChargeAmount, nextProp->nodeMaxCharge - nextProp->nodeCharge);
     transferCharge(donorProp,nextProp,finalTxCharge,indent,txDir,false);
     return finalTxCharge;
@@ -882,9 +883,9 @@ void Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> po
 
     if (debug::printCircuitLog)
     {
-        std::wprintf(L"%s[DIVIDE] (%d,%d) 분배시작: %.2f → %zu방향\n",
+        std::wprintf(L"%s[DIVIDE] (%d,%d)%ls 분배시작: %.2f → %zu방향\n",
             indent.c_str(),
-            propPtr->getGridX(), propPtr->getGridY(),
+            propPtr->getGridX(), propPtr->getGridY(), propPtr->leadItem.name.c_str(),
             inputCharge, possibleDirs.size());
     }
 
@@ -984,9 +985,9 @@ void Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> po
 
     if (debug::printCircuitLog)
     {
-        std::wprintf(L"%s[DIVIDE-END] (%d,%d) 총 %d회 반복, 미분배=%.2f\n",
+        std::wprintf(L"%s[DIVIDE-END] (%d,%d)%ls 총 %d회 반복, 미분배=%.2f\n",
             indent.c_str(),
-            propPtr->getGridX(), propPtr->getGridY(),
+            propPtr->getGridX(), propPtr->getGridY(), propPtr->leadItem.name.c_str(),
             loopCount, remainingCharge);
     }
 }
@@ -998,10 +999,10 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
     {
         if (debug::printCircuitLog)
         {
-            std::wprintf(L"%s[전송 스킵] (%d,%d) → (%d,%d) 양:%.8f (EPSILON 미만)\n",
+            std::wprintf(L"%s[전송 스킵] (%d,%d)%ls → (%d,%d)%ls 양:%.8f (EPSILON 미만)\n",
                 indent.c_str(),
-                thisProp->getGridX(), thisProp->getGridY(),
-                nextProp->getGridX(), nextProp->getGridY(),
+                thisProp->getGridX(), thisProp->getGridY(), thisProp->leadItem.name.c_str(),
+                nextProp->getGridX(), nextProp->getGridY(), nextProp->leadItem.name.c_str(),
                 txChargeAmount);
         }
         return;
@@ -1032,21 +1033,21 @@ void Prop::transferCharge(Prop* thisProp, Prop* nextProp, double txChargeAmount,
     {
         if (isGroundTransfer)
         {
-            std::wprintf(L"\x1b[33m%s[전송 GND] (%d,%d)[%.2f→%.2f] → (%d,%d) 전송:%.2f 손실:%.2f 부하:%.2f/%d\x1b[0m\n",
+            std::wprintf(L"\x1b[33m%s[전송 GND] (%d,%d)%ls [%.2f→%.2f] → (%d,%d)%ls 전송:%.2f 손실:%.2f 부하:%.2f/%d\x1b[0m\n",
                 indent.c_str(),
-                thisProp->getGridX(), thisProp->getGridY(),
+                thisProp->getGridX(), thisProp->getGridY(), thisProp->leadItem.name.c_str(),
                 thisProp->nodeCharge + requiredFromDonor, thisProp->nodeCharge,
-                nextProp->getGridX(), nextProp->getGridY(),
+                nextProp->getGridX(), nextProp->getGridY(), nextProp->leadItem.name.c_str(),
                 txChargeAmount, electricLoss,
                 nextProp->getTotalChargeFlux(), nextProp->leadItem.gndUsePower);
         }
         else
         {
-            std::wprintf(L"%s[전송] (%d,%d)[%.2f→%.2f] → (%d,%d)[%.2f/%d] 전송:%.2f 손실:%.2f\n",
+            std::wprintf(L"%s[전송] (%d,%d)%ls [%.2f→%.2f] → (%d,%d)%ls [%.2f/%d] 전송:%.2f 손실:%.2f\n",
                 indent.c_str(),
-                thisProp->getGridX(), thisProp->getGridY(),
+                thisProp->getGridX(), thisProp->getGridY(), thisProp->leadItem.name.c_str(),
                 thisProp->nodeCharge + requiredFromDonor, thisProp->nodeCharge,
-                nextProp->getGridX(), nextProp->getGridY(),
+                nextProp->getGridX(), nextProp->getGridY(), nextProp->leadItem.name.c_str(),
                 nextProp->nodeCharge, nextProp->nodeMaxCharge,
                 txChargeAmount, electricLoss);
         }
