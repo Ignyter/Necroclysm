@@ -93,8 +93,11 @@ constexpr double EPSILON = 0.000001;
 * 1. 전압원에서 pushCharge() 호출하여 출력 방향으로 전하 밀어냄
 * 
 * 2. 다음 노드 판정 (pushCharge 내부):
-*    - GND(부하)인 경우:
-*        → transferCharge()로 전하 소비 후 즉시 종료 (return)
+*    (2.1) 다음 노드가 접지(부하)를 가지고 있을 경우:
+*        → 일반 부하: gndSink로 전송 (소비 후 남은 전력은 계속 전파)
+*        → 지향성 부하(Gate/Base): gndSink{Dir}로 전송 후 즉시 종료 (신호 핀은 전력을 통과시키지 않음)
+* 
+*    (2.2) 2.1에서 전송한 charge를 제외한 나머지로 아래 로직들을 실행
 *    - 2갈래 이상 분기점:
 *        → divideCharge()로 분배 (GND 방향 우선 처리)
 *        → 각 방향으로 pushCharge() 재귀 호출
@@ -199,7 +202,18 @@ void Prop::updateCircuitNetwork()
         if (visitedSet.find(current) != visitedSet.end()) continue;
         visitedSet.insert(current);
 
-        if (debug::printCircuitLog) std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d) \n", currentProp->leadItem.name.c_str(), current.x, current.y, current.z);
+        if (debug::printCircuitLog)
+        {
+            std::wstring powerState = L"";
+            if (currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON)) powerState = L" [ON]";
+            else if (currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF)) powerState = L" [OFF]";
+
+            std::wprintf(L"[BFS 탐색] %ls (%d,%d,%d)%ls\n",
+                currentProp->leadItem.name.c_str(),
+                current.x, current.y, current.z,
+                powerState.c_str());
+        }
+
         if (currentProp == nullptr)
         {
             std::wprintf(L"[경고] BFS가 nullptr 프롭에 도달함 (%d,%d,%d)\n", current.x, current.y, current.z);
@@ -336,49 +350,10 @@ void Prop::updateCircuitNetwork()
 
                     if (isConnected(current, directions[i]))
                     {
+                        bool isSignalInput = false;
                         if (nextProp != nullptr && nextProp->hasGround())
                         {
-                            //베이스에서 메인라인으로 BFS를 추가하는 것을 막음
-                            if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorU && directions[i] == dir16::down) skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorR && directions[i] == dir16::left) skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorD && directions[i] == dir16::up) skipBFSSet.insert(nextCoord);
 
-                            if (nextProp->leadItem.itemCode == itemRefCode::relayL && directions[i] == dir16::right) skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::relayU && directions[i] == dir16::down) skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::relayR && directions[i] == dir16::left) skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::relayD && directions[i] == dir16::up) skipBFSSet.insert(nextCoord);
-
-                            if(nextProp->leadItem.itemCode == itemRefCode::andGateR && (directions[i] == dir16::right || directions[i] == dir16::up)) 
-                                skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::andGateL && (directions[i] == dir16::left || directions[i] == dir16::up)) 
-                                skipBFSSet.insert(nextCoord);
-
-                            if (nextProp->leadItem.itemCode == itemRefCode::orGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::orGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                skipBFSSet.insert(nextCoord);
-
-                            if (nextProp->leadItem.itemCode == itemRefCode::xorGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::xorGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                skipBFSSet.insert(nextCoord);
-
-                            if (nextProp->leadItem.itemCode == itemRefCode::notGateR && (directions[i] == dir16::right))
-                                skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::notGateL && (directions[i] == dir16::left))
-                                skipBFSSet.insert(nextCoord);
-
-                            if (nextProp->leadItem.itemCode == itemRefCode::srLatchR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::srLatchL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                skipBFSSet.insert(nextCoord);
-
-
-                            if (nextProp->leadItem.itemCode == itemRefCode::powerBankR && (directions[i] == dir16::right))
-                                skipBFSSet.insert(nextCoord);
-                            else if (nextProp->leadItem.itemCode == itemRefCode::powerBankL && (directions[i] == dir16::left))
-                                skipBFSSet.insert(nextCoord);
 
 
 
@@ -427,9 +402,59 @@ void Prop::updateCircuitNetwork()
                             {
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerUp;
                             }
+
+
+                            //베이스에서 메인라인으로 BFS를 추가하는 것을 막음
+                            if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorU && directions[i] == dir16::down) isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorR && directions[i] == dir16::left) isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorD && directions[i] == dir16::up) isSignalInput=true;
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::relayL && directions[i] == dir16::right) isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayU && directions[i] == dir16::down) isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayR && directions[i] == dir16::left) isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayD && directions[i] == dir16::up) isSignalInput=true;
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::andGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::andGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                isSignalInput=true;
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::orGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::orGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                isSignalInput=true;
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::xorGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::xorGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                isSignalInput=true;
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::notGateR && (directions[i] == dir16::right))
+                                isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::notGateL && (directions[i] == dir16::left))
+                                isSignalInput=true;
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::srLatchR && (directions[i] == dir16::right || directions[i] == dir16::up))
+                                isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::srLatchL && (directions[i] == dir16::left || directions[i] == dir16::up))
+                                isSignalInput=true;
+
+
+                            if (nextProp->leadItem.itemCode == itemRefCode::powerBankR && (directions[i] == dir16::right))
+                                isSignalInput=true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::powerBankL && (directions[i] == dir16::left))
+                                isSignalInput=true;
                         }
 
                         
+                        if (isSignalInput)
+                        {
+                            nextProp->nodeMaxCharge = circuitMaxEnergy;
+                            nextProp->nodeCharge = circuitMaxEnergy;
+                            continue;
+                        }
+
                         if (nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
                         {
                             if (directions[i] == dir16::down || directions[i] == dir16::up) crossStates[nextCoord] = crossFlag::vertical;
@@ -810,32 +835,54 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
         dirToArrow(txDir),
         txChargeAmount);
 
+    double gndTxEnergy = 0;
     Point3 current = { donorProp->getGridX(), donorProp->getGridY(), donorProp->getGridZ() };
     if (isGround(current,txDir)) //해당 방향이 GND일 경우 전하 소비 후에 즉시 종료 return
     {
         double remainEnergy;
+        bool isDirectionalGnd = false;
 
         if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->chargeFlux[dir16::left];
+        {
+            remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->gndSinkLeft;
+            isDirectionalGnd = true;
+        }
         else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->chargeFlux[dir16::down];
+        {
+            remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->gndSinkDown;
+            isDirectionalGnd = true;
+        }
         else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->chargeFlux[dir16::right];
+        {
+            remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->gndSinkRight;
+            isDirectionalGnd = true;
+        }
         else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
-            remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->chargeFlux[dir16::up];
-        else
-            remainEnergy = nextProp->leadItem.gndUsePower - nextProp->getTotalChargeFlux();
+        {
+            remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->gndSinkUp;
+            isDirectionalGnd = true;
+        }
+        else remainEnergy = nextProp->leadItem.gndUsePower - nextProp->gndSink;
 
         if (remainEnergy > EPSILON)
         {
-            double consumeEnergy = std::min(txChargeAmount, remainEnergy);
-            transferCharge(donorProp, nextProp, consumeEnergy, indent, txDir,true);
-            return consumeEnergy;
+            gndTxEnergy = std::min(std::min(txChargeAmount, remainEnergy), nextProp->nodeCharge);
+            nextProp->nodeCharge -= gndTxEnergy;
+            if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0) nextProp->gndSinkLeft += gndTxEnergy;
+            else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0) nextProp->gndSinkDown += gndTxEnergy;
+            else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0) nextProp->gndSinkRight += gndTxEnergy;
+            else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) nextProp->gndSinkUp += gndTxEnergy;
+            else nextProp->gndSink += gndTxEnergy;
         }
-        else return 0;
+
+        if (isDirectionalGnd)
+        {
+            transferCharge(donorProp, nextProp, gndTxEnergy, indent, txDir, true);
+            return gndTxEnergy;
+        }
     }
 
-    double pushedCharge = std::min(txChargeAmount, nextProp->nodeCharge);
+    double pushedCharge = std::min(txChargeAmount- gndTxEnergy, nextProp->nodeCharge);
 
     if (pushedCharge > EPSILON)
     {
@@ -1071,7 +1118,9 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
         if (thisProp)
         {
             thisProp->nodeCharge = thisProp->nodeMaxCharge;
+            thisProp->gndSink = 0;
         }
+
 
         const dir16 directions[] = { dir16::right, dir16::up, dir16::left, dir16::down, dir16::above, dir16::below };
         for (int i = 0; i < 6; ++i)
@@ -1086,8 +1135,19 @@ void Prop::initChargeBFS(std::queue<Point3> startPointSet)
                 {
                     //만약 BFS로 해당 방향으로 추가했을 때 GND가 지향성 GND 전력요구를 가지고 있을 경우
                     ItemData& nextItem = nextProp->leadItem;
+
                     thisProp->chargeFlux[directions[i]] = 0;
                     nextProp->chargeFlux[reverse(directions[i])] = 0;
+                    
+                    if(directions[i] == dir16::right && nextItem.gndUsePowerLeft > 0) 
+                        nextProp->gndSinkLeft = 0;
+                    else if(directions[i] == dir16::up && nextItem.gndUsePowerDown > 0) 
+                        nextProp->gndSinkDown = 0;
+                    else if(directions[i] == dir16::left && nextItem.gndUsePowerRight > 0)
+                        nextProp->gndSinkRight = 0;
+                    else if(directions[i] == dir16::down && nextItem.gndUsePowerUp > 0)
+                        nextProp->gndSinkUp = 0;
+                    
                 }
                 frontierQueue.push(nextCoord);
             }
@@ -1115,10 +1175,10 @@ void Prop::loadAct()
     {
         bool baseInput = false;
 
-        if (iCode == itemRefCode::transistorR && chargeFlux[dir16::right] >= 1.0) baseInput = true;
-        else if (iCode == itemRefCode::transistorU && chargeFlux[dir16::up] >= 1.0) baseInput = true;
-        else if (iCode == itemRefCode::transistorL && chargeFlux[dir16::left] >= 1.0) baseInput = true;
-        else if (iCode == itemRefCode::transistorD && chargeFlux[dir16::down] >= 1.0) baseInput = true;
+        if (iCode == itemRefCode::transistorR && gndSinkRight >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::transistorU && gndSinkUp >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::transistorL && gndSinkLeft >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::transistorD && gndSinkDown >= 1.0) baseInput = true;
 
         if (baseInput)
         {
@@ -1142,10 +1202,10 @@ void Prop::loadAct()
     {
         bool baseInput = false;
 
-        if (iCode == itemRefCode::relayR && chargeFlux[dir16::right] >= 1.0) baseInput = true;
-        else if (iCode == itemRefCode::relayU && chargeFlux[dir16::up] >= 1.0) baseInput = true;
-        else if (iCode == itemRefCode::relayL && chargeFlux[dir16::left] >= 1.0) baseInput = true;
-        else if (iCode == itemRefCode::relayD && chargeFlux[dir16::down] >= 1.0) baseInput = true;
+        if (iCode == itemRefCode::relayR && gndSinkRight >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::relayU && gndSinkUp >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::relayL && gndSinkLeft >= 1.0) baseInput = true;
+        else if (iCode == itemRefCode::relayD && gndSinkDown >= 1.0) baseInput = true;
 
         if (baseInput)
         {
@@ -1168,13 +1228,13 @@ void Prop::loadAct()
 
         if (iCode == itemRefCode::andGateR)
         {
-            firstInput = chargeFlux[dir16::left] >= 1.0;
-            secondInput = chargeFlux[dir16::down] >= 1.0;
+            firstInput = gndSinkLeft >= 1.0;
+            secondInput = gndSinkDown >= 1.0;
         }
         else
         {
-            firstInput = chargeFlux[dir16::right] >= 1.0;
-            secondInput = chargeFlux[dir16::down] >= 1.0;
+            firstInput = gndSinkRight >= 1.0;
+            secondInput = gndSinkDown >= 1.0;
         }
 
         if (firstInput && secondInput)
@@ -1198,13 +1258,13 @@ void Prop::loadAct()
 
         if (iCode == itemRefCode::orGateR)
         {
-            firstInput = chargeFlux[dir16::left] >= 1.0;
-            secondInput = chargeFlux[dir16::down] >= 1.0;
+            firstInput = gndSinkLeft >= 1.0;
+            secondInput = gndSinkDown >= 1.0;
         }
         else
         {
-            firstInput = chargeFlux[dir16::right] >= 1.0;
-            secondInput = chargeFlux[dir16::down] >= 1.0;
+            firstInput = gndSinkRight >= 1.0;
+            secondInput = gndSinkDown >= 1.0;
         }
 
         if (firstInput || secondInput)
@@ -1228,13 +1288,13 @@ void Prop::loadAct()
 
         if (iCode == itemRefCode::xorGateR)
         {
-            firstInput = chargeFlux[dir16::left] >= 1.0;
-            secondInput = chargeFlux[dir16::down] >= 1.0;
+            firstInput = gndSinkLeft >= 1.0;
+            secondInput = gndSinkDown >= 1.0;
         }
         else
         {
-            firstInput = chargeFlux[dir16::right] >= 1.0;
-            secondInput = chargeFlux[dir16::down] >= 1.0;
+            firstInput = gndSinkRight >= 1.0;
+            secondInput = gndSinkDown >= 1.0;
         }
 
         if (firstInput != secondInput)
@@ -1255,8 +1315,8 @@ void Prop::loadAct()
     else if (iCode == itemRefCode::notGateR || iCode == itemRefCode::notGateL)
     {
         bool inputActive;
-        if (iCode == itemRefCode::notGateR) inputActive = chargeFlux[dir16::left] >= 1.0;
-        else inputActive = chargeFlux[dir16::right] >= 1.0;
+        if (iCode == itemRefCode::notGateR) inputActive = gndSinkLeft >= 1.0;
+        else inputActive = gndSinkRight >= 1.0;
 
         if (inputActive == false)
         {
@@ -1279,13 +1339,13 @@ void Prop::loadAct()
 
         if (iCode == itemRefCode::srLatchR)
         {
-            setInput = chargeFlux[dir16::left] >= 1.0;
-            resetInput = chargeFlux[dir16::down] >= 1.0;
+            setInput = gndSinkLeft >= 1.0;
+            resetInput = gndSinkDown >= 1.0;
         }
         else
         {
-            setInput = chargeFlux[dir16::right] >= 1.0;
-            resetInput = chargeFlux[dir16::down] >= 1.0;
+            setInput = gndSinkRight >= 1.0;
+            resetInput = gndSinkDown >= 1.0;
         }
 
         if (setInput && resetInput) // 금지상태는 랜덤
@@ -1317,8 +1377,8 @@ void Prop::loadAct()
         reserveDelayInit.erase(this);
 
         bool inputActive;
-        if (iCode == itemRefCode::delayR) inputActive = chargeFlux[dir16::left] >= 1.0;
-        else inputActive = chargeFlux[dir16::right] >= 1.0;
+        if (iCode == itemRefCode::delayR) inputActive = gndSinkLeft >= 1.0;
+        else inputActive = gndSinkRight >= 1.0;
 
         if (inputActive == true)
         {
@@ -1341,7 +1401,11 @@ void Prop::loadAct()
     else if (iCode == itemRefCode::powerBankR || iCode == itemRefCode::powerBankL) //파워뱅크 충전의 경우 부하에 미달해도 작동
     {
         ItemData& loadItem = leadItem;
-        loadItem.powerStorage += getInletCharge();
+        double inletCharge = 0;
+        if (iCode == itemRefCode::powerBankR) inletCharge = gndSinkLeft;
+        else inletCharge = gndSinkRight;
+
+        loadItem.powerStorage += inletCharge;
 
         constexpr double CHARGE_EPSILON = 0.5;
         if (loadItem.powerStorage >= loadItem.powerStorageMax - CHARGE_EPSILON)
@@ -1355,7 +1419,7 @@ void Prop::loadAct()
         if (hereStack != nullptr)
         {
             std::vector<ItemData>& items = hereStack->getPocket()->itemInfo;
-            double inletCharge = getInletCharge();
+            double inletCharge = gndSink;  // 충전포트는 무방향 부하
             if (inletCharge > 0)
             {
                 // 충전 가능한 아이템 인덱스 수집
@@ -1393,10 +1457,10 @@ void Prop::loadAct()
                 }
             }
         }
-        }
-    else //일반적인 부하들은 그라운드차지가 usePower 이상이면 켜지고 아니면 꺼짐
+    }
+    else //일반적인 부하들은 gndSink가 usePower 이상이면 켜지고 아니면 꺼짐
     {
-        if (getTotalChargeFlux() >= static_cast<double>(leadItem.gndUsePower))
+        if (gndSink >= static_cast<double>(leadItem.gndUsePower))
         {
             if (leadItem.checkFlag(itemFlag::PROP_POWER_OFF))
             {
@@ -1412,4 +1476,3 @@ void Prop::loadAct()
         }
     }
 }
-

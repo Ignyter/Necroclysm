@@ -656,6 +656,11 @@ __int64 propTurn()
 	{
 		pPtr->runUsed = false;
 		pPtr->totalLossCharge = 0;
+		pPtr->gndSink = 0;
+		pPtr->gndSinkRight = 0;
+        pPtr->gndSinkUp = 0;
+		pPtr->gndSinkLeft = 0;
+		pPtr->gndSinkDown = 0;
 		pPtr->initChargeFlux();
 		if (pPtr->hasGround()) activeLoadSet.insert(pPtr);
 		else if(pPtr->leadItem.checkFlag(itemFlag::FORCE_LOAD)) activeLoadSet.insert(pPtr);
