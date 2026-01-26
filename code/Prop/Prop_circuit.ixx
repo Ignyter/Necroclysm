@@ -230,6 +230,13 @@ void Prop::updateCircuitNetwork()
 
             if (currentProp->leadItem.checkFlag(itemFlag::VOLTAGE_SOURCE))
             {
+                if (debug::printCircuitLog)
+                {
+                    std::wprintf(L"  \x1b[33m★ 전원 감지: %ls (출력: %d)\x1b[0m\n",
+                        currentProp->leadItem.name.c_str(),
+                        currentProp->leadItem.electricMaxPower);
+                }
+
                 if (currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_ON) &&
                     currentProp->leadItem.checkFlag(itemFlag::PROP_POWER_OFF) == false)
                 {
@@ -268,6 +275,12 @@ void Prop::updateCircuitNetwork()
             //뒤의 isConnect 6방향 체크에 지향성 부하 loadSet 추가 메커니즘이 있음(주의할 것)
             if (currentProp->leadItem.gndUsePower > 0)
             {
+                if (debug::printCircuitLog)
+                {
+                    std::wprintf(L"  \x1b[91m◆ 부하 감지: %ls (소비: %d)\x1b[0m\n",
+                        currentProp->leadItem.name.c_str(),
+                        currentProp->leadItem.gndUsePower);
+                }
                 circuitTotalLoad += currentProp->leadItem.gndUsePower;
             }
 
@@ -331,18 +344,20 @@ void Prop::updateCircuitNetwork()
                     dirToXYZ(directions[i], dx, dy, dz);
                     Point3 nextCoord = { current.x + dx, current.y + dy, current.z + dz };
                     Prop* nextProp = TileProp(nextCoord.x, nextCoord.y, nextCoord.z);
-                    ItemData& nextItem = nextProp->leadItem;
 
-                    
                     if (nextProp && nextProp->leadItem.checkFlag(itemFlag::CROSSED_CABLE))
                     {
                         if (crossStates[current] == crossFlag::horizontal && (directions[i] == dir16::up || directions[i] == dir16::down))
                         {
+                            if (debug::printCircuitLog)
+                                std::wprintf(L"  \x1b[90m[SKIP] %ls방향 크로스케이블 방향 불일치\x1b[0m\n", dirToArrow(directions[i]));
                             crossStates.erase(current);
                             continue;
                         }
                         if (crossStates[current] == crossFlag::vertical && (directions[i] == dir16::right || directions[i] == dir16::left))
                         {
+                            if (debug::printCircuitLog)
+                                std::wprintf(L"  \x1b[90m[SKIP] %ls방향 크로스케이블 방향 불일치\x1b[0m\n", dirToArrow(directions[i]));
                             crossStates.erase(current);
                             continue;
                         }
@@ -350,18 +365,15 @@ void Prop::updateCircuitNetwork()
 
                     if (isConnected(current, directions[i]))
                     {
+                        ItemData& nextItem = nextProp->leadItem;
+
+                        if (debug::printCircuitLog)
+                            std::wprintf(L"  [연결] %ls (%d,%d) %ls\n",
+                                dirToArrow(directions[i]), nextCoord.x, nextCoord.y, nextItem.name.c_str());
+
                         bool isSignalInput = false;
                         if (nextProp != nullptr && nextProp->hasGround())
                         {
-
-
-
-
-                            Point3 rightCoord = { current.x + 1, current.y, current.z };
-                            Point3 upCoord = { current.x, current.y - 1, current.z };
-                            Point3 leftCoord = { current.x - 1, current.y, current.z };
-                            Point3 downCoord = { current.x, current.y + 1, current.z };
-
                             //파워뱅크 충전속도 제한
                             if (nextItem.itemCode == itemRefCode::powerBankR || nextItem.itemCode == itemRefCode::powerBankL)
                             {
@@ -382,74 +394,80 @@ void Prop::updateCircuitNetwork()
                                     nextItem.gndUsePowerRight = myMin(nextItem.gndUsePowerRight, nextItem.powerStorageMax - nextItem.powerStorage);
                                     if (nextItem.gndUsePowerRight < 0) nextItem.gndUsePowerRight = 0;
                                 }
-
-
                             }
 
                             if (directions[i] == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
                             {
+                                if (debug::printCircuitLog)
+                                    std::wprintf(L"    └─ \x1b[35m◆ 지향성부하: 소비=%d\x1b[0m\n", nextProp->leadItem.gndUsePowerLeft);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerLeft;
                             }
                             else if (directions[i] == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
                             {
+                                if (debug::printCircuitLog)
+                                    std::wprintf(L"    └─ \x1b[35m◆ 지향성부하: 소비=%d\x1b[0m\n", nextProp->leadItem.gndUsePowerDown);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerDown;
                             }
                             else if (directions[i] == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
                             {
+                                if (debug::printCircuitLog)
+                                    std::wprintf(L"    └─ \x1b[35m◆ 지향성부하: 소비=%d\x1b[0m\n", nextProp->leadItem.gndUsePowerRight);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerRight;
                             }
                             else if (directions[i] == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
                             {
+                                if (debug::printCircuitLog)
+                                    std::wprintf(L"    └─ \x1b[35m◆ 지향성부하: 소비=%d\x1b[0m\n", nextProp->leadItem.gndUsePowerUp);
                                 circuitTotalLoad += nextProp->leadItem.gndUsePowerUp;
                             }
 
-
                             //베이스에서 메인라인으로 BFS를 추가하는 것을 막음
-                            if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) isSignalInput=true;
-                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorU && directions[i] == dir16::down) isSignalInput=true;
-                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorR && directions[i] == dir16::left) isSignalInput=true;
-                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorD && directions[i] == dir16::up) isSignalInput=true;
+                            if (nextProp->leadItem.itemCode == itemRefCode::transistorL && directions[i] == dir16::right) isSignalInput = true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorU && directions[i] == dir16::down) isSignalInput = true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorR && directions[i] == dir16::left) isSignalInput = true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::transistorD && directions[i] == dir16::up) isSignalInput = true;
 
-                            if (nextProp->leadItem.itemCode == itemRefCode::relayL && directions[i] == dir16::right) isSignalInput=true;
-                            else if (nextProp->leadItem.itemCode == itemRefCode::relayU && directions[i] == dir16::down) isSignalInput=true;
-                            else if (nextProp->leadItem.itemCode == itemRefCode::relayR && directions[i] == dir16::left) isSignalInput=true;
-                            else if (nextProp->leadItem.itemCode == itemRefCode::relayD && directions[i] == dir16::up) isSignalInput=true;
+                            if (nextProp->leadItem.itemCode == itemRefCode::relayL && directions[i] == dir16::right) isSignalInput = true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayU && directions[i] == dir16::down) isSignalInput = true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayR && directions[i] == dir16::left) isSignalInput = true;
+                            else if (nextProp->leadItem.itemCode == itemRefCode::relayD && directions[i] == dir16::up) isSignalInput = true;
 
                             if (nextProp->leadItem.itemCode == itemRefCode::andGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
                             else if (nextProp->leadItem.itemCode == itemRefCode::andGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
 
                             if (nextProp->leadItem.itemCode == itemRefCode::orGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
                             else if (nextProp->leadItem.itemCode == itemRefCode::orGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
 
                             if (nextProp->leadItem.itemCode == itemRefCode::xorGateR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
                             else if (nextProp->leadItem.itemCode == itemRefCode::xorGateL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
 
                             if (nextProp->leadItem.itemCode == itemRefCode::notGateR && (directions[i] == dir16::right))
-                                isSignalInput=true;
+                                isSignalInput = true;
                             else if (nextProp->leadItem.itemCode == itemRefCode::notGateL && (directions[i] == dir16::left))
-                                isSignalInput=true;
+                                isSignalInput = true;
 
                             if (nextProp->leadItem.itemCode == itemRefCode::srLatchR && (directions[i] == dir16::right || directions[i] == dir16::up))
-                                isSignalInput=true;
+                                isSignalInput = true;
                             else if (nextProp->leadItem.itemCode == itemRefCode::srLatchL && (directions[i] == dir16::left || directions[i] == dir16::up))
-                                isSignalInput=true;
-
+                                isSignalInput = true;
 
                             if (nextProp->leadItem.itemCode == itemRefCode::powerBankR && (directions[i] == dir16::right))
-                                isSignalInput=true;
+                                isSignalInput = true;
                             else if (nextProp->leadItem.itemCode == itemRefCode::powerBankL && (directions[i] == dir16::left))
-                                isSignalInput=true;
+                                isSignalInput = true;
                         }
 
-                        
                         if (isSignalInput)
                         {
+                            if (debug::printCircuitLog)
+                                std::wprintf(L"    └─ \x1b[36m[신호입력핀] BFS 차단, 전하만 공급\x1b[0m\n");
+
                             nextProp->nodeMaxCharge = circuitMaxEnergy;
                             nextProp->nodeCharge = circuitMaxEnergy;
                             continue;
@@ -461,11 +479,15 @@ void Prop::updateCircuitNetwork()
                             else if (directions[i] == dir16::right || directions[i] == dir16::left) crossStates[nextCoord] = crossFlag::horizontal;
                         }
                         frontierQueue.push(nextCoord);
-                        
                     }
                 }
             }
-            else skipBFSSet.erase(current);
+            else
+            {
+                if (debug::printCircuitLog)
+                    std::wprintf(L"  \x1b[90m[SKIP-BFS] %ls - 신호핀에서 메인라인 확장 차단\x1b[0m\n", currentProp->leadItem.name.c_str());
+                skipBFSSet.erase(current);
+            }
                 
         }
     }
@@ -837,42 +859,74 @@ double Prop::pushCharge(Prop* donorProp, dir16 txDir, double txChargeAmount, std
 
     double gndTxEnergy = 0;
     Point3 current = { donorProp->getGridX(), donorProp->getGridY(), donorProp->getGridZ() };
-    if (isGround(current,txDir)) //해당 방향이 GND일 경우 전하 소비 후에 즉시 종료 return
+    if (isGround(current, txDir)) //해당 방향이 GND일 경우 전하 소비 후에 즉시 종료 return
     {
         double remainEnergy;
         bool isDirectionalGnd = false;
+        int requiredPower = 0;
 
         if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0)
         {
             remainEnergy = nextProp->leadItem.gndUsePowerLeft - nextProp->gndSinkLeft;
+            requiredPower = nextProp->leadItem.gndUsePowerLeft;
             isDirectionalGnd = true;
         }
         else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0)
         {
             remainEnergy = nextProp->leadItem.gndUsePowerDown - nextProp->gndSinkDown;
+            requiredPower = nextProp->leadItem.gndUsePowerDown;
             isDirectionalGnd = true;
         }
         else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0)
         {
             remainEnergy = nextProp->leadItem.gndUsePowerRight - nextProp->gndSinkRight;
+            requiredPower = nextProp->leadItem.gndUsePowerRight;
             isDirectionalGnd = true;
         }
         else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0)
         {
             remainEnergy = nextProp->leadItem.gndUsePowerUp - nextProp->gndSinkUp;
+            requiredPower = nextProp->leadItem.gndUsePowerUp;
             isDirectionalGnd = true;
         }
-        else remainEnergy = nextProp->leadItem.gndUsePower - nextProp->gndSink;
+        else
+        {
+            remainEnergy = nextProp->leadItem.gndUsePower - nextProp->gndSink;
+            requiredPower = nextProp->leadItem.gndUsePower; 
+        }
+
+        if (debug::printCircuitLog)
+        {
+            std::wprintf(L"%s  └─ \x1b[33m[GND진입] %ls GND, 요구=%d, 잔여용량=%.2f, 시도량=%.2f\x1b[0m\n",
+                indent.c_str(),
+                isDirectionalGnd ? L"지향성" : L"일반",
+                requiredPower,
+                remainEnergy,
+                txChargeAmount);
+        }
 
         if (remainEnergy > EPSILON)
         {
             gndTxEnergy = std::min(std::min(txChargeAmount, remainEnergy), nextProp->nodeCharge);
             nextProp->nodeCharge -= gndTxEnergy;
+
+            if (debug::printCircuitLog)
+            {
+                std::wprintf(L"%s      → 실제소비=%.2f, 남은용량=%.2f\n",
+                    indent.c_str(),
+                    gndTxEnergy,
+                    remainEnergy - gndTxEnergy);
+            }
+
             if (txDir == dir16::right && nextProp->leadItem.gndUsePowerLeft > 0) nextProp->gndSinkLeft += gndTxEnergy;
             else if (txDir == dir16::up && nextProp->leadItem.gndUsePowerDown > 0) nextProp->gndSinkDown += gndTxEnergy;
             else if (txDir == dir16::left && nextProp->leadItem.gndUsePowerRight > 0) nextProp->gndSinkRight += gndTxEnergy;
             else if (txDir == dir16::down && nextProp->leadItem.gndUsePowerUp > 0) nextProp->gndSinkUp += gndTxEnergy;
             else nextProp->gndSink += gndTxEnergy;
+        }
+        else if (debug::printCircuitLog)
+        {
+            std::wprintf(L"%s      → \x1b[90m용량 소진됨, 스킵\x1b[0m\n", indent.c_str());
         }
 
         if (isDirectionalGnd)
@@ -977,7 +1031,7 @@ void Prop::divideCharge(Prop* propPtr, double inputCharge, std::vector<dir16> po
             for (auto dir : gndDirs)
             {
                 auto newPathVisited = pathVisited;
-                double branchPushedCharge = pushCharge(propPtr, dir, gndSplitCharge, newPathVisited, depth);
+                double branchPushedCharge = pushCharge(propPtr, dir, gndSplitCharge, newPathVisited, depth+1);
                 gndPushedCharge += branchPushedCharge;
                 if (branchPushedCharge < EPSILON) dirsToRemove.push_back(dir);
             }
