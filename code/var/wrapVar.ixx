@@ -189,6 +189,7 @@ export Point2 getAbsMouseGrid()
     int revX, revY, revGridX, revGridY;
     if (option::inputMethod == input::touch)
     {
+        errorBox(activeTouchCount == 0, L"getAbsMouseGrid: 터치 입력 모드인데 활성 터치가 없습니다. 쓰레기 값 출력 중...");
         revX = static_cast<int>(event.tfinger.x * cameraW) - (cameraW / 2);
         revY = static_cast<int>(event.tfinger.y * cameraH) - (cameraH / 2);
     }

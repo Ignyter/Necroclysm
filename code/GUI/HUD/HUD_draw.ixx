@@ -453,12 +453,14 @@ void HUD::drawGUI()
 					else { targetBtnSpr = spr::buttons; }
 					drawSpriteCenter(targetBtnSpr, keyIcon::duelSense_TRI, letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
 				}
-				else
+                else if (option::inputMethod == input::mouse)
+				{
+                    drawSpriteCenter(spr::keyboardButtons, keyboardIndex::enter + state[SDL_SCANCODE_RETURN], letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
+				}
+				else if (option::inputMethod == input::touch)
 				{
 					if (y == 0) drawSpriteCenter(spr::windowArrow, 1, letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
 					else drawSpriteCenter(spr::windowArrow, 3, letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
-
-                    drawSpriteCenter(spr::keyboardButtons, keyboardIndex::enter + state[SDL_SCANCODE_RETURN], letterboxPopUpButton.x + 15, letterboxPopUpButton.y + 15);
 				}
 			}
 		}
@@ -980,10 +982,10 @@ void HUD::drawBarAct()
 		else if (barAct[i] == act::selectAll) setBtnLayout(sysStr[26], 27);
 		else if (barAct[i] == act::searching) setBtnLayout(sysStr[27], 28);
 		else if (barAct[i] == act::select) setBtnLayout(sysStr[29], 30);
-		else if (barAct[i] == act::droping) setBtnLayout(sysStr[52], 18);
+		else if (barAct[i] == act::droping) setBtnLayout80(sysStr[52], 40);
 		else if (barAct[i] == act::throwing) setBtnLayout80(sysStr[53], 27);
 		else if (barAct[i] == act::construct) setBtnLayout(sysStr[73], 20);
-		else if (barAct[i] == act::open) setBtnLayout(sysStr[88], 38);
+		else if (barAct[i] == act::open) setBtnLayout80(sysStr[88], 41);
 		else if (barAct[i] == act::test) setBtnLayout(sysStr[92], 60);
 		else if (barAct[i] == act::insert) setBtnLayout(sysStr[11], 17);
 		else if (barAct[i] == act::reload) setBtnLayout80(sysStr[100], 30);
@@ -1679,11 +1681,14 @@ void HUD::drawBodyParts()
 
 void HUD::drawCircuitInfo()
 {
+	return;
 	if (ContextMenu::ins() != nullptr) return;
 
 	static Point2 prevHoverGrid = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
 	static int hoverTime = 0;
 	Point2 currentHoverGrid = getAbsMouseGrid();
+	
+	if(option::inputMethod == input::mouse) currentHoverGrid = getAbsMouseGrid();
 
 	if (prevHoverGrid != currentHoverGrid)
 	{
@@ -1694,6 +1699,9 @@ void HUD::drawCircuitInfo()
 
 	if (hoverTime > 30)
 	{
+		if (prevHoverGrid == Point2{ std::numeric_limits<int>::min(), std::numeric_limits<int>::min() }) return;
+            
+
 		Prop* tgtProp = TileProp(prevHoverGrid.x, prevHoverGrid.y, PlayerPtr->getGridZ());
 		if (tgtProp == nullptr) return;
 		if (((tgtProp->leadItem.checkFlag(itemFlag::CIRCUIT) || tgtProp->leadItem.checkFlag(itemFlag::CABLE)) &&tgtProp->isChargeFlowing())

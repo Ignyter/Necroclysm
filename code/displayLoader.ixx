@@ -9,7 +9,7 @@ import constVar;
 namespace dispOption
 {
     bool fullScreen = true;            // 풀스크린 여부
-    bool useLetterbox = true;         // 풀스크린 시 레터박스 사용 여부 (창모드에서는 상관없음)
+    bool useLetterbox = false;         // 풀스크린 시 레터박스 사용 여부 (창모드에서는 상관없음)
     bool fixScreenRatio = true;       // 창모드 시 비율 고정 여부 (전체화면에서는 상관없음)
     int resolutionPreset = 0;          // 비율 프리셋 (0~1) fixScreenRatio가 true일 때만 적용 (전체화면에서는 상관없음)
     double windowScale = 1.0;          // 창 크기 배율 (전체화면에서는 상관없음)
@@ -38,8 +38,18 @@ export void displayLoader()
         }
         else
         {
-            cameraH = 1080;
-            cameraW = (int)(((float)screenW / (float)screenH) * 1080.0f);
+            float ratio = (float)screenW / (float)screenH;
+
+            if (ratio >= 1.0f)  // 가로 화면 (또는 정사각형)
+            {
+                cameraH = 1080;
+                cameraW = (int)(ratio * 1080.0f);
+            }
+            else  // 세로 화면
+            {
+                cameraW = 1080;
+                cameraH = (int)(1080.0f / ratio);
+            }
         }
     }
     else  // 창모드
